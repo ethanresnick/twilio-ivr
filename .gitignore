@@ -1,0 +1,14 @@
+node_modules/
+
+# Logs
+logs
+*.log
+npm-debug.log*
+
+
+# Code coverage instrumenting (istanbul and jscoverage/JSCover)
+lib-cov/
+coverage/
+
+# Grunt intermediate storage (http://gruntjs.com/creating-plugins#storing-task-files)
+.grunt

@@ -1,0 +1,53 @@
+{
+  "name": "hotline",
+  "version": "0.0.0",
+  "description": "hotline",
+  "license": "MIT",
+  "repository": "",
+  "author": "",
+  "keywords": [
+    ""
+  ],
+  "main": "build/lib/index.js",
+  "typings": "build/lib/index.d.ts",
+  "scripts": {
+    "clean": "rimraf build",
+    "lint": "tslint --type-check --project tsconfig.json --format verbose 'src/**/*.ts'",
+    "build": "npm run build:lintfree && npm run lint",
+    "build:lintfree": "npm run clean && echo Using TypeScript && tsc --version && tsc --pretty",
+    "test": "export NODE_ENV=testing; mocha --compilers ts:ts-node/register --recursive test/**/*Spec.ts",
+    "watch": "npm run build -- --watch",
+    "watch:lintfree": "npm run build:lintfree -- --watch",
+    "watch:test": "npm run test -- --watch"
+  },
+  "dependencies": {
+    "body-parser": "^1.15.2",
+    "debug": "^2.2.0",
+    "express": "^4.14.0",
+    "immutable": "^3.8.1",
+    "static-expiry": "0.0.11",
+    "twilio": "ethanresnick/twilio-node#patch-1"
+  },
+  "devDependencies": {
+    "@types/body-parser": "0.0.32",
+    "@types/chai": "3.4.30",
+    "@types/chai-as-promised": "0.0.29",
+    "@types/debug": "0.0.29",
+    "@types/express": "4.x.x",
+    "@types/mocha": "2.2.29",
+    "@types/node": "6.0.31",
+    "@types/q": "0.0.x",
+    "@types/twilio": "ethanresnick/DefinitelyTyped#working-twilio-installable",
+    "chai": "^3.5.0",
+    "chai-as-promised": "^6.0.0",
+    "mocha": "^3.0.1",
+    "rimraf": "^2.5.4",
+    "testdouble": "^1.7.0",
+    "ts-node": "^1.2.2",
+    "tslint": "3.15.1",
+    "typescript": "2.0.3"
+  },
+  "engines": {
+    "node": ">=6.9.1"
+  }
+}
