@@ -8,7 +8,7 @@ import { urlFor } from "../util/routeCreationHelpers";
 export type UsableState = BranchingState | EndState | NormalState | AsynchronousState;
 
 // This is a complete list of state types for the type guard functions below.
-type State = UsableState | RenderableState | RoutableState;
+export type State = UsableState | RenderableState | RoutableState;
 
 // Some types we share with consumers for convenience.
 export type Session = CallSessionImmutable;
@@ -65,16 +65,27 @@ export function isEndState(it: State): it is EndState {
 }
 
 export function isAsynchronousState(it: State): it is AsynchronousState {
-  return it && (<AsynchronousState>it).backgroundTrigger !== undefined;
+  const state = <AsynchronousState>it;
+
+  return state && state.twimlFor !== undefined && state.backgroundTrigger !== undefined;
 }
 
 export function isNormalState(it: State): it is NormalState {
   return it && (<NormalState>it).processTransitionUri !== undefined;
 }
 
-
-export function isUsableState(it: State): it is UsableState {
-  return isBranchingState(it) || isEndState(it) || isNormalState(it) || isAsynchronousState(it);
+/**
+ * Whether the state is not only a UsableState, but a "valid" one.
+ * This rejects some states that typescript doesn't let us rule out statically,
+ * but taht are nevertheless invalid, namely: branching + renderable but
+ * non-normal ones.
+ *
+ * @param  {State} it
+ * @return {boolean} Whether the state is a valid state.
+ */
+export function isValidState(it: State): boolean {
+  return isNormalState(it) || isAsynchronousState(it) || isEndState(it)
+    || (isBranchingState(it) && !isRenderableState(it));
 }
 
 

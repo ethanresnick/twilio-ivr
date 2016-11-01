@@ -91,7 +91,7 @@ export default function(states: StateTypes.UsableState[], appConfig: any) {
   // Note: when ES6 modules become a thing, we'll need to iterate over the
   // exports differently.
   states.forEach(thisState => {
-    if (!StateTypes.isUsableState(thisState)) {
+    if (!StateTypes.isValidState(thisState)) {
       const stateAsString = (thisState && thisState.name) || String(thisState);
       throw new Error("Invalid state provided: " + stateAsString);
     }
