@@ -1,7 +1,7 @@
 import { CallSessionImmutable } from "./session";
 import { TwimlResponse, CallDataTwiml } from "twilio";
 import "./twilioAugments";
-import { urlFor } from "../util/routeCreationHelpers";
+import { urlFor } from "./util/routeCreationHelpers";
 
 // A RoutableState that's not also either a BranchingState, or a RenderableState
 // subtype is invalid, so we don't include RoutableState in the UsableState type.

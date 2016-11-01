@@ -1,4 +1,4 @@
-import * as StateTypes from "../lib/state";
+import * as StateTypes from "../state";
 import logger from "../lib/logger";
 import * as express from "express";
 import * as Immutable from "immutable";
