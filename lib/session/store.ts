@@ -24,12 +24,16 @@ export default class SequelizeStore implements SessionStore {
       include: [{model: this.callModel, as: "userCall"}]
     };
 
+    logger.debug(`Looking up session for call sid ${callSid}`);
+
     return this.callModel.findOne(callQuery).then(call => {
       return call ? call.get({plain: true}) : undefined;
     });
   }
 
   set(callSid: CallSid, value: CallSession) {
+    logger.debug(`Saving session for call sid ${callSid}`, value);
+
     return this.callModel.upsert(value)
       .then((created: boolean) => created ? "created" : "updated");
   }
