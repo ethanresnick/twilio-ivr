@@ -64,6 +64,8 @@ var endStateRoutable = {
 }
 ```
 
+Once registered with the library, this state would result in the creation of a `POST /unknown-error` endpoint that you could redirect the running call to, and that would render the above Twiml.
+
 ### Normal States (Routable or Not)
 Most states in your system will probably be normal states, as they have all the machinery for playing something to the user, gathering input, and deciding what to do based on that input. 
 
