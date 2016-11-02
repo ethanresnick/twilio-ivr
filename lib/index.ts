@@ -16,19 +16,21 @@ const sessionStorePromise = Promise.resolve().then((sequelize) => {
     throw err;
   });
 
-export default function(states: StateTypes.UsableState[], appConfig: any) {
+export type twilioConfig = { authToken: string; validate: boolean }
+export default function(states: StateTypes.UsableState[], appConfig: any, twilioConfig: twilioConfig) {
   // Set up express
   const app = express();
   Object.entries(appConfig).forEach(([key, value]) => app.set(key, value));
 
   // Parse twilio POST payloads, which come as urlencoded strings...
+  // TODO: handle pre-parsed bodies
   app.use(bodyParser.urlencoded({ extended: false }));
 
   // Verify that incoming requests are coming from twilio.
   // Note: this requires the properties on express's req object to match the
   // properties of the request as twilio sent it (i.e., protocol, host, etc.
   // can't have been rewritten internally).
-  app.use(twilioWebhook(config.get("twilio:authToken"), { validate: !config.get("env:development") }));
+  app.use(twilioWebhook(twilioConfig.authToken, { validate: twilioConfig.validate }));
 
   // Serve static recordings or twiml files from public, with an auto-invalidated far-future Expires.
   app.use(expiry(app, {

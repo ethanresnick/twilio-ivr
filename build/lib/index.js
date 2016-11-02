@@ -14,11 +14,11 @@ const sessionStorePromise = Promise.resolve().then((sequelize) => {
 }, (err) => {
     throw err;
 });
-function default_1(states, appConfig) {
+function default_1(states, appConfig, twilioConfig) {
     const app = express();
     Object.entries(appConfig).forEach(([key, value]) => app.set(key, value));
     app.use(bodyParser.urlencoded({ extended: false }));
-    app.use(twilio_1.webhook(config.get("twilio:authToken"), { validate: !config.get("env:development") }));
+    app.use(twilio_1.webhook(twilioConfig.authToken, { validate: twilioConfig.validate }));
     app.use(expiry(app, {
         location: 'query',
         loadCache: 'startup',
@@ -45,7 +45,7 @@ function default_1(states, appConfig) {
     });
     app.use(session_1.middleware({ store: callSessionStore }));
     states.forEach(thisState => {
-        if (!StateTypes.isUsableState(thisState)) {
+        if (!StateTypes.isValidState(thisState)) {
             const stateAsString = (thisState && thisState.name) || String(thisState);
             throw new Error("Invalid state provided: " + stateAsString);
         }
