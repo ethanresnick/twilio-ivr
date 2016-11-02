@@ -1,3 +1,4 @@
+/// <reference types="twilio" />
 import { CallSessionImmutable } from "./session";
 import { TwimlResponse, CallDataTwiml } from "twilio";
 import "./twilioAugments";
