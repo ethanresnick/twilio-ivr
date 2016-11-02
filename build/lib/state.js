@@ -1,6 +1,6 @@
 "use strict";
 require("./twilioAugments");
-const routeCreationHelpers_1 = require("../util/routeCreationHelpers");
+const routeCreationHelpers_1 = require("./util/routeCreationHelpers");
 exports.urlFor = routeCreationHelpers_1.urlFor;
 function isRoutableState(it) {
     return it && it.uri !== undefined;
@@ -19,14 +19,16 @@ function isEndState(it) {
 }
 exports.isEndState = isEndState;
 function isAsynchronousState(it) {
-    return it && it.backgroundTrigger !== undefined;
+    const state = it;
+    return state && state.twimlFor !== undefined && state.backgroundTrigger !== undefined;
 }
 exports.isAsynchronousState = isAsynchronousState;
 function isNormalState(it) {
     return it && it.processTransitionUri !== undefined;
 }
 exports.isNormalState = isNormalState;
-function isUsableState(it) {
-    return isBranchingState(it) || isEndState(it) || isNormalState(it) || isAsynchronousState(it);
+function isValidState(it) {
+    return isNormalState(it) || isAsynchronousState(it) || isEndState(it)
+        || (isBranchingState(it) && !isRenderableState(it));
 }
-exports.isUsableState = isUsableState;
+exports.isValidState = isValidState;

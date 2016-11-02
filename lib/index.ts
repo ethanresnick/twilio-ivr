@@ -4,77 +4,110 @@ import bodyParser = require("body-parser");
 import expiry = require("static-expiry");
 import { middleware as sessionMiddleware, Store as SessionStore } from "./session";
 import * as express from "express";
+import { Express } from "express";
 import { Request, Response, NextFunction } from "express";
 import { webhook as twilioWebhook, TwimlResponse } from "twilio";
 import "./lib/twilioAugments";
 import "./lib/polyfillObjectValuesEntries";
 import url = require("url");
 
-const sessionStorePromise = Promise.resolve().then((sequelize) => {
-    return new SessionStore();
-  }, (err) => {
-    throw err;
-  });
+// const sessionStorePromise = Promise.resolve().then((sequelize) => {
+//     return new SessionStore();
+//   }, (err) => {
+//     throw err;
+//   });
 
-export default function(states: StateTypes.UsableState[], appConfig: any) {
+// TODO: document
+export type config = {
+  express: any;
+  twilio: {
+    authToken: string;
+    validate: boolean
+  };
+  staticFiles: {
+    path: string;
+    mountPath?: string;
+    holdMusic?: {
+      path: string;
+      loopCount: number;
+      endpoint: string;
+    }
+  };
+}
+
+export default function(states: StateTypes.UsableState[], config: config): Express {
   // Set up express
   const app = express();
-  Object.entries(appConfig).forEach(([key, value]) => app.set(key, value));
+  Object.entries(config.express).forEach(([key, value]) => app.set(key, value));
 
   // Parse twilio POST payloads, which come as urlencoded strings...
+  // TODO: handle pre-parsed bodies
   app.use(bodyParser.urlencoded({ extended: false }));
 
   // Verify that incoming requests are coming from twilio.
   // Note: this requires the properties on express's req object to match the
   // properties of the request as twilio sent it (i.e., protocol, host, etc.
   // can't have been rewritten internally).
-  app.use(twilioWebhook(config.get("twilio:authToken"), { validate: !config.get("env:development") }));
+  app.use(twilioWebhook(config.twilio.authToken, { validate: config.twilio.validate }));
 
   // Serve static recordings or twiml files from public, with an auto-invalidated far-future Expires.
-  app.use(expiry(app, {
+  var staticHandlers = express();
+  staticHandlers.use(expiry(app, {
     location: 'query',
     loadCache: 'startup',
-    dir: 'some dir',
-    conditional: config.get("env:development") ? "none" : "both",
-    unconditional: config.get("env:development") ? "none" : "both"
+    dir: config.staticFiles.path
   }));
-  app.use(express.static('public', { maxAge: '1y' }));
+  staticHandlers.use(express.static(config.staticFiles.path, { maxAge: '1y' }));
 
-  // Add the hold music route to the static-expiry fingerprint caches, since it
-  // should have the same expiration properties as the mp3 file it links to.
-  // (It's basically just a wrapper for that file.)
-  const versionedHoldMp3Url = expiry.urlCache['/hold.mp3'];
-  const currMp3Version = url.parse(versionedHoldMp3Url, true).query.v;
-  const versionedHoldMusicUrl = '/hold-music?v=' + currMp3Version;
+  // TODO: refactor maybe
+  if (config.staticFiles.mountPath) {
+    app.use(config.staticFiles.mountPath, staticHandlers);
+  } else {
+    app.use(staticHandlers);
+  }
 
-  expiry.urlCache['/hold-music'] = versionedHoldMusicUrl;
-  expiry.assetCache[versionedHoldMusicUrl] =
-    Object.assign({}, expiry.assetCache[versionedHoldMp3Url], {assetUrl: '/hold-music'});
+  if (config.staticFiles.holdMusic) {
+    // TODO: assert that all these things exist / create default loopCount ???
+    const { path, loopCount, endpoint } = config.staticFiles.holdMusic
+    // Add the hold music route to the static-expiry fingerprint caches, since it
+    // should have the same expiration properties as the mp3 file it links to.
+    // (It's basically just a wrapper for that file.)
+    // TODO: figure out why, or if, `path` below was prefixed with `/`
+    const versionedHoldMp3Url = expiry.urlCache[path];
+    const currMp3Version = url.parse(versionedHoldMp3Url, true).query.v;
+    const versionedHoldMusicUrl = `${endpoint}?v=${currMp3Version}`
 
-  // Add the route for our hold music, which isn't handled by the generic logic
-  // below, because it's a bit of an exception: it's not a state (it doesn't
-  // have any transition logic, as twilio stops playing it automatically when
-  // another party connects to the call, so it can't be a normal state, but,
-  // conceptually, it's not an end state either; and besides, it doesn't fit in
-  // with the routing for states because we want twilio to make a cacheable, un-
-  // parameterized GET request for it that doesn't involve loading the session),
-  // but it's also not just a static file, because it needs to reflect the host
-  // name differences of our dev/staging and production servers, because twilio
-  // won't accept a relative URI...which is stupid.
-  app.get("/hold-music", (req, res, next) => {
-    const holdUrl = url.format({
-      protocol: req.protocol,
-      host: req.get('Host'),
-      pathname: "/hold.mp3",
-      query: {v: req.query.v }
+    expiry.urlCache[endpoint] = versionedHoldMusicUrl;
+    expiry.assetCache[versionedHoldMusicUrl] =
+    Object.assign({}, expiry.assetCache[versionedHoldMp3Url], {assetUrl: endpoint});
+
+    // Add the route for our hold music, which isn't handled by the generic logic
+    // below, because it's a bit of an exception: it's not a state (it doesn't
+    // have any transition logic, as twilio stops playing it automatically when
+    // another party connects to the call, so it can't be a normal state, but,
+    // conceptually, it's not an end state either; and besides, it doesn't fit in
+    // with the routing for states because we want twilio to make a cacheable, un-
+    // parameterized GET request for it that doesn't involve loading the session),
+    // but it's also not just a static file, because it needs to reflect the host
+    // name differences of our dev/staging and production servers, because twilio
+    // won't accept a relative URI...which is stupid.
+
+    app.get(endpoint, (req, res, next) => {
+      // holdUrl has to be an absolute URL
+      const holdUrl = url.format({
+        protocol: req.protocol,
+        host: req.get('Host'),
+        pathname: path,
+        query: {v: req.query.v }
+      });
+      res.set('Cache-Control', 'public, max-age=31536000');
+      res.send((new TwimlResponse()).play({ loop: loopCount }, holdUrl));
     });
-    res.set('Cache-Control', 'public, max-age=31536000');
-    res.send((new TwimlResponse()).play({ loop: 100 }, holdUrl));
-  });
+  }
 
   // Load information about the call in progress (if any) from the db.
   // The session will be saved in req.callSession.
-  app.use(sessionMiddleware({ store: callSessionStore }));
+  // app.use(sessionMiddleware({ store: callSessionStore }));
 
   // Below, we iterate over all the states and set up routes to handle them.
   // This route setup happens before our app starts, as sort of a "compile" phase.
@@ -124,4 +157,4 @@ export default function(states: StateTypes.UsableState[], appConfig: any) {
   return app;
 }
 
-sessionStorePromise.then(callSessionStore => {});
+// sessionStorePromise.then(callSessionStore => {});

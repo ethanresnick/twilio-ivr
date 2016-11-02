@@ -1,5 +1,5 @@
 "use strict";
-const StateTypes = require("../lib/state");
+const StateTypes = require("../state");
 const logger_1 = require("../lib/logger");
 const Immutable = require("immutable");
 require("./lib/twilioAugments");

@@ -3,49 +3,50 @@ const StateTypes = require("./state");
 const routeCreationHelpers_1 = require("./util/routeCreationHelpers");
 const bodyParser = require("body-parser");
 const expiry = require("static-expiry");
-const session_1 = require("./session");
 const express = require("express");
 const twilio_1 = require("twilio");
 require("./lib/twilioAugments");
 require("./lib/polyfillObjectValuesEntries");
 const url = require("url");
-const sessionStorePromise = Promise.resolve().then((sequelize) => {
-    return new session_1.Store();
-}, (err) => {
-    throw err;
-});
-function default_1(states, appConfig) {
+function default_1(states, config) {
     const app = express();
-    Object.entries(appConfig).forEach(([key, value]) => app.set(key, value));
+    Object.entries(config.express).forEach(([key, value]) => app.set(key, value));
     app.use(bodyParser.urlencoded({ extended: false }));
-    app.use(twilio_1.webhook(config.get("twilio:authToken"), { validate: !config.get("env:development") }));
-    app.use(expiry(app, {
+    app.use(twilio_1.webhook(config.twilio.authToken, { validate: config.twilio.validate }));
+    var staticHandlers = express();
+    staticHandlers.use(expiry(app, {
         location: 'query',
         loadCache: 'startup',
-        dir: 'some dir',
-        conditional: config.get("env:development") ? "none" : "both",
-        unconditional: config.get("env:development") ? "none" : "both"
+        dir: config.staticFiles.path
     }));
-    app.use(express.static('public', { maxAge: '1y' }));
-    const versionedHoldMp3Url = expiry.urlCache['/hold.mp3'];
-    const currMp3Version = url.parse(versionedHoldMp3Url, true).query.v;
-    const versionedHoldMusicUrl = '/hold-music?v=' + currMp3Version;
-    expiry.urlCache['/hold-music'] = versionedHoldMusicUrl;
-    expiry.assetCache[versionedHoldMusicUrl] =
-        Object.assign({}, expiry.assetCache[versionedHoldMp3Url], { assetUrl: '/hold-music' });
-    app.get("/hold-music", (req, res, next) => {
-        const holdUrl = url.format({
-            protocol: req.protocol,
-            host: req.get('Host'),
-            pathname: "/hold.mp3",
-            query: { v: req.query.v }
+    staticHandlers.use(express.static(config.staticFiles.path, { maxAge: '1y' }));
+    if (config.staticFiles.mountPath) {
+        app.use(config.staticFiles.mountPath, staticHandlers);
+    }
+    else {
+        app.use(staticHandlers);
+    }
+    if (config.staticFiles.holdMusic) {
+        const { path, loopCount, endpoint } = config.staticFiles.holdMusic;
+        const versionedHoldMp3Url = expiry.urlCache[path];
+        const currMp3Version = url.parse(versionedHoldMp3Url, true).query.v;
+        const versionedHoldMusicUrl = `${endpoint}?v=${currMp3Version}`;
+        expiry.urlCache[endpoint] = versionedHoldMusicUrl;
+        expiry.assetCache[versionedHoldMusicUrl] =
+            Object.assign({}, expiry.assetCache[versionedHoldMp3Url], { assetUrl: endpoint });
+        app.get(endpoint, (req, res, next) => {
+            const holdUrl = url.format({
+                protocol: req.protocol,
+                host: req.get('Host'),
+                pathname: path,
+                query: { v: req.query.v }
+            });
+            res.set('Cache-Control', 'public, max-age=31536000');
+            res.send((new twilio_1.TwimlResponse()).play({ loop: loopCount }, holdUrl));
         });
-        res.set('Cache-Control', 'public, max-age=31536000');
-        res.send((new twilio_1.TwimlResponse()).play({ loop: 100 }, holdUrl));
-    });
-    app.use(session_1.middleware({ store: callSessionStore }));
+    }
     states.forEach(thisState => {
-        if (!StateTypes.isUsableState(thisState)) {
+        if (!StateTypes.isValidState(thisState)) {
             const stateAsString = (thisState && thisState.name) || String(thisState);
             throw new Error("Invalid state provided: " + stateAsString);
         }
@@ -71,4 +72,3 @@ function default_1(states, appConfig) {
 }
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.default = default_1;
-sessionStorePromise.then(callSessionStore => { });
