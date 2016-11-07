@@ -175,7 +175,17 @@ var lookupWeatherState = {
 The above asynchronous state isn't routable, but, like with the example non-renderable branching state, it would be easy to make it routable if you wanted to use it as the entry state to your call.
 
 # Call Sessions and Data Flow
-[Coming Soon]
+## Call Sessions
+Every request to your system from Twilio includes a `CallSid` parameter, which is a unique id for the current call. As the call moves through different states, then, you might want to associate data with the call or look up previously-associated data, like you'd do with a session on the web. 
+
+This id can be used as a key to look up 
+
+How do all the states you provide to the library get combined to form a coherent IVR system?
+
+1. A POST handler is registered with express for the `uri` of each routable state. Then, when a call is initiated from or pointed to a routable state, 
+
+- routable states get a post route their uri, which follows the branches until it can render twiml
+- normal states get a post route to their uri, which follows branches until it can render twiml
 
 # Other Features
 ## urlFor
