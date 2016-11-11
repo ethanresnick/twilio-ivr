@@ -14,7 +14,7 @@ export type State = UsableState | RenderableState | RoutableState;
 export type Session = CallSessionImmutable;
 export { urlFor };
 
-interface AbstractState {
+export interface AbstractState {
   name: string;
 }
 
