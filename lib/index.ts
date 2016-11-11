@@ -4,6 +4,7 @@ import bodyParser = require("body-parser");
 import expiry = require("static-expiry");
 import { middleware as sessionMiddleware, Store as SessionStore } from "./session";
 import * as express from "express";
+import { Express } from "express";
 import { Request, Response, NextFunction } from "express";
 import { webhook as twilioWebhook, TwimlResponse } from "twilio";
 import "./lib/twilioAugments";
@@ -16,7 +17,7 @@ const sessionStorePromise = Promise.resolve().then((sequelize) => {
     throw err;
   });
 
-export default function(states: StateTypes.UsableState[], appConfig: any) {
+export default function(states: StateTypes.UsableState[], appConfig: any): Express {
   // Set up express
   const app = express();
   Object.entries(appConfig).forEach(([key, value]) => app.set(key, value));
