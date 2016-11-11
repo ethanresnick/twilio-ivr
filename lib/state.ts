@@ -30,7 +30,7 @@ export interface BranchingState extends AbstractState {
 }
 
 export interface RenderableState extends AbstractState {
-  twimlFor(callSession: Session, urlFor: urlFor, inputData?: CallDataTwiml): TwimlResponse;
+  twimlFor(callSession: Session, urlFor: urlFor, inputData?: CallDataTwiml): TwimlResponse | string;
 }
 
 export interface EndState extends RenderableState {
