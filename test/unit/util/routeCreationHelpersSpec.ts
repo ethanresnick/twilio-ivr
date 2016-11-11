@@ -3,10 +3,10 @@ import chaiAsPromised = require("chai-as-promised");
 import { Map } from "immutable";
 import * as td from "testdouble";
 import { CallDataTwiml } from "twilio";
-import "../../../src/lib/twilioAugments";
+import "../../../lib/twilioAugments";
 import { isImmutableEquals } from "../../utils";
-import * as sut from "../../../src/util/routeCreationHelpers";
-import * as State from "../../../src/lib/state";
+import * as sut from "../../../lib/util/routeCreationHelpers";
+import * as State from "../../../lib/state";
 import * as states from "../../fixtures/states";
 
 chai.use(chaiAsPromised);

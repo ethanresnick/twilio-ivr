@@ -1,4 +1,4 @@
-import * as State from "../../src/lib/state";
+import * as State from "../../lib/state";
 import { TwimlResponse } from "twilio";
 
 const emptyTwimlFn = () => new TwimlResponse();

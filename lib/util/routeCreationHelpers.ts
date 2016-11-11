@@ -1,9 +1,9 @@
 import * as StateTypes from "../state";
-import logger from "../lib/logger";
+import logger from "../logger";
 import * as express from "express";
 import * as Immutable from "immutable";
 import { CallDataTwiml } from "twilio";
-import "./lib/twilioAugments";
+import "../twilioAugments";
 import url = require("url");
 
 /**
