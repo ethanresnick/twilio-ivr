@@ -97,17 +97,17 @@ describe("state types", () => {
     });
   });
 
-  describe("isUsableState", () => {
-    it("should return true iff arg is a UsableState", () => {
-      states.nonUsableStates.forEach(state => {
-        expect(sut.isUsableState(state)).to.be.false;
+  describe("isValidState", () => {
+    it("should return true iff arg is a valid state", () => {
+      states.invalidStates.forEach(state => {
+        expect(sut.isValidState(state)).to.be.false;
       });
 
-      const usableStates = states.allStates
-        .filter(it => states.nonUsableStates.indexOf(it) === -1);
+      const validStates = states.allStates
+        .filter(it => states.invalidStates.indexOf(it) === -1);
 
-      usableStates.forEach(state => {
-        expect(sut.isUsableState(state)).to.be.true;
+      validStates.forEach(state => {
+        expect(sut.isValidState(state)).to.be.true;
       });
     });
   });

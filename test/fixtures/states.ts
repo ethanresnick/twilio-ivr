@@ -5,7 +5,7 @@ const emptyTwimlFn = () => new TwimlResponse();
 
 export const d = <any>{
   name: "d",
-  staticTwimlFor: true
+  twimlFor: emptyTwimlFn
 };
 
 export const e = <any>{
@@ -13,15 +13,21 @@ export const e = <any>{
   uri: "/go"
 };
 
+// An invalid state because it's branching and renderable without being normal!
+export const j = <State.UsableState>{
+  name: "f",
+  twimlFor: emptyTwimlFn,
+  transitionOut: (it: any) => Promise.resolve([it, i])
+};
+
 export const h = <State.AsynchronousState>{
   name: "h",
   twimlFor: emptyTwimlFn,
-  staticTwimlFor: true,
   backgroundTrigger: emptyTwimlFn
 };
 
 export const routableStates = [e];
-export const nonUsableStates = [d, e];
+export const invalidStates = [d, e, j];
 
 
 
@@ -37,7 +43,7 @@ export const i = <State.NormalState>{
   transitionOut: (it: any) => Promise.resolve([it, h]),
 };
 
-export const branchingStates = [f, i];
+export const branchingStates = [f, i, j];
 
 
 
@@ -50,6 +56,7 @@ export const g = <State.EndState>{
 export const endStates = [g];
 export const normalStates = [i];
 export const asynchronousStates = [h];
-export const renderableStates = [g, i, h];
+export const renderableStates = [d, g, i, h, j];
 
-export const allStates = (<any[]>nonUsableStates).concat(branchingStates, renderableStates);
+
+export const allStates = (<any[]>invalidStates).concat(branchingStates, renderableStates);

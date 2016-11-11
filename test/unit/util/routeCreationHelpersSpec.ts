@@ -35,23 +35,6 @@ describe("route creation utilities", () => {
       });
     });
 
-    describe("handling non-usable states as input", () => {
-      it("should reject the state", () => {
-        const results: any[] = states.nonUsableStates.map(state =>
-          [state, emptySession, sut.resolveBranches(state, emptySession, <CallDataTwiml>{})]
-        );
-
-        const assertions = results.map(([state, session, resultPromise]) => {
-          return (<SutReturn>resultPromise).then(
-            () => { throw new Error("This promise should have thrown") },
-            (e: any) => undefined
-          );
-        });
-
-        return Promise.all(assertions);
-      })
-    })
-
     describe("handling branching, non-renderable states", () => {
       let g: any, h: any, i: any, startSession: Map<string, any>,
         endSession: Map<string, any>, intermediateSession: Map<string, any>;
