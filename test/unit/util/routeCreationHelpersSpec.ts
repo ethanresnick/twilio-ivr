@@ -43,7 +43,7 @@ describe("route creation utilities", () => {
         g = td.object(<State.NormalState>{
           name: "g",
           processTransitionUri: "/whatevs",
-          twimlFor: () => undefined,
+          twimlFor: () => "",
           transitionOut: (session, input) => Promise.resolve([session, this])
         });
 
