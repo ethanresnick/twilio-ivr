@@ -24,19 +24,6 @@ declare module "testdouble" {
     thenDo(...stubbedValues: any[]): TestDoubleFunction;
   }
 
-  namespace Matchers {
-    type MatcherDefinition = {
-      name?: string,
-      onCreate?: (matcherInstance: any, matcherArgs: any[]) => void,
-      matches(matcherArgs: any[], actual: any): boolean
-    };
-
-    type Matcher = (...args: any[]) => boolean;
-
-    function anything(): Matcher;
-    function create(conf: MatcherDefinition): Matcher
-  }
-
   interface TestDoubleConfig {
     promise?: Function;
     ignoreWarnings?: boolean;
@@ -50,6 +37,19 @@ declare module "testdouble" {
 
   interface ObjectConfig {
     excludeMethods: string[]
+  }
+
+  namespace Matchers {
+    type MatcherDefinition = {
+      name?: string,
+      onCreate?: (matcherInstance: any, matcherArgs: any[]) => void,
+      matches(matcherArgs: any[], actual: any): boolean
+    };
+
+    type Matcher = (...args: any[]) => boolean;
+
+    function anything(): Matcher;
+    function create(conf: MatcherDefinition): Matcher
   }
 
   namespace td {
