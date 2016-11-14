@@ -1,4 +1,5 @@
 declare module "static-expiry";
+declare module "crc";
 
 declare module "testdouble" {
   // Typescript really offers no good way to type this atm.
