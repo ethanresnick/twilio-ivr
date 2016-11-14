@@ -1,4 +1,5 @@
 import * as Sequelize from "sequelize";
+import logger from "../logger";
 import { CallSid, Call, CallInstance } from "../../models/call";
 import { CallSession } from "./index";
 
@@ -24,7 +25,7 @@ export default class SequelizeStore implements SessionStore {
       include: [{model: this.callModel, as: "userCall"}]
     };
 
-    logger.debug(`Looking up session for call sid ${callSid}`);
+    logger.info(`Looking up session for call sid ${callSid}`);
 
     return this.callModel.findOne(callQuery).then(call => {
       return call ? call.get({plain: true}) : undefined;
@@ -32,7 +33,7 @@ export default class SequelizeStore implements SessionStore {
   }
 
   set(callSid: CallSid, value: CallSession) {
-    logger.debug(`Saving session for call sid ${callSid}`, value);
+    logger.info(`Saving session for call sid ${callSid}`, value);
 
     return this.callModel.upsert(value)
       .then((created: boolean) => created ? "created" : "updated");

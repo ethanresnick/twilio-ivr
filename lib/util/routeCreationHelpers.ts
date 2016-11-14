@@ -108,11 +108,11 @@ export function renderState(state: StateTypes.UsableState, req: express.Request,
     const inputToUse = StateTypes.isRenderableState(state) ? inputData : undefined;
 
     if (StateTypes.isAsynchronousState(stateToRender)) {
-      logger.debug("Began asynchronous processing for " + stateToRender.name);
+      logger.info("Began asynchronous processing for " + stateToRender.name);
       stateToRender.backgroundTrigger(session, urlForBound, inputToUse);
     }
 
-    logger.debug("Produced twiml for for " + stateToRender.name);
+    logger.info("Produced twiml for for " + stateToRender.name);
     return stateToRender.twimlFor(session, urlForBound, inputToUse);
   }, (e: Error) => {
     logger.error(`Error while walking the branches.`, e.message);
