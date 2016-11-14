@@ -2,7 +2,7 @@ import * as StateTypes from "../state";
 import logger from "../logger";
 import * as express from "express";
 import * as Immutable from "immutable";
-import { CallDataTwiml } from "twilio";
+import { CallDataTwiml, TwimlResponse } from "twilio";
 import "../twilioAugments";
 import url = require("url");
 
@@ -120,7 +120,7 @@ export function renderState(state: StateTypes.UsableState, req: express.Request,
   });
 }
 
-type furl = (it: string) => string;
+export type furl = (it: string) => string;
 export type urlFor = (path: string, options?: UrlForOptions) => string;
 export type UrlForOptions = {query?: any, fingerprint?: boolean, absolute?: boolean};
 

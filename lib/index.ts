@@ -1,28 +1,30 @@
 import * as StateTypes from "./state";
 import { getSessionData, renderState } from "./util/routeCreationHelpers";
 import { entries as objectEntries } from "./util/objectValuesEntries";
+
+import { Express, Request, Response, NextFunction } from "express";
+import { middleware as sessionMiddleware, Store as SessionStore } from "./session";
+import express = require("express");
 import bodyParser = require("body-parser");
 import expiry = require("static-expiry");
-import { middleware as sessionMiddleware, Store as SessionStore } from "./session";
-import * as express from "express";
-import { Express } from "express";
-import { Request, Response, NextFunction } from "express";
-import { webhook as twilioWebhook, TwimlResponse } from "twilio";
-import "./lib/twilioAugments";
 import url = require("url");
 
-const sessionStorePromise = Promise.resolve().then((sequelize) => {
-    return new SessionStore();
-  }, (err) => {
-    throw err;
-  });
+import { webhook as twilioWebhook, TwimlResponse } from "twilio";
+import "./lib/twilioAugments";
+
+// const sessionStorePromise = Promise.resolve().then((sequelize) => {
+//   return new SessionStore();
+// }, (err) => {
+//   throw err;
+// });
 
 // TODO: document
 export type config = {
   express: any;
+  callSessionStore: SessionStore;
   twilio: {
     authToken: string;
-    validate: boolean
+    validate: boolean;
   };
   staticFiles: {
     path: string;
@@ -50,19 +52,21 @@ export default function(states: StateTypes.UsableState[], config: config): Expre
   // can't have been rewritten internally).
   app.use(twilioWebhook(config.twilio.authToken, { validate: config.twilio.validate }));
 
-  // Serve static recordings or twiml files from public, with an auto-invalidated far-future Expires.
+  // Serve static recordings or twiml files from public,
+  // with an auto-invalidated far-future Expires.
   var staticHandlers = express();
   staticHandlers.use(expiry(app, {
     location: 'query',
     loadCache: 'startup',
     dir: config.staticFiles.path
   }));
-  staticHandlers.use(express.static(config.staticFiles.path, { maxAge: '1y' }));
+  staticHandlers.use(express.static(config.staticFiles.path, { maxAge: '2y' }));
 
-  // TODO: refactor maybe
   if (config.staticFiles.mountPath) {
     app.use(config.staticFiles.mountPath, staticHandlers);
-  } else {
+  }
+
+  else {
     app.use(staticHandlers);
   }
 
@@ -92,7 +96,6 @@ export default function(states: StateTypes.UsableState[], config: config): Expre
     // but it's also not just a static file, because it needs to reflect the host
     // name differences of our dev/staging and production servers, because twilio
     // won't accept a relative URI...which is stupid.
-
     app.get(endpoint, (req, res, next) => {
       // holdUrl has to be an absolute URL
       const holdUrl = url.format({
@@ -158,4 +161,4 @@ export default function(states: StateTypes.UsableState[], config: config): Expre
   return app;
 }
 
-sessionStorePromise.then(callSessionStore => {});
+// sessionStorePromise.then(callSessionStore => {});
