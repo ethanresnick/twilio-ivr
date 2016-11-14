@@ -1,5 +1,6 @@
 import * as StateTypes from "./state";
 import { getSessionData, renderState } from "./util/routeCreationHelpers";
+import { entries as objectEntries } from "./util/objectValuesEntries";
 import bodyParser = require("body-parser");
 import expiry = require("static-expiry");
 import { middleware as sessionMiddleware, Store as SessionStore } from "./session";
@@ -8,7 +9,6 @@ import { Express } from "express";
 import { Request, Response, NextFunction } from "express";
 import { webhook as twilioWebhook, TwimlResponse } from "twilio";
 import "./lib/twilioAugments";
-import "./lib/polyfillObjectValuesEntries";
 import url = require("url");
 
 const sessionStorePromise = Promise.resolve().then((sequelize) => {
@@ -38,7 +38,7 @@ export type config = {
 export default function(states: StateTypes.UsableState[], config: config): Express {
   // Set up express
   const app = express();
-  Object.entries(config.express).forEach(([key, value]) => app.set(key, value));
+  objectEntries(config.express).forEach(([key, value]) => app.set(key, value));
 
   // Parse twilio POST payloads, which come as urlencoded strings...
   // TODO: handle pre-parsed bodies
