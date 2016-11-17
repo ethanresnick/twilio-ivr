@@ -38,11 +38,12 @@ export default function(states: StateTypes.UsableState[], config: config): Expre
   // TODO: handle pre-parsed bodies
   app.use(bodyParser.urlencoded({ extended: false }));
 
-  // Verify that incoming requests are coming from twilio.
+  // Verify that incoming requests are coming from twilio by default or if set.
   // Note: this requires the properties on express's req object to match the
   // properties of the request as twilio sent it (i.e., protocol, host, etc.
   // can't have been rewritten internally).
-  app.use(twilioWebhook(config.twilio.authToken, { validate: config.twilio.validate }));
+  let { validate = true } = config.twilio;
+  app.use(twilioWebhook(config.twilio.authToken, { validate: validate }));
 
   // Serve static recordings or twiml files from public,
   // with an auto-invalidated far-future Expires.
