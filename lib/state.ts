@@ -24,7 +24,7 @@ export interface BranchingState extends AbstractState {
   // Take an immutable session data and some input; return a promise for the
   // modified session data (if being at this state told us something about the
   // call we want to store) and the next state to go to.
-  transitionOut(inputData?: CallDataTwiml): Promise<UsableState>;
+  transitionOut(inputData?: CallDataTwiml): Promise<UsableState>|UsableState;
 }
 
 export interface RenderableState extends AbstractState {

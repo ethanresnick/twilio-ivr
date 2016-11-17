@@ -25,7 +25,7 @@ export function resolveBranches(state: StateTypes.UsableState,
   inputData?: CallDataTwiml): Promise<StateTypes.RenderableState> {
 
   if (StateTypes.isBranchingState(state) && !StateTypes.isRenderableState(state)) {
-    return state.transitionOut(inputData).then(nextState => {
+    return Promise.resolve(state.transitionOut(inputData)).then(nextState => {
       return resolveBranches(nextState);
     });
   }
