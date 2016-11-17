@@ -1,1 +1,1 @@
-import "../../../src/lib/twilioAugments";
+import "../../../lib/twilioAugments";

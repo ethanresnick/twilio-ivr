@@ -1,8 +1,7 @@
 "use strict";
 const chai = require("chai");
-const sut = require("../../../src/lib/state");
+const sut = require("../../../lib/state");
 const states = require("../../fixtures/states");
-require("../../../src/lib/polyfillObjectValuesEntries");
 const { expect } = chai;
 describe("state types", () => {
     describe("isRoutableState", () => {
@@ -77,15 +76,15 @@ describe("state types", () => {
             });
         });
     });
-    describe("isUsableState", () => {
-        it("should return true iff arg is a UsableState", () => {
-            states.nonUsableStates.forEach(state => {
-                expect(sut.isUsableState(state)).to.be.false;
+    describe("isValidState", () => {
+        it("should return true iff arg is a valid state", () => {
+            states.invalidStates.forEach(state => {
+                expect(sut.isValidState(state)).to.be.false;
             });
-            const usableStates = states.allStates
-                .filter(it => states.nonUsableStates.indexOf(it) === -1);
-            usableStates.forEach(state => {
-                expect(sut.isUsableState(state)).to.be.true;
+            const validStates = states.allStates
+                .filter(it => states.invalidStates.indexOf(it) === -1);
+            validStates.forEach(state => {
+                expect(sut.isValidState(state)).to.be.true;
             });
         });
     });

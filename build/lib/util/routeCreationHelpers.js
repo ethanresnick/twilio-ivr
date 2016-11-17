@@ -1,43 +1,28 @@
 "use strict";
-const StateTypes = require("../lib/state");
-const logger_1 = require("../lib/logger");
-const Immutable = require("immutable");
-require("./lib/twilioAugments");
+const StateTypes = require("../state");
+const logger_1 = require("../logger");
+require("../twilioAugments");
 const url = require("url");
-function resolveBranches(state, callSession, inputData) {
+function resolveBranches(state, inputData) {
     if (StateTypes.isBranchingState(state) && !StateTypes.isRenderableState(state)) {
-        return state.transitionOut(callSession, inputData).then(([newSession, nextState]) => {
-            return resolveBranches(nextState, newSession);
+        return Promise.resolve(state.transitionOut(inputData)).then(nextState => {
+            return resolveBranches(nextState);
         });
     }
-    return Promise.resolve([callSession, state]);
+    return Promise.resolve(state);
 }
 exports.resolveBranches = resolveBranches;
-function getSessionData(req) {
-    return (req.callSession && req.callSession.data) || Immutable.Map();
-}
-exports.getSessionData = getSessionData;
-function renderState(state, req, session, furl, inputData) {
+function renderState(state, req, furl, inputData) {
     const urlForBound = urlFor(req.protocol, req.get('Host'), furl);
-    const renderableStatePromise = resolveBranches(state, session, inputData)
-        .then(([updatedSession, nextState]) => {
-        return req.callSession.save(updatedSession.get('callSid'), updatedSession)
-            .then(updatedSessionSaved => {
-            session = updatedSessionSaved;
-            return nextState;
-        }, (e) => {
-            logger_1.default.error(`Error while saving the updated session.`, e.message);
-            return nextState;
-        });
-    });
+    const renderableStatePromise = resolveBranches(state, inputData);
     return renderableStatePromise.then(stateToRender => {
         const inputToUse = StateTypes.isRenderableState(state) ? inputData : undefined;
         if (StateTypes.isAsynchronousState(stateToRender)) {
-            logger_1.default.debug("Began asynchronous processing for " + stateToRender.name);
-            stateToRender.backgroundTrigger(session, urlForBound, inputToUse);
+            logger_1.default.info("Began asynchronous processing for " + stateToRender.name);
+            stateToRender.backgroundTrigger(urlForBound, inputToUse);
         }
-        logger_1.default.debug("Produced twiml for for " + stateToRender.name);
-        return stateToRender.twimlFor(session, urlForBound, inputToUse);
+        logger_1.default.info("Produced twiml for for " + stateToRender.name);
+        return stateToRender.twimlFor(urlForBound, inputToUse);
     }, (e) => {
         logger_1.default.error(`Error while walking the branches.`, e.message);
         throw e;
