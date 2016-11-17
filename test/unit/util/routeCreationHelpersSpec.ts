@@ -1,16 +1,13 @@
-import * as chai from "chai";
+import { expect, use as chaiUse } from "chai";
 import chaiAsPromised = require("chai-as-promised");
-import { Map } from "immutable";
 import * as td from "testdouble";
 import { CallDataTwiml } from "twilio";
 import "../../../lib/twilioAugments";
-import { isImmutableEquals } from "../../utils";
 import * as sut from "../../../lib/util/routeCreationHelpers";
 import * as State from "../../../lib/state";
 import * as states from "../../fixtures/states";
 
-chai.use(chaiAsPromised);
-const {expect} = chai;
+chaiUse(chaiAsPromised);
 
 describe("route creation utilities", () => {
   describe("resolveBranches", () => {
