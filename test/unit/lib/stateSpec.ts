@@ -1,7 +1,6 @@
 import * as chai from "chai";
 import * as sut from "../../../lib/state";
 import * as states from "../../fixtures/states";
-import "../../../lib/util/polyfillObjectValuesEntries";
 
 const {expect} = chai;
 
