@@ -11,45 +11,34 @@ import url = require("url");
  * calls transitionOut repeatedly to get us to the final state that we should
  * render. When it calls transitionOut, it passes input data (if any) the first
  * time, but not on subsequent calls, as subsequent states shouldn't know about
- * any input the user may have passed into the original branching state.
- *
- * With each transitionOut call, it keeps track of the new session and state,
- * and ultimately returns a promise for those. Note that the session changes
- * aren't persisted between transitionOut() calls, so a branching state shouldn't
- * trigger a request back to this service (probably not under any cases -- but
- * certainly not when processing that request requires the latest session data.)
+ * any input the user may have passed into the original branching state. With
+ * each transitionOut call, it keeps track of the new state, and ultimately
+ * returns a promise for that.
  *
  * @param  {StateTypes.UsableState} state The initial state, which may or may
  *   not be renderable.
- * @param  {StateTypes.Session} callSession The call session.
  * @param  {CallDataTwiml} inputData Any user input taht should be passed to
  *   the initial state, and the initial state only, if it's not renderable.
- * @return {Promise<[StateTypes.Session, StateTypes.RenderableState]>}
- *   The final renderable state and the session for it.
+ * @return {Promise<StateTypes.RenderableState>} The final renderable state.
  */
-export function resolveBranches(state: StateTypes.UsableState, callSession: StateTypes.Session,
-  inputData?: CallDataTwiml): Promise<[StateTypes.Session, StateTypes.RenderableState]> {
+export function resolveBranches(state: StateTypes.UsableState,
+  inputData?: CallDataTwiml): Promise<StateTypes.RenderableState> {
 
   if (StateTypes.isBranchingState(state) && !StateTypes.isRenderableState(state)) {
-    return state.transitionOut(callSession, inputData).then(([newSession, nextState]) => {
-      return resolveBranches(nextState, newSession);
+    return state.transitionOut(inputData).then(nextState => {
+      return resolveBranches(nextState);
     });
   }
 
-  return Promise.resolve<[StateTypes.Session, StateTypes.RenderableState]>([callSession, state]);
-}
-
-export function getSessionData(req: express.Request) {
-  return (req.callSession && req.callSession.data) || Immutable.Map<string, any>();
+  return Promise.resolve(state);
 }
 
 /**
  * Takes a state that we want to render (after following non-renderable
  * branching states to a renderable one, if need be), and does all the work
- * needed to render it, namely: 1) following the branches and persisting any
- * changes they make to the session; then 2) calling twimlFor and, if the
- * renderable state is also an asynchronous state, backgroundTrigger; and 3)
- * trying to do robust error handling.
+ * needed to render it, namely: 1) doing the branch following; 2) calling
+ * twimlFor and on the resulting state and, if it's also an asynchronous state,
+ * backgroundTrigger; and 3) trying to do robust error handling.
  *
  * The state passed to this function is found in one of two ways: it's either
  * a routable state (i.e., has been requested directly), or it's one a previous
@@ -60,8 +49,6 @@ export function getSessionData(req: express.Request) {
  * @param  {StateTypes.UsableState} state The state to render, or to use
  *   to find the one to render.
  * @param {express.Request} req The express request
- * @param {StateTypes.Session} session The session data (passed in because the
- *   data saved in req.callSession may not be the latest).
  * @param {urlFor} furl A function to generate fingerprinted uris for static files.
  * @param {CallDataTwiml | undefined} inputData Data we should pass to the first
  *   state that we encounter on our way to rendering the final state. Note: if
@@ -71,30 +58,14 @@ export function getSessionData(req: express.Request) {
  * @return {TwimlResponse} The rendered next state.
  */
 export function renderState(state: StateTypes.UsableState, req: express.Request,
-  session: StateTypes.Session, furl: furl, inputData: CallDataTwiml | undefined) {
+  furl: furl, inputData: CallDataTwiml | undefined) {
 
   // A utility function to help our states generate urls.
   const urlForBound = urlFor(req.protocol, req.get('Host'), furl);
 
   // If this state is non-renderable, follow the branches until we get
-  // to a renderable state. When we are at that point, save the session,
-  // in the form it's been modified in by the branches. That way, the
-  // final session is persisted before we render the state. (Rendering the
-  // state before persisting would increase the odds of a race condition,
-  // if the user interacted with the rendered state to trigger a new POST.)
-  // Note: if the session was already saved as is, it won't be resaved.
-  // Once the session is saved (or that's failed), promise the state to render.
-  const renderableStatePromise = resolveBranches(state, session, inputData)
-    .then(([updatedSession, nextState]) => {
-      return req.callSession.save(updatedSession.get('callSid'), updatedSession)
-        .then(updatedSessionSaved => {
-          session = updatedSessionSaved;
-          return nextState;
-        }, (e: Error) => {
-          logger.error(`Error while saving the updated session.`, e.message);
-          return nextState;
-        })
-    });
+  // to a renderable state.
+  const renderableStatePromise = resolveBranches(state, inputData);
 
   // Now that we have our renderable state, we need to render it.
   // Below, if our stateToRender was arrived at through a branch, then the
@@ -109,11 +80,11 @@ export function renderState(state: StateTypes.UsableState, req: express.Request,
 
     if (StateTypes.isAsynchronousState(stateToRender)) {
       logger.info("Began asynchronous processing for " + stateToRender.name);
-      stateToRender.backgroundTrigger(session, urlForBound, inputToUse);
+      stateToRender.backgroundTrigger(urlForBound, inputToUse);
     }
 
     logger.info("Produced twiml for for " + stateToRender.name);
-    return stateToRender.twimlFor(session, urlForBound, inputToUse);
+    return stateToRender.twimlFor(urlForBound, inputToUse);
   }, (e: Error) => {
     logger.error(`Error while walking the branches.`, e.message);
     throw e;

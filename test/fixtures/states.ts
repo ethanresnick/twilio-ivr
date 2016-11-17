@@ -17,7 +17,7 @@ export const e = <any>{
 export const j = <State.UsableState>{
   name: "f",
   twimlFor: emptyTwimlFn,
-  transitionOut: (it: any) => Promise.resolve([it, i])
+  transitionOut: (it: any) => Promise.resolve(i)
 };
 
 export const h = <State.AsynchronousState>{
@@ -33,14 +33,14 @@ export const invalidStates = [d, e, j];
 
 export const f = <State.BranchingState>{
   name: "f",
-  transitionOut: (it: any) => Promise.resolve([it, i])
+  transitionOut: (it: any) => Promise.resolve(i)
 };
 
 export const i = <State.NormalState>{
   name: "i",
   twimlFor: emptyTwimlFn,
   processTransitionUri: "/t",
-  transitionOut: (it: any) => Promise.resolve([it, h]),
+  transitionOut: (it: any) => Promise.resolve(h),
 };
 
 export const branchingStates = [f, i, j];

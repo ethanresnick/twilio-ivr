@@ -15,19 +15,17 @@ const {expect} = chai;
 describe("route creation utilities", () => {
   describe("resolveBranches", () => {
     const thrower = () => { throw new Error("unexpected.") };
-    const emptySession = Map<string, any>();
-    type SutReturn = Promise<[State.Session, State.RenderableState]>;
+    type SutReturn = Promise<State.RenderableState>;
 
     describe("handling renderable input states", () => {
       it("should return a promise for the input state", () => {
         const results: any[] = states.renderableStates.map(state =>
-          [state, emptySession, sut.resolveBranches(state, emptySession, <CallDataTwiml>{})]
+          [state, sut.resolveBranches(state, <CallDataTwiml>{})]
         );
 
-        const assertions = results.map(([state, session, resultPromise]) => {
-          return (<SutReturn>resultPromise).then(([resolvedSession, resolvedState]) => {
+        const assertions = results.map(([state, resultPromise]) => {
+          return (<SutReturn>resultPromise).then((resolvedState) => {
             expect(state).to.equal(resolvedState);
-            expect(session.equals(resolvedSession)).to.be.true;
           });
         });
 
@@ -36,53 +34,42 @@ describe("route creation utilities", () => {
     });
 
     describe("handling branching, non-renderable states", () => {
-      let g: any, h: any, i: any, startSession: Map<string, any>,
-        endSession: Map<string, any>, intermediateSession: Map<string, any>;
+      let g: any, h: any, i: any;
 
       beforeEach(function() {
         g = td.object(<State.NormalState>{
           name: "g",
           processTransitionUri: "/whatevs",
           twimlFor: () => "",
-          transitionOut: (session, input) => Promise.resolve([session, this])
+          transitionOut: (input) => Promise.resolve(this)
         });
 
         h = td.object(<State.BranchingState>{
           name: "h",
-          transitionOut: (session, input) => Promise.resolve([session, this])
+          transitionOut: (input) => Promise.resolve(this)
         });
 
         i = td.object(<State.BranchingState>{
           name: "i",
-          transitionOut: (session, input) => Promise.resolve([session, this]),
+          transitionOut: (input) => Promise.resolve(this),
         });
 
-        startSession = Map<string, any>();
-        intermediateSession = startSession.merge({i1: true, i2: true});
-        endSession = Map<string, any>({i1: true, i2: false, h: true});
+        td.when(i.transitionOut(td.matchers.anything()))
+          .thenResolve(h);
 
-        td.when(i.transitionOut(isImmutableEquals(startSession)), {ignoreExtraArgs: true})
-          .thenResolve([intermediateSession, h]);
-
-        td.when(h.transitionOut(isImmutableEquals(intermediateSession)), {ignoreExtraArgs: true})
-          .thenResolve([endSession, g]);
-      });
-
-      it("should update the session along the way", () => {
-        return sut.resolveBranches(i, startSession, undefined).then(([session, state]) => {
-          expect(session.equals(endSession)).to.be.true;
-        });
+        td.when(h.transitionOut(td.matchers.anything()))
+          .thenResolve(g);
       });
 
       it("should pass any input data to the first non-renderable state, but not subsequent ones", () => {
-        return sut.resolveBranches(i, startSession, <CallDataTwiml>{}).then(([session, state]) => {
-          td.verify(i.transitionOut(td.matchers.anything(), {}));
-          td.verify(h.transitionOut(td.matchers.anything(), undefined));
+        return sut.resolveBranches(i, <CallDataTwiml>{}).then(state => {
+          td.verify(i.transitionOut({}));
+          td.verify(h.transitionOut(undefined));
         });
       });
 
       it("should not call transition out on the renderable state, once found", () => {
-        return sut.resolveBranches(i, startSession, <CallDataTwiml>{}).then(([session, state]) => {
+        return sut.resolveBranches(i, <CallDataTwiml>{}).then(state => {
           td.verify(g.transitionOut(), {times: 0, ignoreExtraArgs: true});
         });
       });

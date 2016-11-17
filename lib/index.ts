@@ -1,9 +1,8 @@
 import * as StateTypes from "./state";
-import { getSessionData, renderState } from "./util/routeCreationHelpers";
+import { renderState } from "./util/routeCreationHelpers";
 import { entries as objectEntries } from "./util/objectValuesEntries";
 
 import { Express, Request, Response, NextFunction } from "express";
-import { middleware as sessionMiddleware, Store as SessionStore } from "./session";
 import express = require("express");
 import bodyParser = require("body-parser");
 import expiry = require("static-expiry");
@@ -12,16 +11,9 @@ import url = require("url");
 import { webhook as twilioWebhook, TwimlResponse } from "twilio";
 import "./lib/twilioAugments";
 
-// const sessionStorePromise = Promise.resolve().then((sequelize) => {
-//   return new SessionStore();
-// }, (err) => {
-//   throw err;
-// });
-
 // TODO: document
 export type config = {
   express: any;
-  callSessionStore: SessionStore;
   twilio: {
     authToken: string;
     validate: boolean;
@@ -109,10 +101,6 @@ export default function(states: StateTypes.UsableState[], config: config): Expre
     });
   }
 
-  // Load information about the call in progress (if any) from the db.
-  // The session will be saved in req.callSession.
-  app.use(sessionMiddleware({ store: callSessionStore }));
-
   // Below, we iterate over all the states and set up routes to handle them.
   // This route setup happens before our app starts, as sort of a "compile" phase.
   //
@@ -135,7 +123,7 @@ export default function(states: StateTypes.UsableState[], config: config): Expre
 
     if (StateTypes.isRoutableState(thisState)) {
       app.post(thisState.uri, function (req, res, next) {
-        renderState(thisState, req, getSessionData(req), app.locals.furl, req.body).then(twiml => {
+        renderState(thisState, req, app.locals.furl, req.body).then(twiml => {
           res.send(twiml);
         }, next);
       });
@@ -144,13 +132,12 @@ export default function(states: StateTypes.UsableState[], config: config): Expre
     if (StateTypes.isNormalState(thisState)) {
       app.post(thisState.processTransitionUri, function (req, res, next) {
         // Use the input to transition to the next state.
-        const resultStateAndSessionPromise =
-          thisState.transitionOut(getSessionData(req), req.body);
+        const nextStatePromise = thisState.transitionOut(req.body);
 
         // Then, do what we do for renderable states, except don't pass
         // req.body anywhere, as we've already used that input to transition out.
-        resultStateAndSessionPromise.then(([updatedSession, resultState]) => {
-          renderState(resultState, req, updatedSession, app.locals.furl, undefined).then(twiml => {
+        nextStatePromise.then(nextState => {
+          renderState(nextState, req, app.locals.furl, undefined).then(twiml => {
             res.send(twiml);
           }, next);
         });
@@ -160,5 +147,3 @@ export default function(states: StateTypes.UsableState[], config: config): Expre
 
   return app;
 }
-
-// sessionStorePromise.then(callSessionStore => {});

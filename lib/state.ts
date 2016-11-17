@@ -1,4 +1,3 @@
-import { CallSessionImmutable } from "./session";
 import { TwimlResponse, CallDataTwiml } from "twilio";
 import "./twilioAugments";
 import { urlFor } from "./util/routeCreationHelpers";
@@ -11,7 +10,6 @@ export type UsableState = BranchingState | EndState | NormalState | Asynchronous
 export type State = UsableState | RenderableState | RoutableState;
 
 // Some types we share with consumers for convenience.
-export type Session = CallSessionImmutable;
 export { urlFor };
 
 export interface AbstractState {
@@ -26,11 +24,11 @@ export interface BranchingState extends AbstractState {
   // Take an immutable session data and some input; return a promise for the
   // modified session data (if being at this state told us something about the
   // call we want to store) and the next state to go to.
-  transitionOut(callSession: Session, inputData?: CallDataTwiml): Promise<[Session, UsableState]>;
+  transitionOut(inputData?: CallDataTwiml): Promise<UsableState>;
 }
 
 export interface RenderableState extends AbstractState {
-  twimlFor(callSession: Session, urlFor: urlFor, inputData?: CallDataTwiml): TwimlResponse | string;
+  twimlFor(urlFor: urlFor, inputData?: CallDataTwiml): TwimlResponse | string;
 }
 
 export interface EndState extends RenderableState {
@@ -38,7 +36,7 @@ export interface EndState extends RenderableState {
 }
 
 export interface AsynchronousState extends RenderableState {
-  backgroundTrigger(callSession: Session, urlFor: urlFor, inputData?: CallDataTwiml): void;
+  backgroundTrigger(urlFor: urlFor, inputData?: CallDataTwiml): void;
 }
 
 export interface NormalState extends BranchingState, RenderableState {
