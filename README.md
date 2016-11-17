@@ -1,6 +1,6 @@
 # twilio-ivr
 
-This library makes it easy to build a phone tree/[IVR](https://en.wikipedia.org/wiki/Interactive_voice_response) system using twilio. 
+This library makes it easy to build a phone tree/[IVR](https://en.wikipedia.org/wiki/Interactive_voice_response) system using twilio.
 
 # States
 The concept of a "state", in the [finite state machine](https://en.wikipedia.org/wiki/Finite-state_machine) sense of the term, is at the heart of this library. It allows you to describe your call system as a set of states, each of which can transition to other states depending on input from the caller (or on information from outside the call, like the time of day etc).
@@ -13,15 +13,15 @@ A state is just an object (a [POJO](https://www.quora.com/What-is-a-plainObject-
 
 - `name` (**required**): a string that uniquely identifies the state (among all your states).
 
-- `twimlFor(callSession, urlFor, inputData?)` (**optional**): a function that returns the [Twiml](https://www.twilio.com/docs/api/twiml) used to "render" the state to the caller. For example, the caller might be on a state that asks them to choose from a list of options. To present those options to the caller, your application has to provide some Twiml (probably using [`<Say>`](https://www.twilio.com/docs/api/twiml/say) or [`<Play>`](https://www.twilio.com/docs/api/twiml/play)) to read out the options. This function would be responsible for returning that Twiml. States with a `twimlFor` property are called **renderable states**.
+- `twimlFor(urlFor, inputData?)` (**optional**): a function that returns the [Twiml](https://www.twilio.com/docs/api/twiml) used to "render" the state to the caller. For example, the caller might be on a state that asks them to choose from a list of options. To present those options to the caller, your application has to provide some Twiml (probably using [`<Say>`](https://www.twilio.com/docs/api/twiml/say) or [`<Play>`](https://www.twilio.com/docs/api/twiml/play)) to read out the options. This function would be responsible for returning that Twiml. States with a `twimlFor` property are called **renderable states**.
 
-- `transitionOut(callSession, inputData?)` (**optional**): a function that's called to determine the next state. States with a `transitionOut` function are called **branching states**. A state's `transitionOut` function is usually called in response to caller input, or to a new call coming in, and receives that input data. However, it can also be called indirectly; see below. It returns a promise for the next state and any updates to the call session (also described below).
+- `transitionOut(inputData?)` (**optional**): a function that's called to determine the next state. States with a `transitionOut` function are called **branching states**. A state's `transitionOut` function is usually called in response to caller input, or to a new call coming in, and receives that input data. However, it can also be called indirectly; see below. It returns the next state, or a promise for the next state.
 
-- `backgroundTrigger(callSession, urlFor, inputData?)` (**optional**): a function called just before the state is rendered (`backgroundTrigger` is only available on renderable states). This function can be used to kick off background operations that should happen as a result of reaching this state. Note: this function does not block rendering the state, so `twimlFor` should not assume that anything `backgroundTrigger` does has been completed at render time. (`backgroundTrigger` may be given the ability to block, or to be used on non-renderable states, in the future.) States with a `backgroundTrigger` function are called **asynchronous states**.
+- `backgroundTrigger(urlFor, inputData?)` (**optional**): a function called just before the state is rendered (`backgroundTrigger` is only available on renderable states). This function can be used to kick off background operations that should happen as a result of reaching this state. Note: this function does not block rendering the state, so `twimlFor` should not assume that anything `backgroundTrigger` does has been completed at render time. (`backgroundTrigger` may be given the ability to block, or to be used on non-renderable states, in the future.) States with a `backgroundTrigger` function are called **asynchronous states**.
 
 - `uri` (**optional**): most states will *not* have a `uri` property; this property is used primarily on your system's "entry state" (i.e., the state that twilio will use to start a call, likely through the incoming call webhook). However, if there are other states that you need to be able to "jump to" directly (i.e., point twilio to, and have it [continue an existing call from there](https://www.twilio.com/docs/api/rest/change-call-state)) those must also have a `uri`. The `uri` property should hold a relative uri string that will be used by the library to create an express `POST` listener that, when requested, consults the state to figure out how to respond. States with a `uri` property are called **routable states**.
 
-- `processTransitionUri` (**optional**): a relative uri where caller input data should be sent; data sent to this uri will be passed to the state's `transitionOut` method to determine the next state. (The `processTransitionUri` only applies states that are branching and renderable.) Like `uri`, this property is used by the library to set up the appropriate express POST listeners. States with a `processTransitionUri` property, which are also renderable and branching states, are called **normal states** as they tend to be the most common state type.
+- `processTransitionUri` (**optional**): a relative uri where caller input data should be sent; data sent to this uri will be passed to the state's `transitionOut` method to determine the next state. (The `processTransitionUri` only applies states that are branching and renderable.) Like `uri`, the uri given here is turned into an express `POST` listener by the library. A state's `twimlFor()` method should render twiml that instructs twilio to send the relevant user input data to the `processTransitionUri` (see examples below). States with a `processTransitionUri` property, which are also renderable and branching states, are called **normal states** as they tend to be the most common state type.
 
 - `isEndState` (**optional**): this property, if present, can only have one value: `true`. It's used to mark a state as an **end state** of your call (see below).
 
@@ -36,7 +36,7 @@ An End State is a renderable state that doesn't branch to anywhere else. As its 
 var endState = {
   name: "END_STATE",
   isEndState: true,
-  twimlFor() { 
+  twimlFor() {
     // If you don't want to built raw XML, you can also return a TwimlResponse object
     // to simplify this. See https://twilio.github.io/twilio-node/
     return `<?xml version="1.0" encoding="UTF-8"?>
@@ -47,7 +47,7 @@ var endState = {
 }
 ```
 
-The end state above isn't routable (i.e., other states can transition to it, but twilio can't get to it directly to render it). That's usually what you want in your end state. If, however, you wanted to be able to [hijack a running call](https://www.twilio.com/docs/api/rest/change-call-state) to render an error message after some external condition had failed, you could have a routable end state like this:
+The end state above isn't routable (i.e., other states can transition to it, but it doesn't have an HTTP endpoint that twilio can request directly to render it). That's usually what you want in your end state. If, however, you wanted to be able to [hijack a running call](https://www.twilio.com/docs/api/rest/change-call-state) to render an error message after some external condition had failed, you could have a routable end state like this:
 
 ```js
 var endStateRoutable = {
@@ -67,12 +67,12 @@ var endStateRoutable = {
 Once registered with the library, this state would result in the creation of a `POST /unknown-error` endpoint that you could redirect the running call to, and that would render the above Twiml.
 
 ### Normal States (Routable or Not)
-Most states in your system will probably be normal states, as they have all the machinery for playing something to the user, gathering input, and deciding what to do based on that input. 
+Most states in your system will probably be normal states, as they have all the machinery for playing something to the user, gathering input, and deciding what to do based on that input.
 
 Below is an example of two normal states, one routable and one not, that, with the end state above, could form a simple IRV system:
 
 ```js
-// Note the `uri` in the (routable) entry state below, which will produce a 
+// Note the `uri` in the (routable) entry state below, which will produce a
 // POST /incoming-call endpoint that we can use as our twilio webhook handler.
 var entryState = {
   name: "CALL_RECEIVED",
@@ -90,19 +90,19 @@ var entryState = {
         <Redirect method="POST">${entryState.processTransitionUri}</Redirect>
       </Response>`;
   },
-  
-  // Process the input to return a promise for the next state
-  // (and the updated callSession, which we're ignoring for now).
-  // On no/invalid input, redirect to same state so the caller can try again.
+
+  // Process the input to return the next state.
+  // On no/invalid input, play the same state so the caller can try again.
   transitionOut(callSession, inputData) {
     let inputDigit = (inputData.Digits || [])[0];
-    
-    if(inputDigit === "1") {
-      return Promise.resolve([callSession, lunchSpecialsState]);
-    } else if(inputDigit === "2") {
-      return Promise.resolve([callSession, hoursState]);
-    } else {   
-      return Promise.resolve([callSession, entryState]);
+
+    switch(inputDigit) {
+      case "1":
+        return lunchSpecialsState;
+      case "2":
+        return hoursState;
+      default:
+        return entryState;
     }
   }
 }
@@ -112,7 +112,7 @@ var entryState = {
 var lunchSpecialsState = {
   name: "LUNCH_SPECIALS",
   processTransitionUri: "/lunch-specials-transition-out",
-  twimlFor() { 
+  twimlFor() {
     return `<?xml version="1.0" encoding="UTF-8"?>
       <Response>
         <Gather action="${lunchSpecialsState.processTransitionUri}">
@@ -123,11 +123,12 @@ var lunchSpecialsState = {
       </Response>`;
   },
   transitionOut(callSession, inputData) {
-    // Play hours if the user enters one. Otherwise, hang up (using our end state from earlier).
-    return Promise.resolve(
-      (inputData.Digits || [])[0] === "1" ? [callSession, hoursState] : [callSession, endState]
-    );
-  } 
+    let inputDigit = (inputData.Digits || [])[0];
+
+    // Play hours if the user enters one.
+    // Otherwise, hang up (using our end state from earlier).
+    return inputDigit === "1" ? hoursState : endState;
+  }
 }
 
 var hoursState = {/* left as an exercise to the reader. */ };
@@ -140,7 +141,7 @@ So far, all the branching states (i.e. those with a `transitionOut`) that we've 
 var branchingState = {
   name: "CHECK_IF_MORNING",
   transitionOut(callSession) {
-    return Promise.resolve([callSession, (new Date()).getHours() < 12 ? callFrontDesk : recordVoicemail]); 
+    return (new Date()).getHours() < 12 ? callFrontDesk : recordVoicemail;
   }
 }
 ```
@@ -162,7 +163,7 @@ var lookupWeatherState = {
   },
   backgroundTrigger(callSession, urlFor) {
     lookupWeather().then(weather => {
-      // save weather in the call session, and use twilio's rest api 
+      // save weather in the call session, and use twilio's rest api
       // to redirect this call to a state that will play the weather.
     }, error => {
       // the lookup failed, so use twilio's rest api to redirect the call
@@ -174,9 +175,9 @@ var lookupWeatherState = {
 
 The above asynchronous state isn't routable, but, like with the example non-renderable branching state, it would be easy to make it routable if you wanted to use it as the entry state to your call.
 
-# Call Sessions and Data Flow
-[Coming Soon]
-
 # Other Features
 ## urlFor
+[Coming Soon]
+
+## Call Sessions
 [Coming Soon]
