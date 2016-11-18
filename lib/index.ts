@@ -13,12 +13,12 @@ import "./twilioAugments";
 
 // TODO: document
 export type config = {
-  express: any;
+  express?: any;
   twilio: {
     authToken: string;
-    validate: boolean;
+    validate?: boolean;
   };
-  staticFiles: {
+  staticFiles?: {
     path: string;
     mountPath?: string;
     holdMusic?: {
@@ -32,7 +32,7 @@ export type config = {
 export default function(states: StateTypes.UsableState[], config: config): Express {
   // Set up express
   const app = express();
-  objectEntries(config.express).forEach(([key, value]) => app.set(key, value));
+  objectEntries(config.express || {}).forEach(([key, val]) => app.set(key, val));
 
   // Parse twilio POST payloads, which come as urlencoded strings...
   // TODO: handle pre-parsed bodies
@@ -47,59 +47,61 @@ export default function(states: StateTypes.UsableState[], config: config): Expre
 
   // Serve static recordings or twiml files from public,
   // with an auto-invalidated far-future Expires.
-  var staticHandlers = express();
-  staticHandlers.use(expiry(app, {
-    location: 'query',
-    loadCache: 'startup',
-    dir: config.staticFiles.path
-  }));
-  staticHandlers.use(express.static(config.staticFiles.path, { maxAge: '2y' }));
+  if(config.staticFiles) {
+    let staticHandlers = express();
+    staticHandlers.use(expiry(app, {
+      location: 'query',
+      loadCache: 'startup',
+      dir: config.staticFiles.path
+    }));
+    staticHandlers.use(express.static(config.staticFiles.path, { maxAge: '2y' }));
 
-  if (config.staticFiles.mountPath) {
-    app.use(config.staticFiles.mountPath, staticHandlers);
-  }
+    if (config.staticFiles.mountPath) {
+      app.use(config.staticFiles.mountPath, staticHandlers);
+    }
 
-  else {
-    app.use(staticHandlers);
-  }
+    else {
+      app.use(staticHandlers);
+    }
 
-  if (config.staticFiles.holdMusic) {
-    // TODO: assert that all these things exist
-    const { path, loopCount = 500, endpoint } = config.staticFiles.holdMusic
+    if (config.staticFiles.holdMusic) {
+      // TODO: assert that all these things exist
+      const { path, loopCount = 500, endpoint } = config.staticFiles.holdMusic
 
-    // Add the hold music route to the static-expiry fingerprint caches, since it
-    // should have the same expiration properties as the mp3 file it links to.
-    // (It's basically just a wrapper for that file.)
-    // TODO: figure out why, or if, `path` below was prefixed with `/`
-    const versionedHoldMp3Url = expiry.urlCache[path];
-    const currMp3Version = url.parse(versionedHoldMp3Url, true).query.v;
-    const versionedHoldMusicUrl = `${endpoint}?v=${currMp3Version}`
+      // Add the hold music route to the static-expiry fingerprint caches, since it
+      // should have the same expiration properties as the mp3 file it links to.
+      // (It's basically just a wrapper for that file.)
+      // TODO: figure out why, or if, `path` below was prefixed with `/`
+      const versionedHoldMp3Url = expiry.urlCache[path];
+      const currMp3Version = url.parse(versionedHoldMp3Url, true).query.v;
+      const versionedHoldMusicUrl = `${endpoint}?v=${currMp3Version}`
 
-    expiry.urlCache[endpoint] = versionedHoldMusicUrl;
-    expiry.assetCache[versionedHoldMusicUrl] =
-    Object.assign({}, expiry.assetCache[versionedHoldMp3Url], {assetUrl: endpoint});
+      expiry.urlCache[endpoint] = versionedHoldMusicUrl;
+      expiry.assetCache[versionedHoldMusicUrl] =
+      Object.assign({}, expiry.assetCache[versionedHoldMp3Url], {assetUrl: endpoint});
 
-    // Add the route for our hold music, which isn't handled by the generic logic
-    // below, because it's a bit of an exception: it's not a state (it doesn't
-    // have any transition logic, as twilio stops playing it automatically when
-    // another party connects to the call, so it can't be a normal state, but,
-    // conceptually, it's not an end state either; and besides, it doesn't fit in
-    // with the routing for states because we want twilio to make a cacheable, un-
-    // parameterized GET request for it that doesn't involve loading the session),
-    // but it's also not just a static file, because it needs to reflect the host
-    // name differences of our dev/staging and production servers, because twilio
-    // won't accept a relative URI...which is stupid.
-    app.get(endpoint, (req, res, next) => {
-      // holdUrl has to be an absolute URL
-      const holdUrl = url.format({
-        protocol: req.protocol,
-        host: req.get('Host'),
-        pathname: path,
-        query: {v: req.query.v }
+      // Add the route for our hold music, which isn't handled by the generic logic
+      // below, because it's a bit of an exception: it's not a state (it doesn't
+      // have any transition logic, as twilio stops playing it automatically when
+      // another party connects to the call, so it can't be a normal state, but,
+      // conceptually, it's not an end state either; and besides, it doesn't fit in
+      // with the routing for states because we want twilio to make a cacheable, un-
+      // parameterized GET request for it that doesn't involve loading the session),
+      // but it's also not just a static file, because it needs to reflect the host
+      // name differences of our dev/staging and production servers, because twilio
+      // won't accept a relative URI...which is stupid.
+      app.get(endpoint, (req, res, next) => {
+        // holdUrl has to be an absolute URL
+        const holdUrl = url.format({
+          protocol: req.protocol,
+          host: req.get('Host'),
+          pathname: path,
+          query: {v: req.query.v }
+        });
+        res.set('Cache-Control', 'public, max-age=31536000');
+        res.send((new TwimlResponse()).play({ loop: loopCount }, holdUrl));
       });
-      res.set('Cache-Control', 'public, max-age=31536000');
-      res.send((new TwimlResponse()).play({ loop: loopCount }, holdUrl));
-    });
+    }
   }
 
   // Below, we iterate over all the states and set up routes to handle them.
