@@ -9,7 +9,7 @@ import expiry = require("static-expiry");
 import url = require("url");
 
 import { webhook as twilioWebhook, TwimlResponse } from "twilio";
-import "./lib/twilioAugments";
+import "./twilioAugments";
 
 // TODO: document
 export type config = {
