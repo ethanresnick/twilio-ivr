@@ -19,10 +19,10 @@ describe("request signing", () => {
     let app = lib(states, { twilio: { authToken: fakeToken } });
     let agent = request.agent(app);
 
-    it("should reject unsigned requests", (done) => {
-      agent
+    it("should reject unsigned requests", () => {
+      return agent
         .post("/")
-        .expect(403, done);
+        .expect(403);
     });
   });
 
@@ -30,21 +30,21 @@ describe("request signing", () => {
     let app = lib(states, { twilio: { authToken: fakeToken, validate: true } });
     let agent = request.agent(app);
 
-    it("should allow signed requests", (done) => {
+    it("should allow signed requests", () => {
       let test = agent.post("/");
       let testSig = makeDummySignature(fakeToken, test.url, fakeBody);
 
-      test
+      return test
         .type('form')
         .send(fakeBody)
         .set('X-Twilio-Signature', testSig)
-        .expect(200, done);
+        .expect(200);
     });
 
-    it("should reject unsigned requests", (done) => {
-      agent
+    it("should reject unsigned requests", () => {
+      return agent
         .post("/")
-        .expect(403, done);
+        .expect(403);
     });
   });
 
@@ -53,26 +53,20 @@ describe("request signing", () => {
     let agent = request.agent(app);
 
     it("should allow all requests", () => {
-      let unsignedRequestAllowed = new Promise((resolve, reject) => {
+      let test = agent.post("/");
+      let testSig = makeDummySignature(fakeToken, test.url, fakeBody);
+
+      let unsignedRequestAllowed =
         agent
-        .post("/")
-        .expect(200, (err: any) => {
-          err ? reject(err) : resolve();
-        });
-      });
+          .post("/")
+          .expect(200);
 
-      let signedRequestAllowed = new Promise((resolve, reject) => {
-        let test = agent.post("/");
-        let testSig = makeDummySignature(fakeToken, test.url, fakeBody);
-
+      let signedRequestAllowed =
         test
           .type('form')
           .send(fakeBody)
           .set('X-Twilio-Signature', testSig)
-          .expect(200, (err: any) => {
-          err ? reject(err) : resolve();
-        });
-      });
+          .expect(200)
 
       return Promise.all([unsignedRequestAllowed, signedRequestAllowed]);
     });
