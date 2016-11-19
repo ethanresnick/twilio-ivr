@@ -1,6 +1,6 @@
 import * as chai from "chai";
-import * as sut from "../../../lib/state";
-import * as states from "../../fixtures/states";
+import * as sut from "../../lib/state";
+import * as states from "../fixtures/states";
 
 const {expect} = chai;
 
