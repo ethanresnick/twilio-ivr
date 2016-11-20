@@ -99,16 +99,17 @@ export default function(states: StateTypes.UsableState[], config: config): Expre
       expiry.assetCache[versionedHoldMusicUrl] =
         Object.assign({}, expiry.assetCache[versionedHoldMp3Url], {assetUrl: holdMusicEndpoint});
 
-      // Add the route for our hold music, which isn't handled by the generic logic
-      // below, because it's a bit of an exception: it's not a state (it doesn't
-      // have any transition logic, as twilio stops playing it automatically when
-      // another party connects to the call, so it can't be a normal state, but,
-      // conceptually, it's not an end state either; and besides, it doesn't fit in
-      // with the routing for states because we want twilio to make a cacheable, un-
-      // parameterized GET request for it that doesn't involve loading the session),
-      // but it's also not just a static file, because it needs to reflect the host
-      // name differences of our dev/staging and production servers, because twilio
-      // won't accept a relative URI...which is stupid.
+      // Add the route for our hold music, which isn't handled by the generic
+      // logic below, because it's a bit of an exception: it's not a state
+      // (it doesn't have any transition logic, as twilio stops playing it
+      // automatically when another party connects to the call, so it can't be
+      // a normal state, but, conceptually, it's not an end state either;
+      // and besides, it doesn't fit in with the routing for states because
+      // we want twilio to make a cacheable, un-parameterized GET request for
+      // it, but it's also not just a static file, because it needs to reflect
+      // the host name differences of dev/staging and production servers,
+      // because twilio won't accept a relative URI...which is stupid, and it
+      // has dynamic content (to match the hold music's fingerprint).
       app.get(holdMusicEndpoint, (req, res, next) => {
         // holdUrl has to be an absolute URL
         const holdUrl = url.format({
