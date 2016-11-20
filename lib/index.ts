@@ -24,8 +24,8 @@ export type config = {
     holdMusic?: {
       path: string;
       loopCount?: number;
-      endpoint: string;
     }
+      endpoint?: string;
   };
 }
 
@@ -66,7 +66,7 @@ export default function(states: StateTypes.UsableState[], config: config): Expre
 
     if (config.staticFiles.holdMusic) {
       // TODO: assert that all these things exist
-      const { path, loopCount = 500, endpoint } = config.staticFiles.holdMusic
+      const { path, loopCount = 500, endpoint = "/hold-music"} = config.staticFiles.holdMusic
 
       // Add the hold music route to the static-expiry fingerprint caches, since it
       // should have the same expiration properties as the mp3 file it links to.
@@ -78,7 +78,7 @@ export default function(states: StateTypes.UsableState[], config: config): Expre
 
       expiry.urlCache[endpoint] = versionedHoldMusicUrl;
       expiry.assetCache[versionedHoldMusicUrl] =
-      Object.assign({}, expiry.assetCache[versionedHoldMp3Url], {assetUrl: endpoint});
+        Object.assign({}, expiry.assetCache[versionedHoldMp3Url], {assetUrl: endpoint});
 
       // Add the route for our hold music, which isn't handled by the generic logic
       // below, because it's a bit of an exception: it's not a state (it doesn't
