@@ -65,10 +65,13 @@ export default function(states: StateTypes.UsableState[], config: config): Expre
     app.use(staticFilesMountPath, [expiry(app, staticExpiryOpts), serveStatic]);
 
     if (config.staticFiles.holdMusic) {
-      // Todo: assert holdMusicPath exists and is valid
       const holdMusicPath = config.staticFiles.holdMusic.path;
       const holdMusicLoopCount = config.staticFiles.holdMusic.loopCount || 500;
       const holdMusicEndpoint = config.staticFiles.holdMusic.endpoint || "/hold-music";
+
+      if(!holdMusicPath) {
+        throw new Error("You must provide a path to your hold music file.");
+      }
 
       // Add the hold music route to the static-expiry fingerprint caches, as it
       // should have the same expiration properties as the mp3 file it links to.
