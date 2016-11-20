@@ -118,6 +118,7 @@ export default function(states: StateTypes.UsableState[], config: config): Expre
   //
   // Note: when ES6 modules become a thing, we'll need to iterate over the
   // exports differently.
+  let staticFilesMountPath = (config.staticFiles && config.staticFiles.mountPath) || "";
   states.forEach(thisState => {
     if (!StateTypes.isValidState(thisState)) {
       const stateAsString = (thisState && thisState.name) || String(thisState);
@@ -126,7 +127,7 @@ export default function(states: StateTypes.UsableState[], config: config): Expre
 
     if (StateTypes.isRoutableState(thisState)) {
       app.post(thisState.uri, function (req, res, next) {
-        renderState(thisState, req, app.locals.furl, req.body).then(twiml => {
+        renderState(thisState, req, staticFilesMountPath, app.locals.furl, req.body).then(twiml => {
           res.send(twiml);
         }, next);
       });
@@ -140,7 +141,7 @@ export default function(states: StateTypes.UsableState[], config: config): Expre
         // Then, do what we do for renderable states, except don't pass
         // req.body anywhere, as we've already used that input to transition out.
         nextStatePromise.then(nextState => {
-          renderState(nextState, req, app.locals.furl, undefined).then(twiml => {
+          renderState(nextState, req, staticFilesMountPath, app.locals.furl, undefined).then(twiml => {
             res.send(twiml);
           }, next);
         });
