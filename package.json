@@ -42,6 +42,7 @@
     "chai-as-promised": "^6.0.0",
     "mocha": "^3.0.1",
     "rimraf": "^2.5.4",
+    "stream-equal": "^0.1.9",
     "supertest": "^2.0.1",
     "testdouble": "^1.7.0",
     "ts-node": "^1.2.2",
