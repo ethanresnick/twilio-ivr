@@ -24,8 +24,9 @@ export type config = {
     holdMusic?: {
       path: string;
       loopCount?: number;
-    }
       endpoint?: string;
+    },
+    middleware?: express.Handler;
   };
 }
 
@@ -45,40 +46,40 @@ export default function(states: StateTypes.UsableState[], config: config): Expre
   let { validate = true } = config.twilio;
   app.use(twilioWebhook(config.twilio.authToken, { validate: validate }));
 
+  // Figure out our static files mount path, if any.
+  // Need this to setup static files middleware -- but also for all states' urlFor.
+  let staticFilesMountPath = (config.staticFiles && config.staticFiles.mountPath) || "";
+
   // Serve static recordings or twiml files from public,
   // with an auto-invalidated far-future Expires.
   if(config.staticFiles) {
-    let staticHandlers = express();
-    staticHandlers.use(expiry(app, {
-      location: 'query',
-      loadCache: 'startup',
-      dir: config.staticFiles.path
-    }));
-    staticHandlers.use(express.static(config.staticFiles.path, { maxAge: '2y' }));
+    let staticFilesPath = config.staticFiles.path;
+    let staticExpiryOpts = { location: 'query', loadCache: 'startup', dir: staticFilesPath };
 
-    if (config.staticFiles.mountPath) {
-      app.use(config.staticFiles.mountPath, staticHandlers);
-    }
+    let serveStatic = config.staticFiles.middleware ||
+      express.static(staticFilesPath, { maxAge: '2y' });
 
-    else {
-      app.use(staticHandlers);
-    }
+    // Register middleware for handling static files.
+    // Note: even if staticFilesMountPath is an empty string, this still works
+    // (see https://github.com/expressjs/express/blob/master/test/app.use.js#L515)
+    app.use(staticFilesMountPath, [expiry(app, staticExpiryOpts), serveStatic]);
 
     if (config.staticFiles.holdMusic) {
-      // TODO: assert that all these things exist
-      const { path, loopCount = 500, endpoint = "/hold-music"} = config.staticFiles.holdMusic
+      // Todo: assert holdMusicPath exists and is valid
+      const holdMusicPath = config.staticFiles.holdMusic.path;
+      const holdMusicLoopCount = config.staticFiles.holdMusic.loopCount || 500;
+      const holdMusicEndpoint = config.staticFiles.holdMusic.endpoint || "/hold-music";
 
-      // Add the hold music route to the static-expiry fingerprint caches, since it
+      // Add the hold music route to the static-expiry fingerprint caches, as it
       // should have the same expiration properties as the mp3 file it links to.
       // (It's basically just a wrapper for that file.)
-      // TODO: figure out why, or if, `path` below was prefixed with `/`
-      const versionedHoldMp3Url = expiry.urlCache[path];
+      const versionedHoldMp3Url = expiry.urlCache[holdMusicPath];
       const currMp3Version = url.parse(versionedHoldMp3Url, true).query.v;
-      const versionedHoldMusicUrl = `${endpoint}?v=${currMp3Version}`
+      const versionedHoldMusicUrl = `${holdMusicEndpoint}?v=${currMp3Version}`
 
-      expiry.urlCache[endpoint] = versionedHoldMusicUrl;
+      expiry.urlCache[holdMusicEndpoint] = versionedHoldMusicUrl;
       expiry.assetCache[versionedHoldMusicUrl] =
-        Object.assign({}, expiry.assetCache[versionedHoldMp3Url], {assetUrl: endpoint});
+        Object.assign({}, expiry.assetCache[versionedHoldMp3Url], {assetUrl: holdMusicEndpoint});
 
       // Add the route for our hold music, which isn't handled by the generic logic
       // below, because it's a bit of an exception: it's not a state (it doesn't
@@ -90,16 +91,16 @@ export default function(states: StateTypes.UsableState[], config: config): Expre
       // but it's also not just a static file, because it needs to reflect the host
       // name differences of our dev/staging and production servers, because twilio
       // won't accept a relative URI...which is stupid.
-      app.get(endpoint, (req, res, next) => {
+      app.get(holdMusicEndpoint, (req, res, next) => {
         // holdUrl has to be an absolute URL
         const holdUrl = url.format({
           protocol: req.protocol,
           host: req.get('Host'),
-          pathname: path,
+          pathname: holdMusicPath,
           query: {v: req.query.v }
         });
         res.set('Cache-Control', 'public, max-age=31536000');
-        res.send((new TwimlResponse()).play({ loop: loopCount }, holdUrl));
+        res.send((new TwimlResponse()).play({ loop: holdMusicLoopCount }, holdUrl));
       });
     }
   }
@@ -118,7 +119,6 @@ export default function(states: StateTypes.UsableState[], config: config): Expre
   //
   // Note: when ES6 modules become a thing, we'll need to iterate over the
   // exports differently.
-  let staticFilesMountPath = (config.staticFiles && config.staticFiles.mountPath) || "";
   states.forEach(thisState => {
     if (!StateTypes.isValidState(thisState)) {
       const stateAsString = (thisState && thisState.name) || String(thisState);
