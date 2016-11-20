@@ -111,11 +111,16 @@ export function urlFor(protocol: string, host: string, mountPath: string, furl: 
     }
 
     if(fingerprint) {
-      // furl doesn't understand the concept of a mount path, because
-      // static-expiry is built for connect, and a mount path is an abstraction
-      // added at the express level. So, we have to remove the mount path if
-      // any before furling, and then add it back afterwards
-      let fingerprintedRelativeUri = mountPath + furl(path.substr(mountPath.length));
+      // furl doesn't understand the concept of a static files mount path,
+      // because static-expiry is built for connect, and a mount path is an
+      // abstraction added at the express level. So, we have to remove the
+      // mount path if any [sometimes there is none for static files, and some
+      // urls that get fingerprinted don't use it anyway (namely for the hold
+      // music url)] before furling, and then add it back afterwards.
+      let mountPathWithTrailingSlash = mountPath.replace(/\/$/, "") + "/";
+      let fingerprintedRelativeUri = path.startsWith(mountPathWithTrailingSlash) ?
+        mountPath + furl(path.substr(mountPath.length)) :
+        furl(path);
 
       if(absolute) {
         const relativeUriParts = url.parse(fingerprintedRelativeUri);

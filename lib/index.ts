@@ -25,6 +25,10 @@ export type config = {
     holdMusic?: {
       path: string;
       loopCount?: number;
+      // TODO document: hold music endpoint cannot start with
+      // the static files mount path or urlFor will get confused.
+      // More generally, no urls other than the fingerprinted files can
+      // live under the mount point, or urlfor will get confused.
       endpoint?: string;
     },
     middleware?: express.Handler;
@@ -64,8 +68,8 @@ export default function(states: StateTypes.UsableState[], config: config): Expre
       // strips off the first options.dir.length characters. So, if we provide
       // a dir option ending with a `/` we get a different cache key than if
       // we don't. So, below, we normalize the dir we pass in to always end
-      // with a slash, so that the cache key always starts without a slash.
-      dir: staticFilesPath.replace(/\/$/, '') + '/'
+      // without a slash, so that the cache key always starts with a slash.
+      dir: staticFilesPath.replace(/\/$/, '')
     };
 
     let serveStatic = config.staticFiles.middleware ||
@@ -78,20 +82,21 @@ export default function(states: StateTypes.UsableState[], config: config): Expre
 
     if (config.staticFiles.holdMusic) {
       const holdMusicPath = config.staticFiles.holdMusic.path;
+      const holdMusicCacheKey = "/" + holdMusicPath;
       const holdMusicLoopCount = config.staticFiles.holdMusic.loopCount || 500;
       const holdMusicEndpoint = config.staticFiles.holdMusic.endpoint || "/hold-music";
 
       if(!holdMusicPath) {
         throw new Error("You must provide a path to your hold music file.");
       }
-      else if(!expiry.urlCache[holdMusicPath]) {
+      else if(!expiry.urlCache[holdMusicCacheKey]) {
         throw new Error("Your hold music file could not be found.");
       }
 
       // Add the hold music route to the static-expiry fingerprint caches, as it
       // should have the same expiration properties as the mp3 file it links to.
       // (It's basically just a wrapper for that file.)
-      const versionedHoldMp3Url = expiry.urlCache[holdMusicPath];
+      const versionedHoldMp3Url = expiry.urlCache[holdMusicCacheKey];
       const currMp3Version = url.parse(versionedHoldMp3Url, true).query.v;
       const versionedHoldMusicUrl = `${holdMusicEndpoint}?v=${currMp3Version}`
 
@@ -106,7 +111,7 @@ export default function(states: StateTypes.UsableState[], config: config): Expre
       // a normal state, but, conceptually, it's not an end state either;
       // and besides, it doesn't fit in with the routing for states because
       // we want twilio to make a cacheable, un-parameterized GET request for
-      // it, but it's also not just a static file, because it needs to reflect
+      // it. But it's also not just a static file, because it needs to reflect
       // the host name differences of dev/staging and production servers,
       // because twilio won't accept a relative URI...which is stupid, and it
       // has dynamic content (to match the hold music's fingerprint).
