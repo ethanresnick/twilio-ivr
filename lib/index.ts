@@ -54,7 +54,18 @@ export default function(states: StateTypes.UsableState[], config: config): Expre
   // with an auto-invalidated far-future Expires.
   if(config.staticFiles) {
     let staticFilesPath = config.staticFiles.path;
-    let staticExpiryOpts = { location: 'query', loadCache: 'startup', dir: staticFilesPath };
+    let staticExpiryOpts = {
+      location: 'query',
+      loadCache: 'startup',
+
+      // static-expiry is kinda naive about how it generates cache keys.
+      // In particular, it just takes the absolute path to the file and
+      // strips off the first options.dir.length characters. So, if we provide
+      // a dir option ending with a `/` we get a different cache key than if
+      // we don't. So, below, we normalize the dir we pass in to always end
+      // with a slash, so that the cache key always starts without a slash.
+      dir: staticFilesPath.replace(/\/$/, '') + '/'
+    };
 
     let serveStatic = config.staticFiles.middleware ||
       express.static(staticFilesPath, { maxAge: '2y' });
@@ -71,6 +82,9 @@ export default function(states: StateTypes.UsableState[], config: config): Expre
 
       if(!holdMusicPath) {
         throw new Error("You must provide a path to your hold music file.");
+      }
+      else if(!expiry.urlCache[holdMusicPath]) {
+        throw new Error("Your hold music file could not be found.");
       }
 
       // Add the hold music route to the static-expiry fingerprint caches, as it
