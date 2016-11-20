@@ -7,6 +7,7 @@ import express = require("express");
 import bodyParser = require("body-parser");
 import expiry = require("static-expiry");
 import url = require("url");
+import path = require("path");
 
 import { webhook as twilioWebhook, TwimlResponse } from "twilio";
 import "./twilioAugments";
@@ -113,7 +114,7 @@ export default function(states: StateTypes.UsableState[], config: config): Expre
         const holdUrl = url.format({
           protocol: req.protocol,
           host: req.get('Host'),
-          pathname: holdMusicPath,
+          pathname: path.join(staticFilesMountPath, holdMusicPath),
           query: {v: req.query.v }
         });
         res.set('Cache-Control', 'public, max-age=31536000');

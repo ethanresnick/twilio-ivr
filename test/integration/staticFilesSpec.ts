@@ -76,6 +76,27 @@ describe("versioned static files", () => {
         .expect(/\/static\/Tammy\.mp3\?v=/);
     });
   })
+
+  describe("the hold music endpoint", () => {
+    let baseStaticConfig = {
+      holdMusic: { endpoint: "/hold-music", path: "theCalling.mp3" },
+      path: musicPath
+    };
+    let mountedStaticConfig =
+      Object.assign({}, baseStaticConfig, { mountPath: "/static" });
+
+    let agent = request(lib([], filesConfig(baseStaticConfig)));
+    let mountPathAgent = request(lib([], filesConfig(mountedStaticConfig)));
+
+    describe("retrieval and contents", () => {
+      it("should use mount path, if any, and version parameter in mp3's uri", () => {
+        return Promise.all([
+          agent.get("/hold-music?v=122").expect(/http\:\/\/[\d\.\:]+\/theCalling\.mp3\?v=122/),
+          mountPathAgent.get("/hold-music?v=122").expect(/http\:\/\/[\d\.\:]+\/static\/theCalling\.mp3\?v=122/)
+        ]);
+      })
+    });
+  })
 });
 
 function filesConfig(obj: any) {
