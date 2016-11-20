@@ -93,7 +93,7 @@ var entryState = {
 
   // Process the input to return the next state.
   // On no/invalid input, play the same state so the caller can try again.
-  transitionOut(callSession, inputData) {
+  transitionOut(inputData) {
     let inputDigit = (inputData.Digits || [])[0];
 
     switch(inputDigit) {
@@ -122,7 +122,7 @@ var lunchSpecialsState = {
         <Redirect method="POST">${lunchSpecialsState.processTransitionUri}</Redirect>
       </Response>`;
   },
-  transitionOut(callSession, inputData) {
+  transitionOut(inputData) {
     let inputDigit = (inputData.Digits || [])[0];
 
     // Play hours if the user enters one.
@@ -140,7 +140,7 @@ So far, all the branching states (i.e. those with a `transitionOut`) that we've 
 ```js
 var branchingState = {
   name: "CHECK_IF_MORNING",
-  transitionOut(callSession) {
+  transitionOut() {
     return (new Date()).getHours() < 12 ? callFrontDesk : recordVoicemail;
   }
 }
@@ -161,7 +161,7 @@ var lookupWeatherState = {
         <Say>We're looking up the weather. Please hold on.</Say>
       </Response>`
   },
-  backgroundTrigger(callSession, urlFor) {
+  backgroundTrigger(urlFor) {
     lookupWeather().then(weather => {
       // save weather in the call session, and use twilio's rest api
       // to redirect this call to a state that will play the weather.
