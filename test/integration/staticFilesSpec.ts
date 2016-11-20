@@ -1,3 +1,4 @@
+import express = require("express");
 import fs = require("fs");
 import path = require("path");
 import request = require("supertest");
@@ -25,7 +26,7 @@ describe("versioned static files", () => {
       });
     };
 
-    it("should work when there's no static files url prefix", () => {
+    it("should work when there's no static files url prefix (mount path)", () => {
       let app = lib([], filesConfig({ path: musicPath }));
       let agent = request.agent(app);
 
@@ -35,7 +36,7 @@ describe("versioned static files", () => {
         .expect({msg: "True"});
     });
 
-    it("should work when there is a static files url prefix", () => {
+    it("should work when there is a static files url prefix (mount path)", () => {
       let app = lib([], filesConfig({ path: musicPath, mountPath: '/static' }));
       let agent = request.agent(app);
 
@@ -53,6 +54,20 @@ describe("versioned static files", () => {
       return agent
         .get("/Tammy.mp3")
         .expect("Cache-Control", "public, max-age=31536000");
+    });
+
+    it("should fall through when the file doesn't exist", () => {
+      let outerApp = express();
+      let app = lib([], filesConfig({ path: musicPath }));
+
+      outerApp.use(app);
+      outerApp.use((req, res, next) => {
+        res.status(404).send("My Custom 404zzz.");
+      });
+
+      return request(outerApp)
+        .get("/unknownfile.mp3")
+        .expect(404, "My Custom 404zzz.");
     });
   });
 
