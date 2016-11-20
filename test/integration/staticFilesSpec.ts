@@ -5,11 +5,10 @@ import request = require("supertest");
 import streamEqual = require("stream-equal");
 import twilio = require("twilio");
 import lib from "../../lib/";
-import { urlFor, EndState, RoutableState } from "../../lib/state";
-import { filesConfig } from "../util";
+import { filesConfig, stateRenderingUrlFor } from "../util";
 
 const musicPath = path.join(__dirname, "../fixtures/music/");
-const hashOfHoldMusic = "23241bfb2abddb6f58a1e67e99565ec5";
+const hashOfTammyMp3 = "23241bfb2abddb6f58a1e67e99565ec5";
 
 describe("versioned static files", () => {
   describe("receiving static files", () => {
@@ -75,22 +74,12 @@ describe("versioned static files", () => {
 
   describe("urlFor", () => {
     it("should account for the static files prefix, if any", () => {
-      let state: EndState & RoutableState = {
-        name: "ONLY_STATE",
-        uri: "/only-state",
-        isEndState: true,
-        twimlFor(furl: urlFor, input?: any) {
-          let resp = new twilio.TwimlResponse();
-          resp.play(furl('/static/Tammy.mp3'));
-          return resp;
-        }
-      };
-
-      let app = lib([state], filesConfig({ path: musicPath, mountPath: '/static' }));
+      let tammyUrlState = stateRenderingUrlFor("/static/Tammy.mp3", "/only-state");
+      let app = lib([tammyUrlState], filesConfig({ path: musicPath, mountPath: '/static' }));
 
       return request(app)
         .post("/only-state")
-        .expect(new RegExp("/static/Tammy\\.mp3\\?v=" + hashOfHoldMusic));
+        .expect(new RegExp("/static/Tammy\\.mp3\\?v=" + hashOfTammyMp3));
     });
   })
 });
