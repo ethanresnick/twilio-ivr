@@ -9,6 +9,7 @@ npm-debug.log*
 # Code coverage instrumenting (istanbul and jscoverage/JSCover)
 lib-cov/
 coverage/
+.nyc_output
 
 # Grunt intermediate storage (http://gruntjs.com/creating-plugins#storing-task-files)
 .grunt

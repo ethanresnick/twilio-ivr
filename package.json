@@ -16,9 +16,34 @@
     "build": "npm run build:lintfree && npm run lint",
     "build:lintfree": "npm run clean && echo Using TypeScript && tsc --version && tsc --pretty",
     "test": "export NODE_ENV=testing; mocha --compilers ts:ts-node/register --recursive test/**/*Spec.ts test/**/**/*Spec.ts",
+    "cover": "NODE_ENV=test nyc npm t",
     "watch": "npm run build -- --watch",
     "watch:lintfree": "npm run build:lintfree -- --watch",
     "watch:test": "npm run test -- --watch"
+  },
+  "nyc": {
+    "include": [
+      "lib/*.ts",
+      "lib/**/*.ts"
+    ],
+    "exclude": [
+      "typings",
+      "node_modules",
+      "test",
+      "config",
+      "build"
+    ],
+    "extension": [
+      ".ts"
+    ],
+    "require": [
+      "ts-node/register"
+    ],
+    "reporter": [
+      "json",
+      "html"
+    ],
+    "all": true
   },
   "dependencies": {
     "body-parser": "^1.15.2",
@@ -41,6 +66,7 @@
     "chai": "^3.5.0",
     "chai-as-promised": "^6.0.0",
     "mocha": "^3.0.1",
+    "nyc": "^9.0.1",
     "rimraf": "^2.5.4",
     "stream-equal": "^0.1.9",
     "supertest": "^2.0.1",
