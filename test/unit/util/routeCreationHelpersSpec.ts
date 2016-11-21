@@ -58,8 +58,8 @@ describe("route creation utilities", () => {
 
       it("should pass any input data to the first non-renderable state, but not subsequent ones", () => {
         return sut.resolveBranches(i, <CallDataTwiml>{}).then(state => {
-          expect(i.transitionOut).to.have.been.calledWithExactly({});
-          expect(h.transitionOut).to.have.been.calledWithExactly(undefined);
+          expect(i.transitionOut).calledWithExactly({});
+          expect(h.transitionOut).calledWithExactly(undefined);
         });
       });
 
@@ -76,6 +76,15 @@ describe("route creation utilities", () => {
       });
     });
   });
+
+  // The renderState function really just factors out duplicate code that's
+  // used to render both routable states, and to render the next state after a
+  // transitionOut. It doesn't do something super coherent on it's own, though,
+  // (i.e., without the server code calling it properly), and how it integrates
+  // with that code is subject to change. So, rather than unit testing it,
+  // probably makes more sense just to do end to end tests on the server
+  // responses, maybe using mock states to check that the right args were provided.
+  describe("renderState", () => { });
 
   describe("urlFor", () => {
     const urlForBound = sut.urlFor("ftp", "localhost", "/static", (it) => it + '?v=1');

@@ -2,7 +2,7 @@ import * as StateTypes from "./state";
 import { renderState } from "./util/routeCreationHelpers";
 import { entries as objectEntries } from "./util/objectValuesEntries";
 
-import { Express, Request, Response, NextFunction } from "express";
+import { Express, Handler, Request, Response, NextFunction } from "express";
 import express = require("express");
 import bodyParser = require("body-parser");
 import expiry = require("static-expiry");
@@ -31,7 +31,7 @@ export type config = {
       // live under the mount point, or urlfor will get confused.
       endpoint?: string;
     },
-    middleware?: express.Handler;
+    middleware?: Handler;
   };
 }
 

@@ -1,10 +1,14 @@
-import * as StateTypes from "../state";
 import logger from "../logger";
 import * as express from "express";
 import * as Immutable from "immutable";
 import { CallDataTwiml, TwimlResponse } from "twilio";
 import "../twilioAugments";
 import url = require("url");
+
+import {
+  RenderableState, AsynchronousState, UsableState,
+  isRenderableState, isBranchingState, isAsynchronousState
+} from "../state";
 
 /**
  * This function takes a state and, while it's branching but not renderable,
@@ -15,16 +19,16 @@ import url = require("url");
  * each transitionOut call, it keeps track of the new state, and ultimately
  * returns a promise for that.
  *
- * @param  {StateTypes.UsableState} state The initial state, which may or may
+ * @param  {UsableState} state The initial state, which may or may
  *   not be renderable.
  * @param  {CallDataTwiml} inputData Any user input taht should be passed to
  *   the initial state, and the initial state only, if it's not renderable.
- * @return {Promise<StateTypes.RenderableState>} The final renderable state.
+ * @return {Promise<RenderableState>} The final renderable state.
  */
-export function resolveBranches(state: StateTypes.UsableState,
-  inputData?: CallDataTwiml): Promise<StateTypes.RenderableState> {
+export function resolveBranches(state: UsableState,
+  inputData?: CallDataTwiml): Promise<RenderableState> {
 
-  if (StateTypes.isBranchingState(state) && !StateTypes.isRenderableState(state)) {
+  if (isBranchingState(state) && !isRenderableState(state)) {
     return Promise.resolve(state.transitionOut(inputData)).then(nextState => {
       return resolveBranches(nextState);
     });
@@ -37,7 +41,7 @@ export function resolveBranches(state: StateTypes.UsableState,
  * Takes a state that we want to render (after following non-renderable
  * branching states to a renderable one, if need be), and does all the work
  * needed to render it, namely: 1) doing the branch following; 2) calling
- * twimlFor and on the resulting state and, if it's also an asynchronous state,
+ * twimlFor on the resulting state and, if it's also an asynchronous state,
  * backgroundTrigger; and 3) trying to do robust error handling.
  *
  * The state passed to this function is found in one of two ways: it's either
@@ -46,20 +50,20 @@ export function resolveBranches(state: StateTypes.UsableState,
  * we've already used the user input to do the state transition, so the inputData
  * argument to this function should be undefined.
  *
- * @param  {StateTypes.UsableState} state The state to render, or to use
+ * @param  {UsableState} state The state to render, or to use
  *   to find the one to render.
  * @param {express.Request} req The express request
  * @param {staticFilesMountPath} string The url prefix for static files (where
  *   express.static is mounted).
  * @param {urlFor} furl A function to generate fingerprinted uris for static files.
- * @param {CallDataTwiml | undefined} inputData Data we should pass to the first
+ * @param {CallDataTwiml|undefined} inputData Data we should pass to the first
  *   state that we encounter on our way to rendering the final state. Note: if
  *   the state passed in as `state` wasn't requested directly (see above comment),
  *   then the user input will have already been used to transition out, and
  *   inputData should be undefined.
- * @return {TwimlResponse} The rendered next state.
+ * @return {TwimlResponse|string} The rendered next state.
  */
-export function renderState(state: StateTypes.UsableState, req: express.Request,
+export function renderState(state: UsableState, req: express.Request,
   staticFilesMountPath: string, furl: furl, inputData: CallDataTwiml | undefined) {
 
   // A utility function to help our states generate urls.
@@ -69,7 +73,7 @@ export function renderState(state: StateTypes.UsableState, req: express.Request,
   // to a renderable state.
   const renderableStatePromise = resolveBranches(state, inputData);
 
-  // Now that we have our renderable state, we need to render it.
+
   // Below, if our stateToRender was arrived at through a branch, then the
   // inputData was already used by resolveBranches above as input to that branch,
   // so we don't want to use it again in backgroundTrigger/twimlFor. So, we
@@ -77,16 +81,17 @@ export function renderState(state: StateTypes.UsableState, req: express.Request,
   // we started with* is renderable. If so, then, when we must be rendering it
   // directly without having passed through any branches, so we use the inputData.
   // Otherwise, we scrap it.
-  return renderableStatePromise.then(stateToRender => {
-    const inputToUse = StateTypes.isRenderableState(state) ? inputData : undefined;
+  const inputToRenderWith = isRenderableState(state) ? inputData : undefined;
 
-    if (StateTypes.isAsynchronousState(stateToRender)) {
+  // Now that we have our renderable state, we need to render it.
+  return renderableStatePromise.then(stateToRender => {
+    if (isAsynchronousState(stateToRender)) {
       logger.info("Began asynchronous processing for " + stateToRender.name);
-      stateToRender.backgroundTrigger(urlForBound, inputToUse);
+      stateToRender.backgroundTrigger(urlForBound, inputToRenderWith);
     }
 
     logger.info("Produced twiml for for " + stateToRender.name);
-    return stateToRender.twimlFor(urlForBound, inputToUse);
+    return stateToRender.twimlFor(urlForBound, inputToRenderWith);
   }, (e: Error) => {
     logger.error(`Error while walking the branches.`, e.message);
     throw e;
