@@ -1,21 +1,22 @@
 /// <reference types="express" />
 import * as StateTypes from "./state";
-import { Express } from "express";
-import "./lib/twilioAugments";
+import { Express, Handler } from "express";
+import "./twilioAugments";
 export declare type config = {
-    express: any;
+    express?: any;
     twilio: {
         authToken: string;
-        validate: boolean;
+        validate?: boolean;
     };
-    staticFiles: {
+    staticFiles?: {
         path: string;
         mountPath?: string;
         holdMusic?: {
             path: string;
             loopCount?: number;
-            endpoint: string;
+            endpoint?: string;
         };
+        middleware?: Handler;
     };
 };
 export default function (states: StateTypes.UsableState[], config: config): Express;

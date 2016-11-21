@@ -1,7 +1,7 @@
 "use strict";
 const chai = require("chai");
-const sut = require("../../../lib/state");
-const states = require("../../fixtures/states");
+const sut = require("../../lib/state");
+const states = require("../fixtures/states");
 const { expect } = chai;
 describe("state types", () => {
     describe("isRoutableState", () => {

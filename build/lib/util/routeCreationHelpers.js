@@ -1,10 +1,10 @@
 "use strict";
-const StateTypes = require("../state");
 const logger_1 = require("../logger");
 require("../twilioAugments");
 const url = require("url");
+const state_1 = require("../state");
 function resolveBranches(state, inputData) {
-    if (StateTypes.isBranchingState(state) && !StateTypes.isRenderableState(state)) {
+    if (state_1.isBranchingState(state) && !state_1.isRenderableState(state)) {
         return Promise.resolve(state.transitionOut(inputData)).then(nextState => {
             return resolveBranches(nextState);
         });
@@ -12,24 +12,24 @@ function resolveBranches(state, inputData) {
     return Promise.resolve(state);
 }
 exports.resolveBranches = resolveBranches;
-function renderState(state, req, furl, inputData) {
-    const urlForBound = urlFor(req.protocol, req.get('Host'), furl);
+function renderState(state, req, staticFilesMountPath, furl, inputData) {
+    const urlForBound = urlFor(req.protocol, req.get('Host'), staticFilesMountPath, furl);
     const renderableStatePromise = resolveBranches(state, inputData);
+    const inputToRenderWith = state_1.isRenderableState(state) ? inputData : undefined;
     return renderableStatePromise.then(stateToRender => {
-        const inputToUse = StateTypes.isRenderableState(state) ? inputData : undefined;
-        if (StateTypes.isAsynchronousState(stateToRender)) {
+        if (state_1.isAsynchronousState(stateToRender)) {
             logger_1.default.info("Began asynchronous processing for " + stateToRender.name);
-            stateToRender.backgroundTrigger(urlForBound, inputToUse);
+            stateToRender.backgroundTrigger(urlForBound, inputToRenderWith);
         }
         logger_1.default.info("Produced twiml for for " + stateToRender.name);
-        return stateToRender.twimlFor(urlForBound, inputToUse);
+        return stateToRender.twimlFor(urlForBound, inputToRenderWith);
     }, (e) => {
         logger_1.default.error(`Error while walking the branches.`, e.message);
         throw e;
     });
 }
 exports.renderState = renderState;
-function urlFor(protocol, host, furl) {
+function urlFor(protocol, host, mountPath, furl) {
     return (path, { query, absolute = false, fingerprint } = {}) => {
         if (fingerprint && query) {
             throw new Error("Can't combine fingerprinting with query parameters.");
@@ -38,7 +38,10 @@ function urlFor(protocol, host, furl) {
             fingerprint = !query;
         }
         if (fingerprint) {
-            let fingerprintedRelativeUri = furl(path);
+            let mountPathWithTrailingSlash = mountPath.replace(/\/$/, "") + "/";
+            let fingerprintedRelativeUri = path.startsWith(mountPathWithTrailingSlash) ?
+                mountPath + furl(path.substr(mountPath.length)) :
+                furl(path);
             if (absolute) {
                 const relativeUriParts = url.parse(fingerprintedRelativeUri);
                 return url.format({
