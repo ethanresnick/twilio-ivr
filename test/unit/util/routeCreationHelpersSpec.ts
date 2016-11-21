@@ -1,13 +1,13 @@
+import sinon = require("sinon");
+import sinonChai = require("sinon-chai");
 import { expect, use as chaiUse } from "chai";
-import chaiAsPromised = require("chai-as-promised");
-import * as td from "testdouble";
 import { CallDataTwiml } from "twilio";
 import "../../../lib/twilioAugments";
 import * as sut from "../../../lib/util/routeCreationHelpers";
 import * as State from "../../../lib/state";
 import * as states from "../../fixtures/states";
 
-chaiUse(chaiAsPromised);
+chaiUse(sinonChai);
 
 describe("route creation utilities", () => {
   describe("resolveBranches", () => {
@@ -31,43 +31,47 @@ describe("route creation utilities", () => {
     });
 
     describe("handling branching, non-renderable states", () => {
-      let g: any, h: any, i: any;
+      let g = {
+        name: "g",
+        processTransitionUri: "/whatevs",
+        twimlFor: () => "",
+        transitionOut: (<sinon.SinonSpy>((input) => Promise.resolve(this)))
+      };
+
+      let h = {
+        name: "h",
+        transitionOut: (<sinon.SinonSpy>((input) => Promise.resolve(g)))
+      };
+
+      let i = {
+        name: "i",
+        transitionOut: (<sinon.SinonSpy>((input) => Promise.resolve(h))),
+      };
 
       beforeEach(function() {
-        g = td.object(<State.NormalState>{
-          name: "g",
-          processTransitionUri: "/whatevs",
-          twimlFor: () => "",
-          transitionOut: (input) => Promise.resolve(this)
-        });
-
-        h = td.object(<State.BranchingState>{
-          name: "h",
-          transitionOut: (input) => Promise.resolve(this)
-        });
-
-        i = td.object(<State.BranchingState>{
-          name: "i",
-          transitionOut: (input) => Promise.resolve(this),
-        });
-
-        td.when(i.transitionOut(td.matchers.anything()))
-          .thenResolve(h);
-
-        td.when(h.transitionOut(td.matchers.anything()))
-          .thenResolve(g);
+        [g, h, i].forEach(it => sinon.spy(it, "transitionOut"));
       });
+
+      afterEach(() => {
+        [g, h, i].forEach(it => it.transitionOut.restore());
+      })
 
       it("should pass any input data to the first non-renderable state, but not subsequent ones", () => {
         return sut.resolveBranches(i, <CallDataTwiml>{}).then(state => {
-          td.verify(i.transitionOut({}));
-          td.verify(h.transitionOut(undefined));
+          expect(i.transitionOut).to.have.been.calledWithExactly({});
+          expect(h.transitionOut).to.have.been.calledWithExactly(undefined);
+        });
+      });
+
+      it("should finally return a promise for the first renderable state", () => {
+        return sut.resolveBranches(i, <CallDataTwiml>{}).then(state => {
+          expect(state.name).to.equal("g");
         });
       });
 
       it("should not call transition out on the renderable state, once found", () => {
         return sut.resolveBranches(i, <CallDataTwiml>{}).then(state => {
-          td.verify(g.transitionOut(), {times: 0, ignoreExtraArgs: true});
+          expect(g.transitionOut).to.not.have.been.called;
         });
       });
     });
