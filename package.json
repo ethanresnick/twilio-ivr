@@ -17,7 +17,7 @@
     "build:lintfree": "npm run clean && echo Using TypeScript && tsc --version && tsc --pretty",
     "test": "export NODE_ENV=testing; mocha --compilers ts:ts-node/register --recursive test/**/*Spec.ts test/**/**/*Spec.ts",
     "cover": "NODE_ENV=test nyc npm t",
-    "cover:ci": "npm run cover && cat ./coverage/lcov.info | coveralls && rm -rf ./coverage",
+    "cover:ci": "npm run cover && nyc report --reporter=text-lcov | coveralls",
     "watch": "npm run build -- --watch",
     "watch:lintfree": "npm run build:lintfree -- --watch",
     "watch:test": "npm run test -- --watch"
