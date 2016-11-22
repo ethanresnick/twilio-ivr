@@ -9,7 +9,7 @@
     ""
   ],
   "main": "build/lib/index.js",
-  "typings": "build/lib/index.d.ts",
+  "typings": "lib/index.d.ts",
   "scripts": {
     "clean": "rimraf build",
     "lint": "tslint --type-check --project tsconfig.json --format verbose 'src/**/*.ts'",
@@ -31,7 +31,8 @@
       "node_modules",
       "test",
       "config",
-      "build"
+      "build",
+      "lib/index.d.ts"
     ],
     "extension": [
       ".ts"
@@ -46,6 +47,8 @@
     "all": true
   },
   "dependencies": {
+    "@types/express": "^4.0.34",
+    "@types/twilio": "0.0.6",
     "body-parser": "^1.15.2",
     "debug": "^2.2.0",
     "express": "^4.14.0",
