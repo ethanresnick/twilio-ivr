@@ -1,6 +1,5 @@
 import logger from "../logger";
 import * as express from "express";
-import * as Immutable from "immutable";
 import { CallDataTwiml, TwimlResponse } from "twilio";
 import "../twilioAugments";
 import url = require("url");
