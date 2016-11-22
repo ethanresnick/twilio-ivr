@@ -31,7 +31,7 @@ let states: any = {
     uri: "/routable-normal",
     processTransitionUri: "/process-renderable-entry",
     twimlFor(urlFor: urlFor, input?: twilio.CallDataTwiml) {
-      return "input to routableNormal was: " + String(input);
+      return "input to routableNormal was: " + JSON.stringify(input);
     },
     transitionOut(input?: twilio.CallDataTwiml) {
       return Promise.resolve(states.nonRoutableNormal);
@@ -53,7 +53,7 @@ let states: any = {
     twimlFor(urlFor: urlFor, input?: twilio.CallDataTwiml) {
       return "Sorry, no one home. Bye.";
     },
-    backgroundTrigger() { return "we'll put a testdouble here."; }
+    backgroundTrigger() { return "do some effect..."; }
   },
 
   nonRoutableBranching: <BranchingState>{
@@ -67,7 +67,7 @@ let states: any = {
     name: "INNER_RENDER",
     processTransitionUri: "/process-inner-renderable",
     twimlFor(urlFor: urlFor, input?: twilio.CallDataTwiml) {
-      return "input to nonRoutableNormal was: " + String(input);
+      return "input to nonRoutableNormal was: " + JSON.stringify(input);
     },
     transitionOut(input?: twilio.CallDataTwiml) {
       return Promise.resolve(states.routableEnd);
@@ -80,39 +80,147 @@ let app = lib(objectValues<UsableState>(states), appConfig);
 let agent = request(app);
 
 describe("state routing & rendering", () => {
-  let transitionOutSpiedOn = [
-    states.routableBranching,
-    states.nonRoutableBranching
-  ];
-
-  beforeEach(() => {
-    transitionOutSpiedOn.forEach(it => sinon.spy(it, "transitionOut"));
-  });
-
-  afterEach(() => {
-    transitionOutSpiedOn.forEach(it => it.transitionOut.restore());
-  });
-
   describe("routable states", () => {
     describe("branching (non-renderable) routable states", () => {
+      let spiedOn = [
+        states.routableBranching,
+        states.routableEnd,
+        states.nonRoutableBranching,
+        states.nonRoutableNormal
+      ];
+
+      let branchingRoutableRequestWithZip = agent
+        .post("/routable-branching")
+        .type("form")
+        .send({CallerZip: "00000"});
+
+      before(() => {
+        spyOn(spiedOn)
+      });
+
+      after(() => {
+        unSpyOn(spiedOn);
+      });
+
       it("should render the first renderable state", () => {
-        return agent
-         .post("/routable-branching")
-         .type("form")
-         .send({CallerZip: "00000"})
-         .expect("input to nonRoutableNormal was: undefined");
+        return branchingRoutableRequestWithZip
+          .expect("input to nonRoutableNormal was: undefined");
       });
 
       it("should pass input to the first transitionOut, but not subsequent ones", () => {
-        return agent
-         .post("/routable-branching")
-         .type("form")
-         .send({CallerZip: "00000"})
+        return branchingRoutableRequestWithZip
          .then(() => {
-           expect(states.routableBranching.transitionOut).calledWithExactly({CallerZip: "00000"});
-           expect(states.nonRoutableBranching.transitionOut).calledWithExactly(undefined);
+           expect(states.routableBranching.transitionOut)
+             .calledWithExactly({CallerZip: "00000"});
+
+           expect(states.nonRoutableBranching.transitionOut)
+             .calledWithExactly(undefined);
          });
+      });
+
+      it("should not pass input to the ultimate twimlFor", () => {
+        return branchingRoutableRequestWithZip
+         .then(() => {
+           expect(states.nonRoutableNormal.twimlFor)
+             .calledWithExactly(sinon.match.func, undefined);
+         });
+      });
+
+      it("should not matter if the first renderable state is also routable or an end state", () => {
+        let branchingRoutableRequestWithoutZip =
+          agent
+            .post("/routable-branching")
+            .type("form")
+            .send({CallerZip: ""});
+
+        return branchingRoutableRequestWithoutZip
+          .expect("Sorry, no one home. Bye.")
+          .then(() => {
+            expect(states.routableBranching.transitionOut)
+              .calledWithExactly({CallerZip: ""});
+
+            expect(states.routableEnd.twimlFor)
+              .calledWithExactly(sinon.match.func, undefined);
+          });
+      });
+    });
+
+    describe("renderable states", () => {
+      let spiedOn = [
+        states.routableNormal, states.routableAsync
+      ];
+
+      before(() => {
+        spyOn(spiedOn);
+      });
+
+      after(() => {
+        unSpyOn(spiedOn);
+      });
+
+      it("should render state and pass the post data to twimlFor", () => {
+        let dummyData = {To: "+18005555555"};
+        return agent
+          .post("/routable-normal")
+          .type("form")
+          .send(dummyData)
+          .expect('input to routableNormal was: {"To":"+18005555555"}');
+      });
+
+      describe("asynchronous states", () => {
+        let asyncRoutableRequest: request.Test;
+
+        before(() => {
+          asyncRoutableRequest = agent
+            .post("/routable-async")
+            .type("form")
+            .send({"Test": true});
+        });
+
+        it("should call backgroundTrigger just before rendering", () => {
+          return asyncRoutableRequest
+            .then(() => {
+              expect(states.routableAsync.backgroundTrigger)
+                .calledBefore(states.routableAsync.twimlFor);
+            });
+        });
+
+        it("should call backgroundTrigger with the POST data", () => {
+          return asyncRoutableRequest
+            .then(() => {
+              expect(states.routableAsync.backgroundTrigger)
+                .calledBefore(states.routableAsync.twimlFor);
+
+              // Below, we quote "true" in recognition of the fact that
+              // all data is converted to strings as part of POSTing it.
+              expect(states.routableAsync.backgroundTrigger)
+                .calledWithExactly(sinon.match.func, {"Test": "true"});
+            });
+        });
       });
     });
   });
+
+  describe("processing input from prior states", () => {
+
+  });
 });
+
+
+function spyOn(toSpyOn: any[]) {
+  let methods = ["transitionOut", "backgroundTrigger", "twimlFor"];
+  toSpyOn.forEach(it => {
+    methods.forEach(method => {
+      if(it[method]) { sinon.spy(it, method); }
+    });
+  });
+}
+
+function unSpyOn(toSpyOn: any[]) {
+  let methods = ["transitionOut", "backgroundTrigger", "twimlFor"];
+  toSpyOn.forEach(it => {
+    methods.forEach(method => {
+      if(it[method]) { it[method].restore(); }
+    });
+  });
+}
