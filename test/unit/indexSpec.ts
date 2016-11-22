@@ -15,11 +15,20 @@ describe("main express app creation function", () => {
     let dummyEtagFn = () => undefined;
     let app = sut([], {
       twilio: {authToken: ""},
-      express: {"case sensitive routing" : true, etag: dummyEtagFn }
+      express: {"case sensitive routing": true, etag: dummyEtagFn}
     });
 
     expect(app.get('case sensitive routing')).to.be.true;
     expect(app.get('etag')).to.equal(dummyEtagFn);
+  });
+
+  it("should error at creation time when given a state with an invalid shape", () => {
+    let statesWithInvalidState = states.normalStates.concat(states.invalidStates[0]);
+    let makeApp = () => {
+      return sut(statesWithInvalidState, {twilio: {authToken: ""}});
+    };
+
+    expect(makeApp).to.throw(/Invalid state/);
   });
 });
 
