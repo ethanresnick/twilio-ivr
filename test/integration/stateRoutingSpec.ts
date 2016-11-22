@@ -51,7 +51,7 @@ let states: any = {
     name: "CALL_RECEIVED_ASYNC",
     uri: "/routable-async",
     twimlFor(urlFor: urlFor, input?: twilio.CallDataTwiml) {
-      return "Sorry, no one home. Bye.";
+      return "We're doing something...";
     },
     backgroundTrigger() { return "do some effect..."; }
   },
@@ -63,6 +63,13 @@ let states: any = {
     }))
   },
 
+  nonRoutableBranching2: <BranchingState>{
+    name: "INNER_BRANCH_2",
+    transitionOut: (<sinon.SinonSpy>((input?: twilio.CallDataTwiml) => {
+      return Promise.resolve(states.routableAsync);
+    }))
+  },
+
   nonRoutableNormal: <NormalState>{
     name: "INNER_RENDER",
     processTransitionUri: "/process-inner-renderable",
@@ -70,14 +77,14 @@ let states: any = {
       return "input to nonRoutableNormal was: " + JSON.stringify(input);
     },
     transitionOut(input?: twilio.CallDataTwiml) {
-      return Promise.resolve(states.routableEnd);
+      return Promise.resolve(states.nonRoutableBranching2);
     }
   }
 }
 
 let appConfig = { twilio: { authToken: "", validate: false } };
 let app = lib(objectValues<UsableState>(states), appConfig);
-let agent = request(app);
+let requestApp = request(app);
 
 describe("state routing & rendering", () => {
   describe("routable states", () => {
@@ -89,51 +96,52 @@ describe("state routing & rendering", () => {
         states.nonRoutableNormal
       ];
 
-      let branchingRoutableRequestWithZip = agent
-        .post("/routable-branching")
-        .type("form")
-        .send({CallerZip: "00000"});
-
-      before(() => {
+      beforeEach(() => {
         spyOn(spiedOn)
       });
 
-      after(() => {
+      afterEach(() => {
         unSpyOn(spiedOn);
       });
 
       it("should render the first renderable state", () => {
-        return branchingRoutableRequestWithZip
+        return requestApp
+          .post("/routable-branching")
+          .type("form")
+          .send({CallerZip: "00000"})
           .expect("input to nonRoutableNormal was: undefined");
       });
 
       it("should pass input to the first transitionOut, but not subsequent ones", () => {
-        return branchingRoutableRequestWithZip
-         .then(() => {
-           expect(states.routableBranching.transitionOut)
-             .calledWithExactly({CallerZip: "00000"});
+        return requestApp
+          .post("/routable-branching")
+          .type("form")
+          .send({CallerZip: "00000"})
+          .then(() => {
+            expect(states.routableBranching.transitionOut)
+              .calledWithExactly({CallerZip: "00000"});
 
-           expect(states.nonRoutableBranching.transitionOut)
-             .calledWithExactly(undefined);
-         });
+            expect(states.nonRoutableBranching.transitionOut)
+              .calledWithExactly(undefined);
+          });
       });
 
       it("should not pass input to the ultimate twimlFor", () => {
-        return branchingRoutableRequestWithZip
-         .then(() => {
-           expect(states.nonRoutableNormal.twimlFor)
-             .calledWithExactly(sinon.match.func, undefined);
-         });
+        return requestApp
+          .post("/routable-branching")
+          .type("form")
+          .send({CallerZip: "00000"})
+          .then(() => {
+            expect(states.nonRoutableNormal.twimlFor)
+              .calledWithExactly(sinon.match.func, undefined);
+          });
       });
 
       it("should not matter if the first renderable state is also routable or an end state", () => {
-        let branchingRoutableRequestWithoutZip =
-          agent
-            .post("/routable-branching")
-            .type("form")
-            .send({CallerZip: ""});
-
-        return branchingRoutableRequestWithoutZip
+        return requestApp
+          .post("/routable-branching")
+          .type("form")
+          .send({CallerZip: ""})
           .expect("Sorry, no one home. Bye.")
           .then(() => {
             expect(states.routableBranching.transitionOut)
@@ -160,7 +168,7 @@ describe("state routing & rendering", () => {
 
       it("should render state and pass the post data to twimlFor", () => {
         let dummyData = {To: "+18005555555"};
-        return agent
+        return requestApp
           .post("/routable-normal")
           .type("form")
           .send(dummyData)
@@ -171,7 +179,7 @@ describe("state routing & rendering", () => {
         let asyncRoutableRequest: request.Test;
 
         before(() => {
-          asyncRoutableRequest = agent
+          asyncRoutableRequest = requestApp
             .post("/routable-async")
             .type("form")
             .send({"Test": true});
@@ -202,10 +210,77 @@ describe("state routing & rendering", () => {
   });
 
   describe("processing input from prior states", () => {
+      let spiedOn = [
+        states.routableNormal,
+        states.nonRoutableNormal,
+        states.nonRoutableBranching2,
+        states.routableAsync
+      ];
 
+      let dummyData = {Dummy: "Data"};
+
+      beforeEach(() => {
+        spyOn(spiedOn)
+      });
+
+      afterEach(() => {
+        unSpyOn(spiedOn);
+      });
+
+    // try processTransitionOut uri on the routable and nonRoutable normal states.
+    it("should pass user input to the state being transitioned out of", () => {
+      return requestApp
+        .post(states.routableNormal.processTransitionUri)
+        .type("form")
+        .send(dummyData)
+        .then(() => {
+          expect(states.routableNormal.transitionOut)
+            .calledWithExactly(dummyData);
+        });
+    });
+
+    it("should find the next renderable state, branching without passing along input", () => {
+      return requestApp
+        .post(states.nonRoutableNormal.processTransitionUri)
+        .type("form")
+        .send(dummyData)
+        .then(() => {
+          expect(states.nonRoutableBranching2.transitionOut)
+            .calledWithExactly(undefined);
+        });
+    });
+
+    it("should not call transitionOut if the next state's already renderable", () => {
+      return requestApp
+        .post(states.routableNormal.processTransitionUri)
+        .type("form")
+        .send(dummyData)
+        .then(() => {
+          expect(states.nonRoutableNormal.transitionOut).to.not.have.been.called;
+        });
+    });
+
+    it("should render the next state, with no input provided, calling bgTrigger if relevant", () => {
+      return Promise.all([
+        requestApp
+          .post(states.routableNormal.processTransitionUri)
+          .type("form")
+          .send(dummyData)
+          .expect("input to nonRoutableNormal was: undefined"),
+
+        requestApp
+          .post(states.nonRoutableNormal.processTransitionUri)
+          .type("form")
+          .send(dummyData)
+          .expect("We're doing something...")
+          .then(() => {
+            expect(states.routableAsync.twimlFor)
+              .calledWithExactly(sinon.match.func, undefined);
+          })
+      ]);
+    });
   });
 });
-
 
 function spyOn(toSpyOn: any[]) {
   let methods = ["transitionOut", "backgroundTrigger", "twimlFor"];
