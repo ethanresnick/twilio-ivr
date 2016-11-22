@@ -111,7 +111,7 @@ export default function(states: StateTypes.UsableState[], config: config): Expre
       // a normal state, but, conceptually, it's not an end state either;
       // and besides, it doesn't fit in with the routing for states because
       // we want twilio to make a cacheable, un-parameterized GET request for
-      // it. But it's also not just a static file, because it needs to reflect
+      // it). But it's also not just a static file, because it needs to reflect
       // the host name differences of dev/staging and production servers,
       // because twilio won't accept a relative URI...which is stupid, and it
       // has dynamic content (to match the hold music's fingerprint).
@@ -140,9 +140,6 @@ export default function(states: StateTypes.UsableState[], config: config): Expre
   // And we always set that up as a POST for simplicity (the whole point of
   // these states, of course, is that the next transition is dynamic; using a
   // GET with query params could be hacked in, but it's too complicated).
-  //
-  // Note: when ES6 modules become a thing, we'll need to iterate over the
-  // exports differently.
   states.forEach(thisState => {
     if (!StateTypes.isValidState(thisState)) {
       const stateAsString = (thisState && thisState.name) || String(thisState);
