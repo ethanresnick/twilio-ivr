@@ -2,6 +2,7 @@
 const chai = require("chai");
 const express = require("express");
 const index_1 = require("../../lib/index");
+const states = require("../fixtures/states");
 const { expect } = chai;
 describe("main express app creation function", () => {
     it("should return an express app", () => {
@@ -16,6 +17,13 @@ describe("main express app creation function", () => {
         });
         expect(app.get('case sensitive routing')).to.be.true;
         expect(app.get('etag')).to.equal(dummyEtagFn);
+    });
+    it("should error at creation time when given a state with an invalid shape", () => {
+        let statesWithInvalidState = states.normalStates.concat(states.invalidStates[0]);
+        let makeApp = () => {
+            return index_1.default(statesWithInvalidState, { twilio: { authToken: "" } });
+        };
+        expect(makeApp).to.throw(/Invalid state/);
     });
 });
 function isExpressApp(v) {
