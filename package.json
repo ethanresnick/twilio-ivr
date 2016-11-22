@@ -17,6 +17,7 @@
     "build:lintfree": "npm run clean && echo Using TypeScript && tsc --version && tsc --pretty",
     "test": "export NODE_ENV=testing; mocha --compilers ts:ts-node/register --recursive test/**/*Spec.ts test/**/**/*Spec.ts",
     "cover": "NODE_ENV=test nyc npm t",
+    "cover:ci": "npm run cover && cat ./coverage/lcov.info | coveralls && rm -rf ./coverage",
     "watch": "npm run build -- --watch",
     "watch:lintfree": "npm run build:lintfree -- --watch",
     "watch:test": "npm run test -- --watch"
@@ -70,6 +71,7 @@
     "@types/twilio": "ethanresnick/DefinitelyTyped#working-twilio-installable",
     "chai": "^3.5.0",
     "chai-as-promised": "^6.0.0",
+    "coveralls": "^2.11.15",
     "mocha": "^3.0.1",
     "nyc": "^9.0.1",
     "rimraf": "^2.5.4",
