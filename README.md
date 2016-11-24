@@ -27,8 +27,8 @@ app.listen(3000);
 
 The config object allows the following keys:
 
-* `twilio` (*required*): holds an object containing twilio settings:
-  * `authToken` (*required*): your twilio auth token.
+* `twilio` (**required**): an object containing twilio settings.
+  * `authToken` (**required**): your twilio auth token.
   * `validate` (optional, default: `true`): a boolean indicating whether the express app should reject incoming requests that aren't coming from twilio. For security, it's a good idea to set this to true in production. However, when making requests to your own app during development or testing, you’ll need to set it to false. (Note: the app verifies that the request is coming from twilio by checking if it’s signed with your auth token, which only you and twilio are supposed to know.)
 
 * `staticFiles` (optional): an object configuring if/how the returned express app should serve static files to twilio. Serving audio files in a cache friendly way is a common need in IVR systems and this libray [can help with that](#static-files-and-urlfor).
