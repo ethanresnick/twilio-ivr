@@ -12,7 +12,6 @@ import path = require("path");
 import { webhook as twilioWebhook, TwimlResponse } from "twilio";
 import "./twilioAugments";
 
-// TODO: document
 export type config = {
   twilio: {
     authToken: string;
@@ -23,12 +22,8 @@ export type config = {
     mountPath?: string;
     holdMusic?: {
       path: string;
-      twimlFor?: (urlFor: StateTypes.urlFor) => TwimlResponse | string;
-      // TODO document: hold music endpoint cannot start with
-      // the static files mount path or urlFor will get confused.
-      // More generally, no urls other than the fingerprinted files can
-      // live under the mount point, or urlfor will get confused.
       endpoint?: string;
+      twimlFor?: (urlFor: StateTypes.urlFor) => TwimlResponse | string;
     },
     middleware?: Handler;
   };
