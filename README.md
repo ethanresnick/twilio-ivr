@@ -1,4 +1,4 @@
-# twilio-ivr
+# twilio-ivr [![Coverage Status](https://coveralls.io/repos/github/ethanresnick/twilio-ivr/badge.svg?branch=master&t=cLE0la)](https://coveralls.io/github/ethanresnick/twilio-ivr?branch=master)
 
 This library makes it easy to build a phone tree/[IVR](https://en.wikipedia.org/wiki/Interactive_voice_response) system using twilio.
 
