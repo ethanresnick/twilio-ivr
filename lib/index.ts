@@ -1,5 +1,5 @@
 import * as StateTypes from "./state";
-import { renderState } from "./util/routeCreationHelpers";
+import { renderState, urlFor as urlForUnbound } from "./util/routeCreationHelpers";
 import { entries as objectEntries } from "./util/objectValuesEntries";
 
 import { Express, Handler, Request, Response, NextFunction } from "express";
@@ -23,7 +23,7 @@ export type config = {
     mountPath?: string;
     holdMusic?: {
       path: string;
-      loopCount?: number;
+      twimlFor?: (urlFor: StateTypes.urlFor) => TwimlResponse | string;
       // TODO document: hold music endpoint cannot start with
       // the static files mount path or urlFor will get confused.
       // More generally, no urls other than the fingerprinted files can
@@ -81,8 +81,12 @@ export default function(states: StateTypes.UsableState[], config: config): Expre
     if (config.staticFiles.holdMusic) {
       const holdMusicPath = config.staticFiles.holdMusic.path;
       const holdMusicCacheKey = "/" + holdMusicPath;
-      const holdMusicLoopCount = config.staticFiles.holdMusic.loopCount || 500;
       const holdMusicEndpoint = config.staticFiles.holdMusic.endpoint || "/hold-music";
+      const holdMusicTwimlFor = config.staticFiles.holdMusic.twimlFor ||
+        ((urlFor: StateTypes.urlFor) =>
+          (new TwimlResponse()).play({ loop: 1000 }, urlFor(
+            path.join(staticFilesMountPath, holdMusicPath), { absolute: true }
+          )));
 
       if(!holdMusicPath) {
         throw new Error("You must provide a path to your hold music file.");
@@ -114,15 +118,12 @@ export default function(states: StateTypes.UsableState[], config: config): Expre
       // because twilio won't accept a relative URI...which is stupid, and it
       // has dynamic content (to match the hold music's fingerprint).
       app.get(holdMusicEndpoint, (req, res, next) => {
-        // holdUrl has to be an absolute URL
-        const holdUrl = url.format({
-          protocol: req.protocol,
-          host: req.get('Host'),
-          pathname: path.join(staticFilesMountPath, holdMusicPath),
-          query: {v: req.query.v }
-        });
+        let urlFor = urlForUnbound(
+          req.protocol, req.get('Host'), staticFilesMountPath, app.locals.furl
+        );
+
         res.set('Cache-Control', 'public, max-age=31536000');
-        res.send((new TwimlResponse()).play({ loop: holdMusicLoopCount }, holdUrl));
+        res.send(holdMusicTwimlFor(urlFor));
       });
     }
   }

@@ -64,15 +64,15 @@ describe("the hold music endpoint", () => {
   });
 
   describe("contents", () => {
-    it("should use mount path, if any, and version parameter in mp3's uri", () => {
+    it("should use mount path, if any, and the mp3's fingerprint in its uri", () => {
       return Promise.all([
         agent
-          .get("/hold-music?v=122")
-          .expect(/http\:\/\/[\d\.\:]+\/theCalling\.mp3\?v=122/),
+          .get(`/hold-music?v=${hashOfHoldMusic}`)
+          .expect(new RegExp(`http\\://[\\d\\.\\:]+/theCalling\\.mp3\\?v=${hashOfHoldMusic}`)),
 
         mountPathAgent
-          .get("/hold-music?v=122")
-          .expect(/http\:\/\/[\d\.\:]+\/static\/theCalling\.mp3\?v=122/)
+          .get(`/hold-music?v=${hashOfHoldMusic}`)
+          .expect(new RegExp(`http\\://[\\d\\.\\:]+/static/theCalling\\.mp3\\?v=${hashOfHoldMusic}`))
       ]);
     })
   });

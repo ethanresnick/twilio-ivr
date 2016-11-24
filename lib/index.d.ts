@@ -15,8 +15,8 @@ export type config = {
     mountPath?: string;
     holdMusic?: {
       path: string;
-      loopCount?: number;
       endpoint?: string;
+      twimlFor?: (urlFor: urlFor) => TwimlResponse | string;
     };
     middleware?: Handler;
   };
