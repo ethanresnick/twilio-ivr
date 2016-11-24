@@ -2,30 +2,68 @@
 
 This library makes it easy to build a phone tree/[IVR](https://en.wikipedia.org/wiki/Interactive_voice_response) system using twilio.
 
-# States
+# Usage
+
+The library exports one primary function, which takes all the [states](#states) in your call system and returns an express [app](http://expressjs.com/en/4x/api.html#app) that can handle all the HTTP requests needed to interact with twilio to make your call system work.
+
+```js
+const twilioIvr = require("twilio-ivr").default;
+
+// Define an array of your states. See below for how states work.
+const states = [];
+
+const config = {
+  twilio: { authToken: "...." }
+  // ...
+};
+
+const app = twilioIvr(states, config);
+
+// Start up your server to take requests from twilio.
+app.listen(3000);
+```
+
+## Config Options
+
+The config object allows the following keys:
+
+* `twilio` (*required*): holds an object containing twilio settings:
+  * `authToken` (*required*): your twilio auth token.
+  * `validate` (optional, default: `true`): a boolean indicating whether the express app should reject incoming requests that aren't coming from twilio. For security, it's a good idea to set this to true in production. However, when making requests to your own app during development or testing, you’ll need to set it to false. (Note: the app verifies that the request is coming from twilio by checking if it’s signed with your auth token, which only you and twilio are supposed to know.)
+
+* `staticFiles` (optional): an object configuring if/how the returned express app should serve static files to twilio. Serving audio files in a cache friendly way is a common need in IVR systems and this libray [can help with that](#static-files-and-urlfor).
+  * `path` (**required**, if the staticFiles object is present): an *absolute path* to the folder containing your static files.
+  * `mountPath` (optional, empty by default): a path segment that will be used as a prefix in the urls for your static files. For example, if you have a static file called `intro.mp3` and you want it served at `http://yourserver.example.com/static/intro.mp3`, you'd set `mountPath` to `/static`. If this is provided, it should be a string starting with a `/`.
+  * `middleware` (optional): an express middleware that will be registered with the returned app to actually serve the static files. By default, the built in `express.static` is used.
+
+  * `holdMusic` (optional): an object containing keys specifically related to setting up the [hold music endpoint](#hold-music); if not provided, no hold music endpoint will be created.
+    * `path` (**required**, if the holdMusic object is present): the path to your hold music audio file, *relative to the static files path*
+    * `endpoint` (optional, defaults to `/hold-music`): the ([root-relative](https://stackoverflow.com/questions/5559578/having-links-relative-to-root#answer-5559597)) uri to use for the hold music endpoint. This uri must not be under the static files mount path.* I.e., if the mountPath is `/static`, the hold music uri can't start with `/static/`.
+    * `twimlFor(urlFor)` (optional): a function you can provide to override the built-in logic for generating the hold music endpoint's Twiml.
+
+## States
+
 The concept of a "state", in the [finite state machine](https://en.wikipedia.org/wiki/Finite-state_machine) sense of the term, is at the heart of this library. It allows you to describe your call system as a set of states, each of which can transition to other states depending on input from the caller (or on information from outside the call, like the time of day etc).
 
-The library exports one primary function, which takes all of your states and returns an express [app](http://expressjs.com/en/4x/api.html#app) that can handle all HTTP requests needed to interact with twilio to make your call work.
-
-## Anatomy of a State
+### Anatomy of a State
 
 A state is just an object (a [POJO](https://www.quora.com/What-is-a-plainObject-in-JavaScript/answer/Alex-Giannakakos) is fine). This library defines some properties/methods that a state can have, which affect how it's handled (e.g. how the library will pass it input). The allowed properties are:
 
 - `name` (**required**): a string that uniquely identifies the state (among all your states).
 
-- `twimlFor(urlFor, inputData?)` (**optional**): a function that returns the [Twiml](https://www.twilio.com/docs/api/twiml) used to "render" the state to the caller. For example, the caller might be on a state that asks them to choose from a list of options. To present those options to the caller, your application has to provide some Twiml (probably using [`<Say>`](https://www.twilio.com/docs/api/twiml/say) or [`<Play>`](https://www.twilio.com/docs/api/twiml/play)) to read out the options. This function would be responsible for returning that Twiml. States with a `twimlFor` property are called **renderable states**.
+- `twimlFor(urlFor, inputData?)` (optional): a function that returns the [Twiml](https://www.twilio.com/docs/api/twiml) used to "render" the state to the caller. For example, the caller might be on a state that asks them to choose from a list of options. To present those options to the caller, your application has to provide some Twiml (probably using [`<Say>`](https://www.twilio.com/docs/api/twiml/say) or [`<Play>`](https://www.twilio.com/docs/api/twiml/play)) to read out the options. This function would be responsible for returning that Twiml. States with a `twimlFor` property are called **renderable states**.
 
-- `transitionOut(inputData?)` (**optional**): a function that's called to determine the next state. States with a `transitionOut` function are called **branching states**. A state's `transitionOut` function is usually called in response to caller input, or to a new call coming in, and receives that input data. However, it can also be called indirectly; see below. It returns the next state, or a promise for the next state.
+- `transitionOut(inputData?)` (optional): a function that's called to determine the next state. States with a `transitionOut` function are called **branching states**. A state's `transitionOut` function is usually called in response to caller input, or to a new call coming in, and receives that input data. However, it can also be called indirectly; see below. It returns the next state, or a promise for the next state.
 
-- `backgroundTrigger(urlFor, inputData?)` (**optional**): a function called just before the state is rendered (`backgroundTrigger` is only available on renderable states). This function can be used to kick off background operations that should happen as a result of reaching this state. Note: this function does not block rendering the state, so `twimlFor` should not assume that anything `backgroundTrigger` does has been completed at render time. (`backgroundTrigger` may be given the ability to block, or to be used on non-renderable states, in the future.) States with a `backgroundTrigger` function are called **asynchronous states**.
+- `backgroundTrigger(urlFor, inputData?)` (optional): a function called just before the state is rendered (`backgroundTrigger` is only available on renderable states). This function can be used to kick off background operations that should happen as a result of reaching this state. Note: this function does not block rendering the state, so `twimlFor` should not assume that anything `backgroundTrigger` does has been completed at render time. (`backgroundTrigger` may be given the ability to block, or to be used on non-renderable states, in the future.) States with a `backgroundTrigger` function are called **asynchronous states**.
 
-- `uri` (**optional**): most states will *not* have a `uri` property; this property is used primarily on your system's "entry state" (i.e., the state that twilio will use to start a call, likely through the incoming call webhook). However, if there are other states that you need to be able to "jump to" directly (i.e., point twilio to, and have it [continue an existing call from there](https://www.twilio.com/docs/api/rest/change-call-state)) those must also have a `uri`. The `uri` property should hold a relative uri string that will be used by the library to create an express `POST` listener that, when requested, consults the state to figure out how to respond. States with a `uri` property are called **routable states**.
+- `uri` (optional): most states will *not* have a `uri` property; this property is used primarily on your system's "entry state" (i.e., the state that twilio will use to start a call, likely through the incoming call webhook). However, if there are other states that you need to be able to "jump to" directly (i.e., point twilio to, and have it [continue an existing call from there](https://www.twilio.com/docs/api/rest/change-call-state)) those must also have a `uri`. The `uri` property should hold a relative uri string that will be used by the library to create an express `POST` listener that, when requested, consults the state to figure out how to respond. States with a `uri` property are called **routable states**.
 
-- `processTransitionUri` (**optional**): a relative uri where caller input data should be sent; data sent to this uri will be passed to the state's `transitionOut` method to determine the next state. (The `processTransitionUri` only applies states that are branching and renderable.) Like `uri`, the uri given here is turned into an express `POST` listener by the library. A state's `twimlFor()` method should render twiml that instructs twilio to send the relevant user input data to the `processTransitionUri` (see examples below). States with a `processTransitionUri` property, which are also renderable and branching states, are called **normal states** as they tend to be the most common state type.
+- `processTransitionUri` (optional): a relative uri where caller input data should be sent; data sent to this uri will be passed to the state's `transitionOut` method to determine the next state. (The `processTransitionUri` only applies states that are branching and renderable.) Like `uri`, the uri given here is turned into an express `POST` listener by the library. A state's `twimlFor()` method should render twiml that instructs twilio to send the relevant user input data to the `processTransitionUri` (see examples below). States with a `processTransitionUri` property, which are also renderable and branching states, are called **normal states** as they tend to be the most common state type.
 
-- `isEndState` (**optional**): this property, if present, can only have one value: `true`. It's used to mark a state as an **end state** of your call (see below).
+- `isEndState` (optional): this property, if present, can only have one value: `true`. It's used to mark a state as an **end state** of your call (see below).
 
-## Valid States
+### Valid States
 
 As you can see, almost all properties on a state are optional, and many of the properties can be used together to create states with interesting behaviors. However, not all combinations are valid. Below are all the valid combinations, with an example of where you might use each:
 
@@ -149,7 +187,6 @@ var branchingState = {
 The above state isn't routable but, if you wanted this check to happen as the first thing when when a call comes in, you could make it routable (by adding a `uri` member) and use it as the entry state/twilio webhook destination.
 
 ### Asynchronous States (Routable or Not)
-
 Asynchronous states are used when you need to kick something off in the background before rendering the state. Below is an example of an asynchronous state that performs a slow lookup of the weather while the user is told to wait. Then, if the lookup succeeds, it redirects the user to a state that reads the weather; otherwise, it redirects to an error state.
 
 ```js
@@ -175,9 +212,13 @@ var lookupWeatherState = {
 
 The above asynchronous state isn't routable, but, like with the example non-renderable branching state, it would be easy to make it routable if you wanted to use it as the entry state to your call.
 
-# Other Features
-## urlFor
+## Other Features
+
+### Static files and urlFor
 [Coming Soon]
 
-## Call Sessions
+### Hold Music
+[Coming Soon]
+
+### Call Sessions
 [Coming Soon]
