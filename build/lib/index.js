@@ -1,7 +1,6 @@
 "use strict";
 const StateTypes = require("./state");
 const routeCreationHelpers_1 = require("./util/routeCreationHelpers");
-const objectValuesEntries_1 = require("./util/objectValuesEntries");
 const express = require("express");
 const bodyParser = require("body-parser");
 const expiry = require("static-expiry");
@@ -11,7 +10,6 @@ const twilio_1 = require("twilio");
 require("./twilioAugments");
 function default_1(states, config) {
     const app = express();
-    objectValuesEntries_1.entries(config.express || {}).forEach(([key, val]) => app.set(key, val));
     app.use(bodyParser.urlencoded({ extended: false }));
     let { validate = true } = config.twilio;
     app.use(twilio_1.webhook(config.twilio.authToken, { validate: validate }));
@@ -29,8 +27,9 @@ function default_1(states, config) {
         if (config.staticFiles.holdMusic) {
             const holdMusicPath = config.staticFiles.holdMusic.path;
             const holdMusicCacheKey = "/" + holdMusicPath;
-            const holdMusicLoopCount = config.staticFiles.holdMusic.loopCount || 500;
             const holdMusicEndpoint = config.staticFiles.holdMusic.endpoint || "/hold-music";
+            const holdMusicTwimlFor = config.staticFiles.holdMusic.twimlFor ||
+                ((urlFor) => (new twilio_1.TwimlResponse()).play({ loop: 1000 }, urlFor(path.join(staticFilesMountPath, holdMusicPath), { absolute: true })));
             if (!holdMusicPath) {
                 throw new Error("You must provide a path to your hold music file.");
             }
@@ -44,14 +43,9 @@ function default_1(states, config) {
             expiry.assetCache[versionedHoldMusicUrl] =
                 Object.assign({}, expiry.assetCache[versionedHoldMp3Url], { assetUrl: holdMusicEndpoint });
             app.get(holdMusicEndpoint, (req, res, next) => {
-                const holdUrl = url.format({
-                    protocol: req.protocol,
-                    host: req.get('Host'),
-                    pathname: path.join(staticFilesMountPath, holdMusicPath),
-                    query: { v: req.query.v }
-                });
+                let urlFor = routeCreationHelpers_1.urlFor(req.protocol, req.get('Host'), staticFilesMountPath, app.locals.furl);
                 res.set('Cache-Control', 'public, max-age=31536000');
-                res.send((new twilio_1.TwimlResponse()).play({ loop: holdMusicLoopCount }, holdUrl));
+                res.send(holdMusicTwimlFor(urlFor));
             });
         }
     }

@@ -9,15 +9,6 @@ describe("main express app creation function", () => {
         let result = index_1.default([], { twilio: { authToken: "" } });
         expect(isExpressApp(result)).to.be.true;
     });
-    it("should apply the user's express config options to the app", () => {
-        let dummyEtagFn = () => undefined;
-        let app = index_1.default([], {
-            twilio: { authToken: "" },
-            express: { "case sensitive routing": true, etag: dummyEtagFn }
-        });
-        expect(app.get('case sensitive routing')).to.be.true;
-        expect(app.get('etag')).to.equal(dummyEtagFn);
-    });
     it("should error at creation time when given a state with an invalid shape", () => {
         let statesWithInvalidState = states.normalStates.concat(states.invalidStates[0]);
         let makeApp = () => {
