@@ -6,7 +6,6 @@ import { TwimlResponse } from "twilio";
 export default function (states: UsableState[], config: config): Express;
 
 export type config = {
-  express?: any;
   twilio: {
     authToken: string;
     validate?: boolean;

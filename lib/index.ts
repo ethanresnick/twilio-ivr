@@ -14,7 +14,6 @@ import "./twilioAugments";
 
 // TODO: document
 export type config = {
-  express?: any;
   twilio: {
     authToken: string;
     validate?: boolean;
@@ -38,7 +37,6 @@ export type config = {
 export default function(states: StateTypes.UsableState[], config: config): Express {
   // Set up express
   const app = express();
-  objectEntries(config.express || {}).forEach(([key, val]) => app.set(key, val));
 
   // Parse twilio POST payloads, which come as urlencoded strings...
   // TODO: handle pre-parsed bodies
