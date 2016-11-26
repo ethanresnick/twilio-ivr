@@ -51,6 +51,7 @@ export default function(states: StateTypes.UsableState[], config: config): Expre
   // Serve static recordings or twiml files from public,
   // with an auto-invalidated far-future Expires.
   if(config.staticFiles) {
+    let oneYearInSeconds = (60 * 60 * 24 * 365);
     let staticFilesPath = config.staticFiles.path;
     let staticExpiryOpts: expiry.config = {
       location: 'query',
@@ -60,6 +61,8 @@ export default function(states: StateTypes.UsableState[], config: config): Expre
       // safely use caching headers, even in development, so let's do that.
       unconditional: "both",
       conditional: "both",
+      duration: oneYearInSeconds,
+
       // static-expiry is kinda naive about how it generates cache keys.
       // In particular, it just takes the absolute path to the file and
       // strips off the first options.dir.length characters. So, if we provide
@@ -70,7 +73,7 @@ export default function(states: StateTypes.UsableState[], config: config): Expre
     };
 
     let serveStatic = config.staticFiles.middleware ||
-      express.static(staticFilesPath, { maxAge: '2y' });
+      express.static(staticFilesPath, { maxAge: oneYearInSeconds*1000, index: false });
 
     // Register middleware for handling static files.
     // Note: even if staticFilesMountPath is an empty string, this still works

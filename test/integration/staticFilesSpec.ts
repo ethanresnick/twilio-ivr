@@ -11,7 +11,7 @@ const musicPath = path.join(__dirname, "../fixtures/music/");
 const hashOfTammyMp3 = "23241bfb2abddb6f58a1e67e99565ec5";
 
 describe("versioned static files", () => {
-  describe("receiving static files", () => {
+  describe("serving static files", () => {
     // We use this function to check if the res's contents are the same as
     // Tammy.mp3; if they are, we modify res.body to some known value, which
     // we can then assert on. Note: we have to compare the streams in parse(),
@@ -53,8 +53,12 @@ describe("versioned static files", () => {
       let agent = request.agent(app);
 
       return agent
-        .get("/Tammy.mp3")
-        .expect("Cache-Control", "public, max-age=31536000");
+        .get(`/Tammy.mp3?v=${hashOfTammyMp3}`)
+        .expect("Cache-Control", "public, max-age=31536000")
+        .expect((res: request.Response) => {
+          if(!res.header.expires)
+            throw new Error("expires header expected");
+        });
     });
 
     it("should fall through when the file doesn't exist", () => {
