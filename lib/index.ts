@@ -56,6 +56,10 @@ export default function(states: StateTypes.UsableState[], config: config): Expre
       location: 'query',
       loadCache: 'startup',
 
+      // The whole point of fingerprinted urls is that you can always
+      // safely use caching headers, even in development, so let's do that.
+      unconditional: "both",
+      conditional: "both",
       // static-expiry is kinda naive about how it generates cache keys.
       // In particular, it just takes the absolute path to the file and
       // strips off the first options.dir.length characters. So, if we provide
