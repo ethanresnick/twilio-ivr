@@ -52,7 +52,7 @@ export default function(states: StateTypes.UsableState[], config: config): Expre
   // with an auto-invalidated far-future Expires.
   if(config.staticFiles) {
     let staticFilesPath = config.staticFiles.path;
-    let staticExpiryOpts = {
+    let staticExpiryOpts: expiry.config = {
       location: 'query',
       loadCache: 'startup',
 
@@ -83,23 +83,34 @@ export default function(states: StateTypes.UsableState[], config: config): Expre
             path.join(staticFilesMountPath, holdMusicPath), { absolute: true }
           )));
 
+      // We're peeking into the caches that are really
+      // part of the private expiry api, so I document them here.
+      type expiryReal = {
+        urlCache: { [plainUrl: string]: string };
+        assetCache: {
+          [fingerprintedUrl: string]:
+            { assetUrl: string, lastModified: string, etag: string }
+        }
+      }
+      const { urlCache, assetCache } = (<expiryReal>(<any>expiry));
+
       if(!holdMusicPath) {
         throw new Error("You must provide a path to your hold music file.");
       }
-      else if(!expiry.urlCache[holdMusicCacheKey]) {
+      else if(!urlCache[holdMusicCacheKey]) {
         throw new Error("Your hold music file could not be found.");
       }
 
       // Add the hold music route to the static-expiry fingerprint caches, as it
       // should have the same expiration properties as the mp3 file it links to.
       // (It's basically just a wrapper for that file.)
-      const versionedHoldMp3Url = expiry.urlCache[holdMusicCacheKey];
+      const versionedHoldMp3Url = urlCache[holdMusicCacheKey];
       const currMp3Version = url.parse(versionedHoldMp3Url, true).query.v;
       const versionedHoldMusicUrl = `${holdMusicEndpoint}?v=${currMp3Version}`
 
-      expiry.urlCache[holdMusicEndpoint] = versionedHoldMusicUrl;
-      expiry.assetCache[versionedHoldMusicUrl] =
-        Object.assign({}, expiry.assetCache[versionedHoldMp3Url], {assetUrl: holdMusicEndpoint});
+      urlCache[holdMusicEndpoint] = versionedHoldMusicUrl;
+      assetCache[versionedHoldMusicUrl] =
+        Object.assign({}, assetCache[versionedHoldMp3Url], {assetUrl: holdMusicEndpoint});
 
       // Add the route for our hold music, which isn't handled by the generic
       // logic below, because it's a bit of an exception: it's not a state

@@ -53,7 +53,7 @@
     "body-parser": "^1.15.2",
     "debug": "^2.2.0",
     "express": "^4.14.0",
-    "static-expiry": "0.0.11",
+    "static-expiry": "ethanresnick/connect-static-expiry#typescript-typings",
     "twilio": "ethanresnick/twilio-node#patch-1"
   },
   "devDependencies": {
