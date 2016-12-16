@@ -35,7 +35,7 @@ export type UsableState = BranchingState | EndState | NormalState | Asynchronous
 export type State = UsableState | RenderableState | RoutableState;
 
 export interface AbstractState {
-  name: string;
+  name?: string;
 }
 
 export interface RoutableState extends AbstractState {

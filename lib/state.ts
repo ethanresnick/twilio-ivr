@@ -13,7 +13,7 @@ export type State = UsableState | RenderableState | RoutableState;
 export { urlFor };
 
 export interface AbstractState {
-  name: string;
+  name?: string;
 }
 
 export interface RoutableState extends AbstractState {

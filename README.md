@@ -41,8 +41,6 @@ The concept of a "state", in the [finite state machine](https://en.wikipedia.org
 
 A state is just an object (a [POJO](https://www.quora.com/What-is-a-plainObject-in-JavaScript/answer/Alex-Giannakakos) is fine). This library defines some properties/methods that a state can have, which affect how it's handled (e.g. how the library will pass it input). The allowed properties are:
 
-- `name` (**required**): a string that uniquely identifies the state (among all your states).
-
 - `twimlFor(urlFor, inputData?)` (optional): a function that returns the [Twiml](https://www.twilio.com/docs/api/twiml) used to "render" the state to the caller. For example, the caller might be on a state that asks them to choose from a list of options. To present those options to the caller, your application has to provide some Twiml (probably using [`<Say>`](https://www.twilio.com/docs/api/twiml/say) or [`<Play>`](https://www.twilio.com/docs/api/twiml/play)) to read out the options. This function would be responsible for returning that Twiml. States with a `twimlFor` property are called **renderable states**.
 
 - `transitionOut(inputData?)` (optional): a function that's called to determine the next state. States with a `transitionOut` function are called **branching states**. A state's `transitionOut` function is usually called in response to caller input, or to a new call coming in, and receives that input data. However, it can also be called indirectly; see below. It returns the next state, or a promise for the next state.
@@ -54,6 +52,8 @@ A state is just an object (a [POJO](https://www.quora.com/What-is-a-plainObject-
 - `processTransitionUri` (optional): a relative uri where caller input data should be sent; data sent to this uri will be passed to the state's `transitionOut` method to determine the next state. (The `processTransitionUri` only applies states that are branching and renderable.) Like `uri`, the uri given here is turned into an express `POST` listener by the library. A state's `twimlFor()` method should render twiml that instructs twilio to send the relevant user input data to the `processTransitionUri` (see examples below). States with a `processTransitionUri` property, which are also renderable and branching states, are called **normal states** as they tend to be the most common state type.
 
 - `isEndState` (optional): this property, if present, can only have one value: `true`. It's used to mark a state as an **end state** of your call (see below).
+
+- `name` (optional): a string that uniquely identifies the state (among all your states). Will be used in the logs for easier debugging.
 
 ### Valid States
 
