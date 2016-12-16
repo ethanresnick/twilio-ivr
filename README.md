@@ -29,17 +29,9 @@ The config object allows the following keys:
 
 * `twilio` (**required**): an object containing twilio settings.
   * `authToken` (**required**): your twilio auth token.
-  * `validate` (optional, default: `true`): a boolean indicating whether the express app should reject incoming requests that aren't coming from twilio. For security, it's a good idea to set this to true in production. However, when making requests to your own app during development or testing, you’ll need to set it to false. (Note: the app verifies that the request is coming from twilio by checking if it’s signed with your auth token, which only you and twilio are supposed to know.)
+  * `validate` (optional, default: `true`): a boolean indicating whether the express app should reject incoming requests that aren't coming from twilio. For security, it's a good idea to set this to true in production. However, when making requests to your own app during development or testing, it's very convenient to set it to false. (Note: the app verifies that the request is coming from twilio by checking if it’s signed with your auth token, which only you and twilio are supposed to know.)
 
-* `staticFiles` (optional): an object configuring if/how the returned express app should serve static files to twilio. Serving audio files in a cache friendly way is a common need in IVR systems and this libray [can help with that](#static-files-and-urlfor).
-  * `path` (**required**, if the staticFiles object is present): an *absolute path* to the folder containing your static files.
-  * `mountPath` (optional, empty by default): a path segment that will be used as a prefix in the urls for your static files. For example, if you have a static file called `intro.mp3` and you want it served at `http://yourserver.example.com/static/intro.mp3`, you'd set `mountPath` to `/static`. If this is provided, it should be a string starting with a `/`.
-  * `middleware` (optional): an express middleware that will be registered with the returned app to actually serve the static files. By default, the built in `express.static` is used.
-
-  * `holdMusic` (optional): an object containing keys specifically related to setting up the [hold music endpoint](#hold-music); if not provided, no hold music endpoint will be created.
-    * `path` (**required**, if the holdMusic object is present): the path to your hold music audio file, *relative to the static files path*
-    * `endpoint` (optional, defaults to `/hold-music`): the ([root-relative](https://stackoverflow.com/questions/5559578/having-links-relative-to-root#answer-5559597)) uri to use for the hold music endpoint. This uri must not be under the static files mount path.* I.e., if the mountPath is `/static`, the hold music uri can't start with `/static/`.
-    * `twimlFor(urlFor)` (optional): a function you can provide to override the built-in logic for generating the hold music endpoint's Twiml.
+* `staticFiles` (optional): an object configuring if/how the returned express app should serve static files to twilio. Serving audio files in a cache friendly way is a common need in IVR systems and this library can help with that. See the [static files section](#static-files-config) for the keys allowed here.
 
 ## States
 
@@ -75,7 +67,7 @@ var endState = {
   name: "END_STATE",
   isEndState: true,
   twimlFor() {
-    // If you don't want to built raw XML, you can also return a TwimlResponse object
+    // If you don't want to built raw XML, you can also return a TwimlResponse
     // to simplify this. See https://twilio.github.io/twilio-node/
     return `<?xml version="1.0" encoding="UTF-8"?>
       <Response>
@@ -215,7 +207,46 @@ The above asynchronous state isn't routable, but, like with the example non-rend
 ## Other Features
 
 ### Static files and urlFor
-[Coming Soon]
+It's very likely that, at some point, you'll want to play a recording to the caller, which you can do by pointing to an audio file in your Twiml. When twilio requests your audio file, you'll want to ensure that your HTTP response includes headers telling twilio to cache the file; if you don't, twilio will have to download and transcode the audio file every time it's played, and your callers will experience a delay before the audio starts. In addition, if/when you update your audio with a new recording, you'll want to force twilio to pick up and use the new version right away.
+
+The common way to handle both these needs is to set far-future `Expires`/`Cache-Control` headers on your static file responses, and then bust the cache by updating the url when the file changes. This technique is explained [here](https://maanasroyy.wordpress.com/2012/05/05/apache-performance-tuning-use-a-far-future-expires-header/).
+
+The twilio-ivr library makes it really easy to do this. First, you provide a few options in your [static files configuration](#static-files-config) (described below). Then, use the `urlFor` function, passed by the library as the first argument to `twimlFor` and `backgroundTrigger`, to generate urls for your static files that automatically have a query parameter whose value will change every time the file is changed, to bust the cache. These are called "fingerprinted urls".
+
+For example:
+
+```
+var playAudioState = {
+  twimlFor(urlFor) {
+    return `<?xml version="1.0" encoding="UTF-8"?>
+      <Response>
+        <Play>${ urlFor("/intro.mp3") }</Play>
+      </Response>`
+  }
+};
+```
+
+Above, the urlFor call will generate a fingerprinted url like: `/intro.mp3?v=16acf2382173d....`. Note: the argument to the urlFor function is the public url to your static file (not its path on disk), just without the version parameter.
+
+> Note: cache busting using a query parameter is generally not as reliable as cache-busting by changing the non-query part of the URL, because not all caches include the query parameters in their cache keys. However, twilio's cache does, and that's the only cache we care about.
+
+The `urlFor` function optionally takes other [options](https://github.com/ethanresnick/twilio-ivr/blob/master/lib/index.d.ts#L25), including whether to make the generated url absolute (which twilio needs in some cases) and an object of query parameters to add to the generated url.
+
+<a id="static-files-config"></a>Below are the options you can provide under the `staticFiles` key of the config object, to the functionality described above:
+
+  * `path` or `fingerprintUrl`. If you're using the library's static file handling at all, you must provide **one and only one** of these:
+    * `path`: an *absolute path* to the folder on disk containing your static files. If this is provided, the library will automatically scan that directory when your app is started and generate a fingerprint for each file, which will then be used to generate urls by the `urlFor` function.
+
+    * `fingerprintUrl`: a function that takes an unfingerprinted (root-relative) url for a static file, and returns the fingerprinted version. If provided, this function will be used by the `urlFor` function to generate the fingerprinted urls. Only use this option if you can't use `path` for some reason. Possible reasons: your static files are not located on disk, but are retreived over the network; or, your static files change while the app is running, and you need the fingerprints to be regenerated without restarting the app.
+
+  * `mountPath` (optional, empty by default): a path segment that will be used as a prefix in the urls for your static files. For example, if you have a static file called `intro.mp3` and you want it served at `https://example.com/static/intro.mp3`, you'd set `mountPath` to `/static`. If this is provided, it should be a string starting with a `/`.
+
+  * `middleware` (**required if `fingerprintUrl` is used**; optional otherwise): an express middleware that will be used to actually serve the static files and set the appropriate caching headers. By default, the library will just use the `path` option to find your files on disk and serve them with the appropriate headers. But, if `fingerprintUrl` is set, the library doesn't know where those files are, so you must provide this middleware yourself. Even if `path` is set, you can provide a custom middleware if you want to override the library's behavior.
+
+  * `holdMusic` (optional): an object containing keys specifically related to setting up the [hold music endpoint](#hold-music); if not provided, no hold music endpoint will be created.
+    * `fileRelativeUri` (**required**, if the holdMusic object is present): the URI of your hold music audio file, *relative to/excluding the base URI where all your static files are served from*. So, if your static files are served out of `https://example.com/static`, and your hold music file is at `https://example.com/static/hold.mp3`, you'd set this option to `hold.mp3` (or `./hold.mp3`).
+    * `endpoint` (optional, defaults to `/hold-music`): the uri to use for the hold music endpoint. This uri will be nested under the static files mount path if one is provided. I.e., if the mountPath is `/static` and the endpoint is `/hold-music`, the full hold music uri will `/static/hold-music`.
+    * `twimlFor(urlFor)` (optional): a function you can provide to override the built-in logic for generating the hold music endpoint's Twiml.
 
 ### Hold Music
 [Coming Soon]
