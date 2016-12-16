@@ -1,7 +1,5 @@
 "use strict";
 require("./twilioAugments");
-const routeCreationHelpers_1 = require("./util/routeCreationHelpers");
-exports.urlFor = routeCreationHelpers_1.urlFor;
 function isRoutableState(it) {
     return it && it.uri !== undefined;
 }

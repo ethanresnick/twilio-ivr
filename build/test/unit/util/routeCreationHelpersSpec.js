@@ -61,38 +61,31 @@ describe("route creation utilities", () => {
     });
     describe("renderState", () => { });
     describe("urlFor", () => {
-        const urlForBound = sut.urlFor("ftp", "localhost", "/static", (it) => it + '?v=1');
-        const urlForBoundMountless = sut.urlFor("ftp", "localhost", "", (it) => it + '?v=1');
+        const urlFor = sut.makeUrlFor("ftp", "localhost", (it) => it + '?v=1');
         it("should reject an attempt to fingerprint a uri with a query parameter", () => {
             chai_1.expect(() => {
-                urlForBound('/static/test', { query: { a: 'b' }, absolute: false, fingerprint: true });
+                urlFor('/static/test', { query: { a: 'b' }, absolute: false, fingerprint: true });
             }).to.throw();
             chai_1.expect(() => {
-                urlForBound('/static/test', { query: { a: 'b' }, absolute: true, fingerprint: true });
+                urlFor('/static/test', { query: { a: 'b' }, absolute: true, fingerprint: true });
             }).to.throw();
         });
         it("should default fingerprint setting to !query", () => {
-            chai_1.expect(urlForBound('/static/test', {}).includes('v=1')).to.be.true;
-            chai_1.expect(urlForBound('/static/test', { query: { a: 'b' } }).includes('v=1')).to.be.false;
+            chai_1.expect(urlFor('/static/test', {}).includes('v=1')).to.be.true;
+            chai_1.expect(urlFor('/static/test', { query: { a: 'b' } }).includes('v=1')).to.be.false;
         });
         it("should default absolute to false", () => {
-            chai_1.expect(urlForBound('/static/test', {}).startsWith('/static/test')).to.be.true;
-            chai_1.expect(urlForBound('/static/test', { query: { a: 'b' } }).startsWith('/static/test')).to.be.true;
-            chai_1.expect(urlForBound('/static/test', { fingerprint: true }).startsWith('/static/test')).to.be.true;
+            chai_1.expect(urlFor('/static/test', {}).startsWith('/static/test')).to.be.true;
+            chai_1.expect(urlFor('/static/test', { query: { a: 'b' } }).startsWith('/static/test')).to.be.true;
+            chai_1.expect(urlFor('/static/test', { fingerprint: true }).startsWith('/static/test')).to.be.true;
         });
         it("should handle all the valid permutations of the options", () => {
-            chai_1.expect(urlForBound('/static/test', { query: { a: 'b' }, absolute: true })).to.equal('ftp://localhost/static/test?a=b');
-            chai_1.expect(urlForBound('/static/test', { query: { a: 'b' }, absolute: false })).to.equal('/static/test?a=b');
-            chai_1.expect(urlForBound('/static/test', { absolute: true })).to.equal('ftp://localhost/static/test?v=1');
-            chai_1.expect(urlForBound('/static/test', { absolute: false })).to.equal('/static/test?v=1');
-            chai_1.expect(urlForBound('/static/test', { query: undefined, fingerprint: false, absolute: true })).to.equal('ftp://localhost/static/test');
-            chai_1.expect(urlForBound('/static/test', { query: undefined, fingerprint: false, absolute: false })).to.equal('/static/test');
-            chai_1.expect(urlForBoundMountless('/test', { query: { a: 'b' }, absolute: true })).to.equal('ftp://localhost/test?a=b');
-            chai_1.expect(urlForBoundMountless('/test', { query: { a: 'b' }, absolute: false })).to.equal('/test?a=b');
-            chai_1.expect(urlForBoundMountless('/test', { absolute: true })).to.equal('ftp://localhost/test?v=1');
-            chai_1.expect(urlForBoundMountless('/test', { absolute: false })).to.equal('/test?v=1');
-            chai_1.expect(urlForBoundMountless('/test', { query: undefined, fingerprint: false, absolute: true })).to.equal('ftp://localhost/test');
-            chai_1.expect(urlForBoundMountless('/test', { query: undefined, fingerprint: false, absolute: false })).to.equal('/test');
+            chai_1.expect(urlFor('/static/test', { query: { a: 'b' }, absolute: true })).to.equal('ftp://localhost/static/test?a=b');
+            chai_1.expect(urlFor('/static/test', { query: { a: 'b' }, absolute: false })).to.equal('/static/test?a=b');
+            chai_1.expect(urlFor('/static/test', { absolute: true })).to.equal('ftp://localhost/static/test?v=1');
+            chai_1.expect(urlFor('/static/test', { absolute: false })).to.equal('/static/test?v=1');
+            chai_1.expect(urlFor('/static/test', { query: undefined, fingerprint: false, absolute: true })).to.equal('ftp://localhost/static/test');
+            chai_1.expect(urlFor('/static/test', { query: undefined, fingerprint: false, absolute: false })).to.equal('/static/test');
         });
     });
 });

@@ -1,10 +1,9 @@
 "use strict";
 const StateTypes = require("./state");
+const staticExpiryHelpers_1 = require("./util/staticExpiryHelpers");
 const routeCreationHelpers_1 = require("./util/routeCreationHelpers");
 const express = require("express");
 const bodyParser = require("body-parser");
-const expiry = require("static-expiry");
-const url = require("url");
 const path = require("path");
 const twilio_1 = require("twilio");
 require("./twilioAugments");
@@ -13,41 +12,57 @@ function default_1(states, config) {
     app.use(bodyParser.urlencoded({ extended: false }));
     let { validate = true } = config.twilio;
     app.use(twilio_1.webhook(config.twilio.authToken, { validate: validate }));
-    let staticFilesMountPath = (config.staticFiles && config.staticFiles.mountPath) || "";
+    let urlFingerprinter;
     if (config.staticFiles) {
-        let staticFilesPath = config.staticFiles.path;
-        let staticExpiryOpts = {
-            location: 'query',
-            loadCache: 'startup',
-            dir: staticFilesPath.replace(/\/$/, '')
-        };
-        let serveStatic = config.staticFiles.middleware ||
-            express.static(staticFilesPath, { maxAge: '2y' });
-        app.use(staticFilesMountPath, [expiry(app, staticExpiryOpts), serveStatic]);
+        let staticFilesMountPath = config.staticFiles.mountPath || "";
+        let serveStaticMiddleware;
+        [serveStaticMiddleware, urlFingerprinter] = ((staticFilesConf) => {
+            if (staticFilesConf.fingerprintUrl && staticFilesConf.middleware) {
+                return [[staticFilesConf.middleware], staticFilesConf.fingerprintUrl];
+            }
+            else if (staticFilesConf.path) {
+                let [middleware, furl] = staticExpiryHelpers_1.makeServingMiddlewareAndFurl(app, staticFilesMountPath, staticFilesConf.path);
+                middleware = staticFilesConf.middleware ? [staticFilesConf.middleware] : middleware;
+                return [middleware, furl];
+            }
+            else {
+                throw new Error("To use twilio-ivr's built-in static files handling, you must set " +
+                    "either the path option or the fingerprintUrl and middleware options.");
+            }
+        })(config.staticFiles);
         if (config.staticFiles.holdMusic) {
-            const holdMusicPath = config.staticFiles.holdMusic.path;
-            const holdMusicCacheKey = "/" + holdMusicPath;
+            const holdMusicFileUri = config.staticFiles.holdMusic.fileRelativeUri;
             const holdMusicEndpoint = config.staticFiles.holdMusic.endpoint || "/hold-music";
+            const holdMusicEndpointMounted = path.normalize(staticFilesMountPath + '/' + holdMusicEndpoint);
             const holdMusicTwimlFor = config.staticFiles.holdMusic.twimlFor ||
-                ((urlFor) => (new twilio_1.TwimlResponse()).play({ loop: 1000 }, urlFor(path.join(staticFilesMountPath, holdMusicPath), { absolute: true })));
-            if (!holdMusicPath) {
-                throw new Error("You must provide a path to your hold music file.");
+                ((urlFor) => (new twilio_1.TwimlResponse()).play({ loop: 1000 }, urlFor(path.normalize(staticFilesMountPath + '/' + holdMusicFileUri), { absolute: true })));
+            if (!holdMusicFileUri) {
+                throw new Error("You must provide a relative uri to your hold music file.");
             }
-            else if (!expiry.urlCache[holdMusicCacheKey]) {
-                throw new Error("Your hold music file could not be found.");
+            if (!config.staticFiles.fingerprintUrl) {
+                const origUrlFingerprinter = urlFingerprinter;
+                const musicFileFingerprint = (() => {
+                    try {
+                        return staticExpiryHelpers_1.getFingerprintForFile(holdMusicFileUri);
+                    }
+                    catch (e) {
+                        throw new Error("Your hold music file could not be found.");
+                    }
+                })();
+                urlFingerprinter = (path) => {
+                    return (path === holdMusicEndpointMounted) ?
+                        `${holdMusicEndpointMounted}?v=${musicFileFingerprint}` :
+                        origUrlFingerprinter(path);
+                };
             }
-            const versionedHoldMp3Url = expiry.urlCache[holdMusicCacheKey];
-            const currMp3Version = url.parse(versionedHoldMp3Url, true).query.v;
-            const versionedHoldMusicUrl = `${holdMusicEndpoint}?v=${currMp3Version}`;
-            expiry.urlCache[holdMusicEndpoint] = versionedHoldMusicUrl;
-            expiry.assetCache[versionedHoldMusicUrl] =
-                Object.assign({}, expiry.assetCache[versionedHoldMp3Url], { assetUrl: holdMusicEndpoint });
-            app.get(holdMusicEndpoint, (req, res, next) => {
-                let urlFor = routeCreationHelpers_1.urlFor(req.protocol, req.get('Host'), staticFilesMountPath, app.locals.furl);
+            let holdMusicMiddleware = express().get(holdMusicEndpoint, (req, res, next) => {
+                let urlFor = routeCreationHelpers_1.makeUrlFor(req.protocol, req.get('Host'), urlFingerprinter);
                 res.set('Cache-Control', 'public, max-age=31536000');
                 res.send(holdMusicTwimlFor(urlFor));
             });
+            serveStaticMiddleware[config.staticFiles.middleware ? "push" : "unshift"](holdMusicMiddleware);
         }
+        app.use(staticFilesMountPath, serveStaticMiddleware);
     }
     states.forEach(thisState => {
         if (!StateTypes.isValidState(thisState)) {
@@ -56,7 +71,7 @@ function default_1(states, config) {
         }
         if (StateTypes.isRoutableState(thisState)) {
             app.post(thisState.uri, function (req, res, next) {
-                routeCreationHelpers_1.renderState(thisState, req, staticFilesMountPath, app.locals.furl, req.body).then(twiml => {
+                routeCreationHelpers_1.renderState(thisState, req, urlFingerprinter, req.body).then(twiml => {
                     res.send(twiml);
                 }, next);
             });
@@ -65,7 +80,7 @@ function default_1(states, config) {
             app.post(thisState.processTransitionUri, function (req, res, next) {
                 const nextStatePromise = Promise.resolve(thisState.transitionOut(req.body));
                 nextStatePromise.then(nextState => {
-                    routeCreationHelpers_1.renderState(nextState, req, staticFilesMountPath, app.locals.furl, undefined).then(twiml => {
+                    routeCreationHelpers_1.renderState(nextState, req, urlFingerprinter, undefined).then(twiml => {
                         res.send(twiml);
                     }, next);
                 });

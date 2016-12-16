@@ -9,7 +9,7 @@ const util_1 = require("../util");
 const musicPath = path.join(__dirname, "../fixtures/music/");
 const hashOfTammyMp3 = "23241bfb2abddb6f58a1e67e99565ec5";
 describe("versioned static files", () => {
-    describe("receiving static files", () => {
+    describe("serving static files", () => {
         const parseMp3FileResponse = (res, cb) => {
             let musicStream = fs.createReadStream(path.join(musicPath, "Tammy.mp3"));
             streamEqual(res, musicStream, (err, streamsAreEqual) => {
@@ -37,8 +37,12 @@ describe("versioned static files", () => {
             let app = _1.default([], util_1.filesConfig({ path: musicPath }));
             let agent = request.agent(app);
             return agent
-                .get("/Tammy.mp3")
-                .expect("Cache-Control", "public, max-age=31536000");
+                .get(`/Tammy.mp3?v=${hashOfTammyMp3}`)
+                .expect("Cache-Control", "public, max-age=31536000")
+                .expect((res) => {
+                if (!res.header.expires)
+                    throw new Error("expires header expected");
+            });
         });
         it("should fall through when the file doesn't exist", () => {
             let outerApp = express();
@@ -52,13 +56,58 @@ describe("versioned static files", () => {
                 .expect(404, "My Custom 404zzz.");
         });
     });
-    describe("urlFor", () => {
+    describe("urlFor/fingerprinting (built-in)", () => {
         it("should account for the static files prefix, if any", () => {
             let tammyUrlState = util_1.stateRenderingUrlFor("/static/Tammy.mp3", "/only-state");
             let app = _1.default([tammyUrlState], util_1.filesConfig({ path: musicPath, mountPath: '/static' }));
             return request(app)
                 .post("/only-state")
-                .expect(new RegExp("/static/Tammy\\.mp3\\?v=" + hashOfTammyMp3));
+                .expect("/static/Tammy.mp3?v=" + hashOfTammyMp3);
+        });
+    });
+    describe("user-provided middleware and fingerprinting function", () => {
+        const tammyUrlState = util_1.stateRenderingUrlFor("/static/Tammy.mp3", "/only-state");
+        const conf = util_1.filesConfig({
+            fingerprintUrl: (path) => {
+                let pathParts = path.split('.');
+                pathParts.splice(pathParts.length - 1, 0, 'abc');
+                return pathParts.join('.');
+            },
+            mountPath: '/static',
+            middleware: ((req, res, next) => {
+                res.send("Hi from " + req.url);
+            })
+        });
+        const app = _1.default([tammyUrlState], conf);
+        it("should use the user-provided fingerprinting function in urlFor", () => {
+            return request(app)
+                .post("/only-state")
+                .expect("/static/Tammy.abc.mp3");
+        });
+        it("should use user-provided middleware to serve static files", () => {
+            return request(app)
+                .get("/static/Tammy.abc.mp3")
+                .expect("Hi from /Tammy.abc.mp3");
+        });
+    });
+    describe("user-provided middleware with built-in fingerprinting", () => {
+        const tammyUrlState = util_1.stateRenderingUrlFor("/static/Tammy.mp3", "/only-state");
+        const app = _1.default([tammyUrlState], util_1.filesConfig({
+            path: musicPath,
+            mountPath: '/static',
+            middleware: ((req, res, next) => {
+                res.send("Hi from " + req.url);
+            })
+        }));
+        it("should use the built-in fingerprinting function in urlFor", () => {
+            return request(app)
+                .post("/only-state")
+                .expect("/static/Tammy.mp3?v=" + hashOfTammyMp3);
+        });
+        it('should use the provided middleware to serve the file', () => {
+            return request(app)
+                .get("/static/Tammy.mp3?v=" + hashOfTammyMp3)
+                .expect("Hi from /Tammy.mp3?v=" + hashOfTammyMp3);
         });
     });
 });

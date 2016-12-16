@@ -12,8 +12,8 @@ function resolveBranches(state, inputData) {
     return Promise.resolve(state);
 }
 exports.resolveBranches = resolveBranches;
-function renderState(state, req, staticFilesMountPath, furl, inputData) {
-    const urlForBound = urlFor(req.protocol, req.get('Host'), staticFilesMountPath, furl);
+function renderState(state, req, furl, inputData) {
+    const urlForBound = makeUrlFor(req.protocol, req.get('Host'), furl);
     const renderableStatePromise = resolveBranches(state, inputData);
     const inputToRenderWith = state_1.isRenderableState(state) ? inputData : undefined;
     return renderableStatePromise.then(stateToRender => {
@@ -29,7 +29,7 @@ function renderState(state, req, staticFilesMountPath, furl, inputData) {
     });
 }
 exports.renderState = renderState;
-function urlFor(protocol, host, mountPath, furl) {
+function makeUrlFor(protocol, host, furl) {
     return (path, { query, absolute = false, fingerprint } = {}) => {
         if (fingerprint && query) {
             throw new Error("Can't combine fingerprinting with query parameters.");
@@ -38,10 +38,11 @@ function urlFor(protocol, host, mountPath, furl) {
             fingerprint = !query;
         }
         if (fingerprint) {
-            let mountPathWithTrailingSlash = mountPath.replace(/\/$/, "") + "/";
-            let fingerprintedRelativeUri = path.startsWith(mountPathWithTrailingSlash) ?
-                mountPath + furl(path.substr(mountPath.length)) :
-                furl(path);
+            if (!furl) {
+                throw new Error("You must provide a fingerprinting function to generate " +
+                    "fingerprinted urls.");
+            }
+            let fingerprintedRelativeUri = furl(path);
             if (absolute) {
                 const relativeUriParts = url.parse(fingerprintedRelativeUri);
                 return url.format({
@@ -63,5 +64,5 @@ function urlFor(protocol, host, mountPath, furl) {
         }
     };
 }
-exports.urlFor = urlFor;
+exports.makeUrlFor = makeUrlFor;
 ;
