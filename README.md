@@ -217,7 +217,7 @@ The twilio-ivr library makes it really easy to do this. First, you provide a few
 
 For example:
 
-```
+```js
 var playAudioState = {
   twimlFor(urlFor) {
     return `<?xml version="1.0" encoding="UTF-8"?>
@@ -234,11 +234,10 @@ Above, the urlFor call will generate a fingerprinted url like: `/intro.mp3?v=16a
 
 The `urlFor` function optionally takes other [options](https://github.com/ethanresnick/twilio-ivr/blob/master/lib/index.d.ts#L25), including whether to make the generated url absolute (which twilio needs in some cases) and an object of query parameters to add to the generated url.
 
-<a id="static-files-config"></a>Below are the options you can provide under the `staticFiles` key of the config object, to the functionality described above:
+<a id="static-files-config"></a>Below are the options you can provide under the `staticFiles` key of the config object, to get the functionality described above:
 
   * `path` or `fingerprintUrl`. If you're using the library's static file handling at all, you must provide **one and only one** of these:
     * `path`: an *absolute path* to the folder on disk containing your static files. If this is provided, the library will automatically scan that directory when your app is started and generate a fingerprint for each file, which will then be used to generate urls by the `urlFor` function.
-
     * `fingerprintUrl`: a function that takes an unfingerprinted (root-relative) url for a static file, and returns the fingerprinted version. If provided, this function will be used by the `urlFor` function to generate the fingerprinted urls. Only use this option if you can't use `path` for some reason. Possible reasons: your static files are not located on disk, but are retreived over the network; or, your static files change while the app is running, and you need the fingerprints to be regenerated without restarting the app.
 
   * `mountPath` (optional, empty by default): a path segment that will be used as a prefix in the urls for your static files. For example, if you have a static file called `intro.mp3` and you want it served at `https://example.com/static/intro.mp3`, you'd set `mountPath` to `/static`. If this is provided, it should be a string starting with a `/`.
