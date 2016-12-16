@@ -52,9 +52,8 @@ export function resolveBranches(state: UsableState,
  * @param  {UsableState} state The state to render, or to use
  *   to find the one to render.
  * @param {express.Request} req The express request
- * @param {staticFilesMountPath} string The url prefix for static files (where
- *   express.static is mounted).
- * @param {urlFor} furl A function to generate fingerprinted uris for static files.
+ * @param {fingerprintUrl|undefined} furl A function to generate fingerprinted
+ *   uris for static files.
  * @param {CallDataTwiml|undefined} inputData Data we should pass to the first
  *   state that we encounter on our way to rendering the final state. Note: if
  *   the state passed in as `state` wasn't requested directly (see above comment),
@@ -63,10 +62,10 @@ export function resolveBranches(state: UsableState,
  * @return {TwimlResponse|string} The rendered next state.
  */
 export function renderState(state: UsableState, req: express.Request,
-  staticFilesMountPath: string, furl: furl, inputData: CallDataTwiml | undefined) {
+  furl: fingerprintUrl | undefined, inputData: CallDataTwiml | undefined) {
 
   // A utility function to help our states generate urls.
-  const urlForBound = urlFor(req.protocol, req.get('Host'), staticFilesMountPath, furl);
+  const urlForBound = makeUrlFor(req.protocol, req.get('Host'), furl);
 
   // If this state is non-renderable, follow the branches until we get
   // to a renderable state.
@@ -97,11 +96,11 @@ export function renderState(state: UsableState, req: express.Request,
   });
 }
 
-export type furl = (it: string) => string;
+export type fingerprintUrl = (path: string) => string;
 export type urlFor = (path: string, options?: UrlForOptions) => string;
 export type UrlForOptions = {query?: any, fingerprint?: boolean, absolute?: boolean};
 
-export function urlFor(protocol: string, host: string, mountPath: string, furl: furl): urlFor {
+export function makeUrlFor(protocol: string, host: string, furl?: fingerprintUrl): urlFor {
   return (path: string, { query, absolute = false, fingerprint }: UrlForOptions = {}) => {
     // Static files are the only ones that can be fingerprinted, and they
     // shouldn't have query parameters. Enforcing this simplies the logic below.
@@ -115,16 +114,16 @@ export function urlFor(protocol: string, host: string, mountPath: string, furl: 
     }
 
     if(fingerprint) {
-      // furl doesn't understand the concept of a static files mount path,
-      // because static-expiry is built for connect, and a mount path is an
-      // abstraction added at the express level. So, we have to remove the
-      // mount path if any [sometimes there is none for static files, and some
-      // urls that get fingerprinted don't use it anyway (namely for the hold
-      // music url)] before furling, and then add it back afterwards.
-      let mountPathWithTrailingSlash = mountPath.replace(/\/$/, "") + "/";
-      let fingerprintedRelativeUri = path.startsWith(mountPathWithTrailingSlash) ?
-        mountPath + furl(path.substr(mountPath.length)) :
-        furl(path);
+      // if the user's asking for a fingerprinted url, but urlFor
+      // wasn't created with a function for doing the fingerprinting, throw.
+      if(!furl) {
+        throw new Error(
+          "You must provide a fingerprinting function to generate " +
+          "fingerprinted urls."
+        );
+      }
+
+      let fingerprintedRelativeUri = furl(path);
 
       if(absolute) {
         const relativeUriParts = url.parse(fingerprintedRelativeUri);
@@ -139,6 +138,7 @@ export function urlFor(protocol: string, host: string, mountPath: string, furl: 
 
       return fingerprintedRelativeUri;
     }
+
     else {
       const formatOptions = {pathname: path, query: query || undefined};
       if(absolute) {

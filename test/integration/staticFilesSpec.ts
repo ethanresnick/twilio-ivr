@@ -6,6 +6,7 @@ import streamEqual = require("stream-equal");
 import twilio = require("twilio");
 import lib from "../../lib/";
 import { filesConfig, stateRenderingUrlFor } from "../util";
+import { Handler } from "express";
 
 const musicPath = path.join(__dirname, "../fixtures/music/");
 const hashOfTammyMp3 = "23241bfb2abddb6f58a1e67e99565ec5";
@@ -76,14 +77,67 @@ describe("versioned static files", () => {
     });
   });
 
-  describe("urlFor", () => {
+  describe("urlFor/fingerprinting (built-in)", () => {
     it("should account for the static files prefix, if any", () => {
       let tammyUrlState = stateRenderingUrlFor("/static/Tammy.mp3", "/only-state");
       let app = lib([tammyUrlState], filesConfig({ path: musicPath, mountPath: '/static' }));
 
       return request(app)
         .post("/only-state")
-        .expect(new RegExp("/static/Tammy\\.mp3\\?v=" + hashOfTammyMp3));
+        .expect("/static/Tammy.mp3?v=" + hashOfTammyMp3);
+    });
+  });
+
+  describe("user-provided middleware and fingerprinting function", () => {
+    const tammyUrlState = stateRenderingUrlFor("/static/Tammy.mp3", "/only-state");
+    const conf = filesConfig({
+      fingerprintUrl: (path: string) => {
+        let pathParts = path.split('.');
+        pathParts.splice(pathParts.length - 1, 0, 'abc');
+        return pathParts.join('.');
+      },
+      mountPath: '/static',
+      middleware: <Handler>((req, res, next) => {
+        // note, middleware shouldn't see the mountpath.
+        res.send("Hi from " + req.url);
+      })
+    });
+    const app = lib([tammyUrlState], conf);
+
+    it("should use the user-provided fingerprinting function in urlFor", () => {
+      return request(app)
+        .post("/only-state")
+        .expect("/static/Tammy.abc.mp3");
+    });
+
+    it("should use user-provided middleware to serve static files", () => {
+      return request(app)
+        .get("/static/Tammy.abc.mp3")
+        .expect("Hi from /Tammy.abc.mp3");
+    });
+  });
+
+  describe("user-provided middleware with built-in fingerprinting", () => {
+    const tammyUrlState = stateRenderingUrlFor("/static/Tammy.mp3", "/only-state");
+    const app = lib([tammyUrlState], filesConfig({
+      path: musicPath,
+      mountPath: '/static',
+      middleware: <Handler>((req, res, next) => {
+        // note, middleware shouldn't see the mountpath.
+        res.send("Hi from " + req.url);
+      })
+    }));
+
+    it("should use the built-in fingerprinting function in urlFor", () => {
+      return request(app)
+        .post("/only-state")
+        .expect("/static/Tammy.mp3?v=" + hashOfTammyMp3);
+    });
+
+    it('should use the provided middleware to serve the file', () => {
+      return request(app)
+        .get("/static/Tammy.mp3?v=" + hashOfTammyMp3)
+        .expect("Hi from /Tammy.mp3?v=" + hashOfTammyMp3);
     });
   })
 });

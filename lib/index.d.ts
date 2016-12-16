@@ -10,18 +10,20 @@ export type config = {
     authToken: string;
     validate?: boolean;
   };
-  staticFiles?: {
-    path: string;
+  staticFiles?: (
+    { path: string; middleware?: Handler; fingerprintUrl: undefined; } |
+    { path: undefined; middleware: Handler; fingerprintUrl: fingerprintUrl; }
+  ) & {
     mountPath?: string;
     holdMusic?: {
-      path: string;
+      fileRelativeUri: string;
       endpoint?: string;
       twimlFor?: (urlFor: urlFor) => TwimlResponse | string;
     };
-    middleware?: Handler;
   };
 };
 
+export type fingerprintUrl = (path: string) => string;
 export type urlFor = (path: string, options?: UrlForOptions) => string;
 export type UrlForOptions = {
   query?: any;
