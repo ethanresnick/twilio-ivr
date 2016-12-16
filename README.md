@@ -2,6 +2,8 @@
 
 This library makes it easy to build a phone tree/[IVR](https://en.wikipedia.org/wiki/Interactive_voice_response) system using twilio.
 
+Note: although this library has good test coverage and I've had no problems using it in production, it's still pre-1.0 and the API may change as call session functionality is added.
+
 # Usage
 
 The library exports one primary function, which takes all the [states](#states) in your call system and returns an express [app](http://expressjs.com/en/4x/api.html#app) that can handle all the HTTP requests needed to interact with twilio to make your call system work.
