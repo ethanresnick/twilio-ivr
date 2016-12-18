@@ -1,6 +1,7 @@
 import logger from "../logger";
 import * as express from "express";
 import { CallDataTwiml, TwimlResponse } from "twilio";
+import { stateToString } from "../state";
 import "../twilioAugments";
 import url = require("url");
 
@@ -81,18 +82,44 @@ export function renderState(state: UsableState, req: express.Request,
   // Otherwise, we scrap it.
   const inputToRenderWith = isRenderableState(state) ? inputData : undefined;
 
+  // A value we need for error handling below.
+  const couldNotFindRenderableStateError = Symbol();
+
   // Now that we have our renderable state, we need to render it.
   return renderableStatePromise.then(stateToRender => {
+    const stateName = stateToString(stateToRender);
     if (isAsynchronousState(stateToRender)) {
-      logger.info("Began asynchronous processing for " + stateToRender.name);
+      logger.info("Began asynchronous processing for " + stateName);
       stateToRender.backgroundTrigger(urlForBound, inputToRenderWith);
     }
 
-    logger.info("Produced twiml for for " + stateToRender.name);
+    logger.info("Produced twiml for " + stateName);
     return stateToRender.twimlFor(urlForBound, inputToRenderWith);
   }, (e: Error) => {
-    logger.error(`Error while walking the branches.`, e.message);
-    throw e;
+    // Here, we got an error while finding the next state to render (because
+    // renderableStatePromise rejected) and we want to re-throw it, because we
+    // can't recover from it and we ultimately want to get it to the outside
+    // world for handling (i.e., we don't want to swallow it). But, if we just
+    // rethrow it as is, that will still trigger the catch block below (by
+    // creating a new rejected promise), and that catch block won't have any way
+    // to know whether the error its operating on came from here or from the
+    // then() block above. So, to distinguish between those cases, we type the
+    // error here with a symbol, which we can check for below.
+    throw { type: couldNotFindRenderableStateError, origError: e };
+  }).catch((e: Error) => {
+    // Find whether the error came from attempting to find the state to render,
+    // or from attempting to render it. Then log the error and re-throw it.
+    const origStateName = stateToString(state);
+    const errorToString = (e: any) => e && e.message ? e.message : String(e);
+
+    const [errorToThrow, genericMessageForErrorType] =
+      (e && (<any>e).type === couldNotFindRenderableStateError) ?
+        [(<any>e).origError, `Error while attempting to find the next state to render after ${origStateName}.`] :
+        [e, `Error while attempting to render next state after ${origStateName}.`];
+
+    const specificMessageFromThisError = errorToString(errorToThrow);
+    logger.error(genericMessageForErrorType, specificMessageFromThisError);
+    throw errorToThrow;
   });
 }
 

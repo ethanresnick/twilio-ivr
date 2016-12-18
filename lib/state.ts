@@ -75,7 +75,7 @@ export function isNormalState(it: State): it is NormalState {
 /**
  * Whether the state is not only a UsableState, but a "valid" one.
  * This rejects some states that typescript doesn't let us rule out statically,
- * but taht are nevertheless invalid, namely: branching + renderable but
+ * but that are nevertheless invalid, namely: branching + renderable but
  * non-normal ones.
  *
  * @param  {State} it
@@ -86,5 +86,8 @@ export function isValidState(it: State): boolean {
     || (isBranchingState(it) && !isRenderableState(it));
 }
 
+export function stateToString(it: State): string {
+  return (it && it.name) || "unnamed state";
+}
 
 export default State;

@@ -1,4 +1,4 @@
-import * as StateTypes from "./state";
+import * as State from "./state";
 import { makeServingMiddlewareAndFurl, getFingerprintForFile } from "./util/staticExpiryHelpers";
 import { renderState, makeUrlFor, fingerprintUrl } from "./util/routeCreationHelpers";
 import { entries as objectEntries } from "./util/objectValuesEntries";
@@ -13,7 +13,7 @@ import { webhook as twilioWebhook, TwimlResponse } from "twilio";
 import "./twilioAugments";
 
 
-export default function(states: StateTypes.UsableState[], config: config): Express {
+export default function(states: State.UsableState[], config: config): Express {
   // Set up express
   const app = express();
 
@@ -71,7 +71,7 @@ export default function(states: StateTypes.UsableState[], config: config): Expre
       const holdMusicEndpointMounted = path.normalize(staticFilesMountPath + '/' + holdMusicEndpoint);
 
       const holdMusicTwimlFor = config.staticFiles.holdMusic.twimlFor ||
-        ((urlFor: StateTypes.urlFor) =>
+        ((urlFor: State.urlFor) =>
           (new TwimlResponse()).play({ loop: 1000 }, urlFor(
             path.normalize(staticFilesMountPath + '/' + holdMusicFileUri), { absolute: true }
           )));
@@ -143,12 +143,12 @@ export default function(states: StateTypes.UsableState[], config: config): Expre
   // these states, of course, is that the next transition is dynamic; using a
   // GET with query params could be hacked in, but it's too complicated).
   states.forEach(thisState => {
-    if (!StateTypes.isValidState(thisState)) {
-      const stateAsString = (thisState && thisState.name) || String(thisState);
+    if (!State.isValidState(thisState)) {
+      const stateAsString = State.stateToString(thisState);
       throw new Error("Invalid state provided: " + stateAsString);
     }
 
-    if (StateTypes.isRoutableState(thisState)) {
+    if (State.isRoutableState(thisState)) {
       app.post(thisState.uri, function (req, res, next) {
         renderState(thisState, req, urlFingerprinter, req.body).then(twiml => {
           res.send(twiml);
@@ -156,7 +156,7 @@ export default function(states: StateTypes.UsableState[], config: config): Expre
       });
     }
 
-    if (StateTypes.isNormalState(thisState)) {
+    if (State.isNormalState(thisState)) {
       app.post(thisState.processTransitionUri, function (req, res, next) {
         // Use the input to transition to the next state.
         const nextStatePromise = Promise.resolve(thisState.transitionOut(req.body));
@@ -196,7 +196,7 @@ type StaticFilesConfig =
     readonly holdMusic?: {
       readonly fileRelativeUri: string;
       readonly endpoint?: string;
-      readonly twimlFor?: (urlFor: StateTypes.urlFor) => TwimlResponse | string;
+      readonly twimlFor?: (urlFor: State.urlFor) => TwimlResponse | string;
     }
   };
 
