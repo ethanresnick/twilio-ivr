@@ -8,7 +8,6 @@ import { BranchingState, RoutableState } from "../../lib/state";
 describe("error handling (at component integration points)", () => {
   describe("an invalid state transition (to undefined, an error, or an invalid state)", () => {
     it("should trigger the express app's error handling middleware", () => {
-
       let statesWithInvalidTransition = <(BranchingState & RoutableState)[]>[
         { uri: "/1",
           transitionOut() {
@@ -39,6 +38,6 @@ describe("error handling (at component integration points)", () => {
         request(app).post('/2').expect(500, 'error handler reached'),
         request(app).post('/3').expect(500, 'error handler reached')
       ]);
-    })
-  })
+    });
+  });
 });
