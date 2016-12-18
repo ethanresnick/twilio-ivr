@@ -4,4 +4,7 @@ machine:
 
 test:
   override:
-    - npm run cover:ci # generating coverage runs the tests too.
+    - npm run cover # generating coverage runs the tests too.
+  post:
+    - mv coverage $CIRCLE_ARTIFACTS
+    - bash <(curl -s https://codecov.io/bash)
