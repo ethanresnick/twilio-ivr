@@ -31,10 +31,24 @@ function getFingerprintForFile(relativeFilePath) {
 }
 exports.getFingerprintForFile = getFingerprintForFile;
 function mountPathAwareFurl(mountPath, furl) {
-    let mountPathWithTrailingSlash = mountPath.replace(/\/$/, "") + "/";
-    return function (path) {
-        return path.startsWith(mountPathWithTrailingSlash) ?
-            mountPath + furl(path.substr(mountPath.length)) :
-            furl(path);
+    const mountPathWithTrailingSlash = mountPath.replace(/\/$/, "") + "/";
+    if (mountPath === '/') {
+        mountPath = '';
+    }
+    return (path) => {
+        if (!path.startsWith(mountPathWithTrailingSlash)) {
+            throw new UrlToFingerprintNotUnderMountPathError(path, mountPath);
+        }
+        return mountPath + furl(path.substr(mountPath.length));
     };
 }
+class UrlToFingerprintNotUnderMountPathError extends Error {
+    constructor(path, mountPath) {
+        super(`You tried to fingerprint a url (${path}) whose path isn\'t under the` +
+            `static files mount path (${mountPath}). However, when using the built-in ` +
+            'fingerprint function, only urls for static files can be fingerprinted, ' +
+            'and all static files have their URL under the static files mount path.');
+    }
+}
+exports.UrlToFingerprintNotUnderMountPathError = UrlToFingerprintNotUnderMountPathError;
+;

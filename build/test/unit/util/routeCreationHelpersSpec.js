@@ -70,9 +70,12 @@ describe("route creation utilities", () => {
                 urlFor('/static/test', { query: { a: 'b' }, absolute: true, fingerprint: true });
             }).to.throw();
         });
-        it("should default fingerprint setting to !query", () => {
+        it("should default fingerprint setting to (!!furl && !query)", () => {
             chai_1.expect(urlFor('/static/test', {}).includes('v=1')).to.be.true;
             chai_1.expect(urlFor('/static/test', { query: { a: 'b' } }).includes('v=1')).to.be.false;
+            const urlForCantFingerprint = sut.makeUrlFor("ftp", "localhost");
+            chai_1.expect(urlForCantFingerprint('/static/test', {}).includes('v=1')).to.be.false;
+            chai_1.expect(urlForCantFingerprint('/static/test', { query: { a: 'b' } }).includes('v=1')).to.be.false;
         });
         it("should default absolute to false", () => {
             chai_1.expect(urlFor('/static/test', {}).startsWith('/static/test')).to.be.true;

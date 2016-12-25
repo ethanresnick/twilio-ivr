@@ -1,6 +1,7 @@
 "use strict";
 const logger_1 = require("../logger");
 const state_1 = require("../state");
+const staticExpiryHelpers_1 = require("./staticExpiryHelpers");
 require("../twilioAugments");
 const url = require("url");
 const state_2 = require("../state");
@@ -46,14 +47,24 @@ function makeUrlFor(protocol, host, furl) {
             throw new Error("Can't combine fingerprinting with query parameters.");
         }
         if (fingerprint === undefined) {
-            fingerprint = !query;
+            fingerprint = (!!furl && !query);
         }
         if (fingerprint) {
             if (!furl) {
                 throw new Error("You must provide a fingerprinting function to generate " +
                     "fingerprinted urls.");
             }
-            let fingerprintedRelativeUri = furl(path);
+            let fingerprintedRelativeUri;
+            try {
+                fingerprintedRelativeUri = furl(path);
+            }
+            catch (e) {
+                if (e instanceof staticExpiryHelpers_1.UrlToFingerprintNotUnderMountPathError) {
+                    e.message +=
+                        ' Most likely, you forgot to set the `fingerprint` option to false.';
+                }
+                throw e;
+            }
             if (absolute) {
                 const relativeUriParts = url.parse(fingerprintedRelativeUri);
                 return url.format({

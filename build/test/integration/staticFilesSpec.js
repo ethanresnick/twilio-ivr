@@ -58,11 +58,22 @@ describe("versioned static files", () => {
     });
     describe("urlFor/fingerprinting (built-in)", () => {
         it("should account for the static files prefix, if any", () => {
-            let tammyUrlState = util_1.stateRenderingUrlFor("/static/Tammy.mp3", "/only-state");
-            let app = _1.default([tammyUrlState], util_1.filesConfig({ path: musicPath, mountPath: '/static' }));
-            return request(app)
-                .post("/only-state")
-                .expect("/static/Tammy.mp3?v=" + hashOfTammyMp3);
+            const tammyMountedUrlState = util_1.stateRenderingUrlFor("/static/Tammy.mp3", "/only-state");
+            const tammyUnmountedUrlState = util_1.stateRenderingUrlFor("/Tammy.mp3", "/only-state");
+            const app = _1.default([tammyMountedUrlState], util_1.filesConfig({ path: musicPath, mountPath: '/static' }));
+            const appNoMountPath = _1.default([tammyUnmountedUrlState], util_1.filesConfig({ path: musicPath }));
+            const appSlashMountPath = _1.default([tammyUnmountedUrlState], util_1.filesConfig({ path: musicPath, mountPath: '/' }));
+            return Promise.all([
+                request(app)
+                    .post("/only-state")
+                    .expect("/static/Tammy.mp3?v=" + hashOfTammyMp3),
+                request(appNoMountPath)
+                    .post("/only-state")
+                    .expect("/Tammy.mp3?v=" + hashOfTammyMp3),
+                request(appSlashMountPath)
+                    .post("/only-state")
+                    .expect("/Tammy.mp3?v=" + hashOfTammyMp3)
+            ]);
         });
     });
     describe("user-provided middleware and fingerprinting function", () => {
