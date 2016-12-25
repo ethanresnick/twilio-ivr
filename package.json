@@ -1,6 +1,6 @@
 {
   "name": "twilio-interactive-flow",
-  "version": "0.0.0",
+  "version": "0.8.0",
   "description": "Easily build phone/sms trees with twilio and express.",
   "license": "MIT",
   "repository": {

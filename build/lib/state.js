@@ -30,3 +30,7 @@ function isValidState(it) {
         || (isBranchingState(it) && !isRenderableState(it));
 }
 exports.isValidState = isValidState;
+function stateToString(it) {
+    return (it && it.name) || "unnamed state";
+}
+exports.stateToString = stateToString;

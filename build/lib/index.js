@@ -1,5 +1,5 @@
 "use strict";
-const StateTypes = require("./state");
+const State = require("./state");
 const staticExpiryHelpers_1 = require("./util/staticExpiryHelpers");
 const routeCreationHelpers_1 = require("./util/routeCreationHelpers");
 const express = require("express");
@@ -65,18 +65,18 @@ function default_1(states, config) {
         app.use(staticFilesMountPath, serveStaticMiddleware);
     }
     states.forEach(thisState => {
-        if (!StateTypes.isValidState(thisState)) {
-            const stateAsString = (thisState && thisState.name) || String(thisState);
+        if (!State.isValidState(thisState)) {
+            const stateAsString = State.stateToString(thisState);
             throw new Error("Invalid state provided: " + stateAsString);
         }
-        if (StateTypes.isRoutableState(thisState)) {
+        if (State.isRoutableState(thisState)) {
             app.post(thisState.uri, function (req, res, next) {
                 routeCreationHelpers_1.renderState(thisState, req, urlFingerprinter, req.body).then(twiml => {
                     res.send(twiml);
                 }, next);
             });
         }
-        if (StateTypes.isNormalState(thisState)) {
+        if (State.isNormalState(thisState)) {
             app.post(thisState.processTransitionUri, function (req, res, next) {
                 const nextStatePromise = Promise.resolve(thisState.transitionOut(req.body));
                 nextStatePromise.then(nextState => {

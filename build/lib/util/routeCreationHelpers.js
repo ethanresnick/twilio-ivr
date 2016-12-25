@@ -1,10 +1,11 @@
 "use strict";
 const logger_1 = require("../logger");
+const state_1 = require("../state");
 require("../twilioAugments");
 const url = require("url");
-const state_1 = require("../state");
+const state_2 = require("../state");
 function resolveBranches(state, inputData) {
-    if (state_1.isBranchingState(state) && !state_1.isRenderableState(state)) {
+    if (state_2.isBranchingState(state) && !state_2.isRenderableState(state)) {
         return Promise.resolve(state.transitionOut(inputData)).then(nextState => {
             return resolveBranches(nextState);
         });
@@ -15,17 +16,27 @@ exports.resolveBranches = resolveBranches;
 function renderState(state, req, furl, inputData) {
     const urlForBound = makeUrlFor(req.protocol, req.get('Host'), furl);
     const renderableStatePromise = resolveBranches(state, inputData);
-    const inputToRenderWith = state_1.isRenderableState(state) ? inputData : undefined;
+    const inputToRenderWith = state_2.isRenderableState(state) ? inputData : undefined;
+    const couldNotFindRenderableStateError = Symbol();
     return renderableStatePromise.then(stateToRender => {
-        if (state_1.isAsynchronousState(stateToRender)) {
-            logger_1.default.info("Began asynchronous processing for " + stateToRender.name);
+        const stateName = state_1.stateToString(stateToRender);
+        if (state_2.isAsynchronousState(stateToRender)) {
+            logger_1.default.info("Began asynchronous processing for " + stateName);
             stateToRender.backgroundTrigger(urlForBound, inputToRenderWith);
         }
-        logger_1.default.info("Produced twiml for for " + stateToRender.name);
+        logger_1.default.info("Produced twiml for " + stateName);
         return stateToRender.twimlFor(urlForBound, inputToRenderWith);
     }, (e) => {
-        logger_1.default.error(`Error while walking the branches.`, e.message);
-        throw e;
+        throw { type: couldNotFindRenderableStateError, origError: e };
+    }).catch((e) => {
+        const origStateName = state_1.stateToString(state);
+        const errorToString = (e) => e && e.message ? e.message : String(e);
+        const [errorToThrow, genericMessageForErrorType] = (e && e.type === couldNotFindRenderableStateError) ?
+            [e.origError, `Error while attempting to find the next state to render after ${origStateName}.`] :
+            [e, `Error while attempting to render next state after ${origStateName}.`];
+        const specificMessageFromThisError = errorToString(errorToThrow);
+        logger_1.default.error(genericMessageForErrorType, specificMessageFromThisError);
+        throw errorToThrow;
     });
 }
 exports.renderState = renderState;
