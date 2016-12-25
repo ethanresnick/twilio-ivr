@@ -1,4 +1,4 @@
-# twilio-ivr [![CircleCI](https://circleci.com/gh/ethanresnick/twilio-ivr.svg?style=svg)](https://circleci.com/gh/ethanresnick/twilio-ivr) [![codecov](https://codecov.io/gh/ethanresnick/twilio-ivr/branch/master/graph/badge.svg)](https://codecov.io/gh/ethanresnick/twilio-ivr)
+# twilio-interactive-flow [![CircleCI](https://circleci.com/gh/ethanresnick/twilio-ivr.svg?style=svg)](https://circleci.com/gh/ethanresnick/twilio-ivr) [![codecov](https://codecov.io/gh/ethanresnick/twilio-ivr/branch/master/graph/badge.svg)](https://codecov.io/gh/ethanresnick/twilio-ivr)
 
 This library makes it easy to build a phone tree/[IVR](https://en.wikipedia.org/wiki/Interactive_voice_response) system using twilio.
 
@@ -9,7 +9,7 @@ Note: although this library has good test coverage and I've had no problems usin
 The library exports one primary function, which takes all the [states](#states) in your call system and returns an express [app](http://expressjs.com/en/4x/api.html#app) that can handle all the HTTP requests needed to interact with twilio to make your call system work.
 
 ```js
-const twilioIvr = require("twilio-ivr").default;
+const twilioIvr = require("twilio-interactive-flow").default;
 
 // Define an array of your states. See below for how states work.
 const states = [];
@@ -213,7 +213,7 @@ It's very likely that, at some point, you'll want to play a recording to the cal
 
 The common way to handle both these needs is to set far-future `Expires`/`Cache-Control` headers on your static file responses, and then bust the cache by updating the url when the file changes. This technique is explained [here](https://maanasroyy.wordpress.com/2012/05/05/apache-performance-tuning-use-a-far-future-expires-header/).
 
-The twilio-ivr library makes it really easy to do this. First, you provide a few options in your [static files configuration](#static-files-config) (described below). Then, use the `urlFor` function, passed by the library as the first argument to `twimlFor` and `backgroundTrigger`, to generate urls for your static files that automatically have a query parameter whose value will change every time the file is changed, to bust the cache. These are called "fingerprinted urls".
+The twilio-interactive-flow library makes it really easy to do this. First, you provide a few options in your [static files configuration](#static-files-config) (described below). Then, use the `urlFor` function, passed by the library as the first argument to `twimlFor` and `backgroundTrigger`, to generate urls for your static files that automatically have a query parameter whose value will change every time the file is changed, to bust the cache. These are called "fingerprinted urls".
 
 For example:
 
