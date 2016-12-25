@@ -1,12 +1,25 @@
 {
-  "name": "twilio-ivr",
+  "name": "twilio-interactive-flow",
   "version": "0.0.0",
-  "description": "hotline",
+  "description": "Easily build phone/sms trees with twilio and express.",
   "license": "MIT",
-  "repository": "",
-  "author": "",
+  "repository": {
+    "type" : "git",
+    "url" : "https://github.com/ethanresnick/twilio-ivr.git"
+  },
+  "author": "Ethan Resnick",
   "keywords": [
-    ""
+    "twilio",
+    "twiml",
+    "ivr",
+    "call",
+    "sms",
+    "phone tree",
+    "sms flow",
+    "sms script",
+    "call script",
+    "call flow",
+    "call tree"
   ],
   "main": "build/lib/index.js",
   "typings": "lib/index.d.ts",
