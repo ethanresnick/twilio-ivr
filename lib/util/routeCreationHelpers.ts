@@ -136,9 +136,10 @@ export function makeUrlFor(protocol: string, host: string, furl?: fingerprintUrl
       throw new Error("Can't combine fingerprinting with query parameters.");
     }
 
-    // Default fingerprint to true...unless we have a query, per above.
+    // Default fingerprint to true...if we have a fingerprinting function
+    // and unless we have a query, per above.
     if(fingerprint === undefined) {
-      fingerprint = !query;
+      fingerprint = (!!furl && !query);
     }
 
     if(fingerprint) {

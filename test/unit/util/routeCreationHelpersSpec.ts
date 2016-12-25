@@ -98,9 +98,13 @@ describe("route creation utilities", () => {
       }).to.throw();
     });
 
-    it("should default fingerprint setting to !query", () => {
+    it("should default fingerprint setting to (!!furl && !query)", () => {
       expect(urlFor('/static/test', {}).includes('v=1')).to.be.true;
       expect(urlFor('/static/test', {query: {a: 'b'}}).includes('v=1')).to.be.false;
+
+      const urlForCantFingerprint = sut.makeUrlFor("ftp", "localhost");
+      expect(urlForCantFingerprint('/static/test', {}).includes('v=1')).to.be.false;
+      expect(urlForCantFingerprint('/static/test', {query: {a: 'b'}}).includes('v=1')).to.be.false;
     });
 
     it("should default absolute to false", () => {
