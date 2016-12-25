@@ -2,6 +2,7 @@ import logger from "../logger";
 import * as express from "express";
 import { CallDataTwiml, TwimlResponse } from "twilio";
 import { stateToString } from "../state";
+import { UrlToFingerprintNotUnderMountPathError } from "./staticExpiryHelpers";
 import "../twilioAugments";
 import url = require("url");
 
@@ -150,7 +151,20 @@ export function makeUrlFor(protocol: string, host: string, furl?: fingerprintUrl
         );
       }
 
-      let fingerprintedRelativeUri = furl(path);
+      let fingerprintedRelativeUri: string;
+
+      try {
+        fingerprintedRelativeUri = furl(path);
+      }
+
+      catch (e) {
+        if(e instanceof UrlToFingerprintNotUnderMountPathError) {
+          e.message +=
+            ' Most likely, you forgot to set the `fingerprint` option to false.';
+        }
+
+        throw e;
+      }
 
       if(absolute) {
         const relativeUriParts = url.parse(fingerprintedRelativeUri);

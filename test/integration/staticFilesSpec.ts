@@ -79,12 +79,37 @@ describe("versioned static files", () => {
 
   describe("urlFor/fingerprinting (built-in)", () => {
     it("should account for the static files prefix, if any", () => {
-      let tammyUrlState = stateRenderingUrlFor("/static/Tammy.mp3", "/only-state");
-      let app = lib([tammyUrlState], filesConfig({ path: musicPath, mountPath: '/static' }));
+      const tammyMountedUrlState = stateRenderingUrlFor("/static/Tammy.mp3", "/only-state");
+      const tammyUnmountedUrlState = stateRenderingUrlFor("/Tammy.mp3", "/only-state");
 
-      return request(app)
-        .post("/only-state")
-        .expect("/static/Tammy.mp3?v=" + hashOfTammyMp3);
+      const app = lib(
+        [tammyMountedUrlState],
+        filesConfig({ path: musicPath, mountPath: '/static' })
+      );
+
+      const appNoMountPath = lib(
+        [tammyUnmountedUrlState],
+        filesConfig({ path: musicPath })
+      );
+
+      const appSlashMountPath = lib(
+        [tammyUnmountedUrlState],
+        filesConfig({ path: musicPath, mountPath: '/' })
+      );
+
+      return Promise.all([
+        request(app)
+          .post("/only-state")
+          .expect("/static/Tammy.mp3?v=" + hashOfTammyMp3),
+
+        request(appNoMountPath)
+          .post("/only-state")
+          .expect("/Tammy.mp3?v=" + hashOfTammyMp3),
+
+        request(appSlashMountPath)
+          .post("/only-state")
+          .expect("/Tammy.mp3?v=" + hashOfTammyMp3)
+      ]);
     });
   });
 
@@ -102,6 +127,7 @@ describe("versioned static files", () => {
         res.send("Hi from " + req.url);
       })
     });
+
     const app = lib([tammyUrlState], conf);
 
     it("should use the user-provided fingerprinting function in urlFor", () => {
@@ -139,5 +165,5 @@ describe("versioned static files", () => {
         .get("/static/Tammy.mp3?v=" + hashOfTammyMp3)
         .expect("Hi from /Tammy.mp3?v=" + hashOfTammyMp3);
     });
-  })
+  });
 });

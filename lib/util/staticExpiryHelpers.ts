@@ -61,16 +61,42 @@ export function getFingerprintForFile(relativeFilePath: string) {
  * from the start of the url (if present) before invoking static-expiry's furl.
  */
 function mountPathAwareFurl(mountPath: string, furl: furl): furl {
-  let mountPathWithTrailingSlash = mountPath.replace(/\/$/, "") + "/";
+  const mountPathWithTrailingSlash = mountPath.replace(/\/$/, "") + "/";
+
+  // If mountPath is the string '/', that should behave identically to mountPath
+  // being the empty string. However, looking at the return value below, you can
+  // see that it might not, because: `'/' + furl(path.substr(1))` may not equal
+  // `'' + furl(path.substr(0))`, which is just `furl(path)`. Now, in practice,
+  // those two values are actually equal, because of how furl happens to be
+  // implemented. But we don't want to rely on that, so  we normalize
+  // mountPath === '/' to '' in this case. With this normalization, mountPath
+  // is either /dirname or an empty string, and, either way, we end up feeding
+  // a path into furl with a leading '/', which is good.
+  if(mountPath === '/') {
+    mountPath = '';
+  }
 
   // Remove the mount path if any [sometimes there is none for static files]
   // before furling, and then add it back afterwards.
-  return function(path) {
-    return path.startsWith(mountPathWithTrailingSlash) ?
-      mountPath + furl(path.substr(mountPath.length)) :
-      furl(path);
+  return (path) => {
+    if(!path.startsWith(mountPathWithTrailingSlash)) {
+      throw new UrlToFingerprintNotUnderMountPathError(path, mountPath);
+    }
+
+    return mountPath + furl(path.substr(mountPath.length));
   }
 }
+
+export class UrlToFingerprintNotUnderMountPathError extends Error {
+  constructor(path: string, mountPath: string) {
+    super(
+      `You tried to fingerprint a url (${path}) whose path isn\'t under the` +
+      `static files mount path (${mountPath}). However, when using the built-in ` +
+      'fingerprint function, only urls for static files can be fingerprinted, ' +
+      'and all static files have their URL under the static files mount path.'
+    );
+  }
+};
 
 // We sometimes need to peek into the caches that are really
 // part of the private expiry api, so I document them here.
