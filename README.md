@@ -1,4 +1,4 @@
-# twilio-interactive-flow [![CircleCI](https://circleci.com/gh/ethanresnick/twilio-ivr.svg?style=svg)](https://circleci.com/gh/ethanresnick/twilio-ivr) [![codecov](https://codecov.io/gh/ethanresnick/twilio-ivr/branch/master/graph/badge.svg)](https://codecov.io/gh/ethanresnick/twilio-ivr)
+# twilio-interactive-flow [![CircleCI](https://circleci.com/gh/ethanresnick/twilio-ivr.svg?style=svg)](https://circleci.com/gh/ethanresnick/twilio-ivr) [![codecov](https://codecov.io/gh/ethanresnick/twilio-ivr/branch/master/graph/badge.svg)](https://codecov.io/gh/ethanresnick/twilio-ivr) [![Known Vulnerabilities](https://snyk.io/test/github/ethanresnick/twilio-ivr/badge.svg)](https://snyk.io/test/github/ethanresnick/twilio-ivr)
 
 This library makes it easy to build a phone tree/[IVR](https://en.wikipedia.org/wiki/Interactive_voice_response) system using twilio.
 
