@@ -61,5 +61,5 @@ function makeDummySignature(authToken, url, body) {
         return prev + key + body[key];
     }, url);
     return crypto.createHmac('sha1', authToken)
-        .update(new Buffer(finalUrl, 'utf-8')).digest('Base64');
+        .update(new Buffer(finalUrl, 'utf-8')).digest('base64');
 }
