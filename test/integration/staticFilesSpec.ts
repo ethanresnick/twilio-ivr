@@ -3,7 +3,6 @@ import fs = require("fs");
 import path = require("path");
 import request = require("supertest");
 import streamEqual = require("stream-equal");
-import twilio = require("twilio");
 import lib from "../../lib/";
 import { filesConfig, stateRenderingUrlFor } from "../util";
 import { Handler } from "express";

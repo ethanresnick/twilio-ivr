@@ -1,5 +1,4 @@
 import crypto = require("crypto");
-import twilio = require("twilio");
 import request = require("supertest");
 import lib from "../../lib/";
 import { UsableState } from "../../lib/state";

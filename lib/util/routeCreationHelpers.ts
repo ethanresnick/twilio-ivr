@@ -1,13 +1,13 @@
 import logger from "../logger";
 import * as express from "express";
-import { CallDataTwiml, TwimlResponse } from "twilio";
+import { CallDataTwiml } from "twilio";
 import { stateToString } from "../state";
 import { UrlToFingerprintNotUnderMountPathError } from "./staticExpiryHelpers";
 import "../twilioAugments";
 import url = require("url");
 
 import {
-  RenderableState, AsynchronousState, UsableState,
+  RenderableState, UsableState,
   isRenderableState, isBranchingState, isAsynchronousState
 } from "../state";
 

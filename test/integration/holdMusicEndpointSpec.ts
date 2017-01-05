@@ -1,6 +1,5 @@
 import path = require("path");
 import request = require("supertest");
-import twilio = require("twilio");
 import lib from "../../lib/";
 import { filesConfig, stateRenderingUrlFor } from "../util";
 
