@@ -2,10 +2,9 @@ import * as State from "./state";
 import { makeServingMiddlewareAndFurl, getFingerprintForFile } from "./util/staticExpiryHelpers";
 import { renderState, makeUrlFor, fingerprintUrl } from "./util/routeCreationHelpers";
 
-import { Express, Handler, Request, Response, NextFunction } from "express";
+import { Express, Handler } from "express";
 import express = require("express");
 import bodyParser = require("body-parser");
-import url = require("url");
 import path = require("path");
 
 import { webhook as twilioWebhook, TwimlResponse } from "twilio";

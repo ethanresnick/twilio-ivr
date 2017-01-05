@@ -1,5 +1,4 @@
 import crypto = require("crypto");
-import twilio = require("twilio");
 import request = require("supertest");
 import lib from "../../lib/";
 import { UsableState } from "../../lib/state";
@@ -79,5 +78,5 @@ function makeDummySignature(authToken: string, url: string, body: any) {
   }, url);
 
   return crypto.createHmac('sha1', authToken)
-    .update(new Buffer(finalUrl, 'utf-8')).digest('Base64');
+    .update(new Buffer(finalUrl, 'utf-8')).digest('base64');
 }

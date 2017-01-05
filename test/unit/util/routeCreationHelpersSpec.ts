@@ -11,7 +11,6 @@ chaiUse(sinonChai);
 
 describe("route creation utilities", () => {
   describe("resolveBranches", () => {
-    const thrower = () => { throw new Error("unexpected.") };
     type SutReturn = Promise<State.RenderableState>;
 
     describe("handling renderable input states", () => {

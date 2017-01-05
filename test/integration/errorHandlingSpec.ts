@@ -1,6 +1,4 @@
-import path = require("path");
 import request = require("supertest");
-import twilio = require("twilio");
 import lib from "../../lib/";
 import { ErrorRequestHandler } from "express";
 import { BranchingState, RoutableState } from "../../lib/state";

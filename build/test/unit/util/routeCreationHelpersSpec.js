@@ -8,7 +8,6 @@ const states = require("../../fixtures/states");
 chai_1.use(sinonChai);
 describe("route creation utilities", () => {
     describe("resolveBranches", () => {
-        const thrower = () => { throw new Error("unexpected."); };
         describe("handling renderable input states", () => {
             it("should return a promise for the input state", () => {
                 const results = states.renderableStates.map(state => [state, sut.resolveBranches(state, {})]);
