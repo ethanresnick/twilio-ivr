@@ -3,7 +3,7 @@ import request = require("supertest");
 import lib from "../../lib/";
 import { UsableState } from "../../lib/state";
 
-let states: UsableState[] = [<UsableState>{
+const states: UsableState[] = [<UsableState>{
   uri: "/returns-twiml-response",
   name: "DUMMY",
   isEndState: true,
@@ -16,7 +16,7 @@ let states: UsableState[] = [<UsableState>{
 }];
 
 describe("rending Twiml", () => {
-  let app = lib(states, { twilio: { authToken: "", validate: false } });
+  const app = lib(states, { twilio: { authToken: "", validate: false } });
 
   it("should render TwimlResponse object", () => {
     return request(app)

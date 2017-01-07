@@ -15,12 +15,12 @@ import {
 chaiUse(sinonChai);
 
 
-let states: any = {
+const states: any = {
   routableBranching: <RoutableState & BranchingState>{
     name: "CALL_RECEIVED_BRANCH",
     uri: "/routable-branching",
     transitionOut: (<sinon.SinonSpy>((input?: twilio.CallDataTwiml) => {
-      return input && input.CallerZip == "00000" ?
+      return input && input.CallerZip === "00000" ?
         states.nonRoutableBranching :
         states.routableEnd;
     }))
@@ -82,14 +82,14 @@ let states: any = {
   }
 }
 
-let appConfig = { twilio: { authToken: "", validate: false } };
-let app = lib(objectValues<UsableState>(states), appConfig);
-let requestApp = request(app);
+const appConfig = { twilio: { authToken: "", validate: false } };
+const app = lib(objectValues<UsableState>(states), appConfig);
+const requestApp = request(app);
 
 describe("state routing & rendering", () => {
   describe("routable states", () => {
     describe("branching (non-renderable) routable states", () => {
-      let spiedOn = [
+      const spiedOn = [
         states.routableBranching,
         states.routableEnd,
         states.nonRoutableBranching,
@@ -154,7 +154,7 @@ describe("state routing & rendering", () => {
     });
 
     describe("renderable states", () => {
-      let spiedOn = [
+      const spiedOn = [
         states.routableNormal, states.routableAsync
       ];
 
@@ -167,7 +167,7 @@ describe("state routing & rendering", () => {
       });
 
       it("should render state and pass the post data to twimlFor", () => {
-        let dummyData = {To: "+18005555555"};
+        const dummyData = {To: "+18005555555"};
         return requestApp
           .post("/routable-normal")
           .type("form")
@@ -210,14 +210,14 @@ describe("state routing & rendering", () => {
   });
 
   describe("processing input from prior states", () => {
-      let spiedOn = [
+      const spiedOn = [
         states.routableNormal,
         states.nonRoutableNormal,
         states.nonRoutableBranching2,
         states.routableAsync
       ];
 
-      let dummyData = {Dummy: "Data"};
+      const dummyData = {Dummy: "Data"};
 
       beforeEach(() => {
         spyOn(spiedOn)
@@ -283,7 +283,7 @@ describe("state routing & rendering", () => {
 });
 
 function spyOn(toSpyOn: any[]) {
-  let methods = ["transitionOut", "backgroundTrigger", "twimlFor"];
+  const methods = ["transitionOut", "backgroundTrigger", "twimlFor"];
   toSpyOn.forEach(it => {
     methods.forEach(method => {
       if(it[method]) { sinon.spy(it, method); }
@@ -292,7 +292,7 @@ function spyOn(toSpyOn: any[]) {
 }
 
 function unSpyOn(toSpyOn: any[]) {
-  let methods = ["transitionOut", "backgroundTrigger", "twimlFor"];
+  const methods = ["transitionOut", "backgroundTrigger", "twimlFor"];
   toSpyOn.forEach(it => {
     methods.forEach(method => {
       if(it[method]) { it[method].restore(); }

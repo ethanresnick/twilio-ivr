@@ -25,7 +25,7 @@
   "typings": "lib/index.d.ts",
   "scripts": {
     "clean": "rimraf build",
-    "lint": "tslint --type-check --project tsconfig.json --format verbose 'src/**/*.ts'",
+    "lint": "tslint --type-check --project tsconfig.json --format verbose",
     "build": "npm run build:lintfree && npm run lint",
     "build:lintfree": "npm run clean && echo Using TypeScript && tsc --version && tsc --pretty",
     "test": "export NODE_ENV=testing; mocha --compilers ts:ts-node/register --recursive test/**/*Spec.ts test/**/**/*Spec.ts",
@@ -74,7 +74,7 @@
     "@types/chai-as-promised": "0.0.29",
     "@types/debug": "0.0.29",
     "@types/mocha": "2.2.36",
-    "@types/node": "6.0.55",
+    "@types/node": "6.0.58",
     "@types/q": "0.0.x",
     "@types/sinon": "^1.16.32",
     "@types/sinon-chai": "^2.7.27",
@@ -90,7 +90,7 @@
     "stream-equal": "^0.1.9",
     "supertest": "^2.0.1",
     "ts-node": "^2.0.0",
-    "tslint": "4.2.0",
+    "tslint": "4.3.1",
     "typescript": "2.1.4"
   },
   "engines": {

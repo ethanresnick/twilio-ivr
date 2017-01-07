@@ -21,15 +21,15 @@ describe("versioned static files", () => {
     // would be nicer, but, when we assert on the body's contents, supertest
     // will look in res.text (not res.body) if our assertion is a string.
     const parseMp3FileResponse = (res: any, cb: any) => {
-      let musicStream = fs.createReadStream(path.join(musicPath, "Tammy.mp3"));
+      const musicStream = fs.createReadStream(path.join(musicPath, "Tammy.mp3"));
       streamEqual(res, musicStream, (err, streamsAreEqual) => {
         cb(err, streamsAreEqual ? {msg: "True"} : {msg: "Unequal Contents"});
       });
     };
 
     it("should work when there's no static files url prefix (mount path)", () => {
-      let app = lib([], filesConfig({ path: musicPath }));
-      let agent = request.agent(app);
+      const app = lib([], filesConfig({ path: musicPath }));
+      const agent = request.agent(app);
 
       return agent
         .get("/Tammy.mp3")
@@ -38,8 +38,8 @@ describe("versioned static files", () => {
     });
 
     it("should work when there is a static files url prefix (mount path)", () => {
-      let app = lib([], filesConfig({ path: musicPath, mountPath: '/static' }));
-      let agent = request.agent(app);
+      const app = lib([], filesConfig({ path: musicPath, mountPath: '/static' }));
+      const agent = request.agent(app);
 
       return agent
         .get("/static/Tammy.mp3")
@@ -49,21 +49,22 @@ describe("versioned static files", () => {
     });
 
     it("should include a far future cache header with the files", () => {
-      let app = lib([], filesConfig({ path: musicPath }));
-      let agent = request.agent(app);
+      const app = lib([], filesConfig({ path: musicPath }));
+      const agent = request.agent(app);
 
       return agent
         .get(`/Tammy.mp3?v=${hashOfTammyMp3}`)
         .expect("Cache-Control", "public, max-age=31536000")
         .expect((res: request.Response) => {
-          if(!res.header.expires)
+          if(!res.header.expires) {
             throw new Error("expires header expected");
+          }
         });
     });
 
     it("should fall through when the file doesn't exist", () => {
-      let outerApp = express();
-      let app = lib([], filesConfig({ path: musicPath }));
+      const outerApp = express();
+      const app = lib([], filesConfig({ path: musicPath }));
 
       outerApp.use(app);
       outerApp.use((req, res, next) => {
@@ -116,7 +117,7 @@ describe("versioned static files", () => {
     const tammyUrlState = stateRenderingUrlFor("/static/Tammy.mp3", "/only-state");
     const conf = filesConfig({
       fingerprintUrl: (path: string) => {
-        let pathParts = path.split('.');
+        const pathParts = path.split('.');
         pathParts.splice(pathParts.length - 1, 0, 'abc');
         return pathParts.join('.');
       },

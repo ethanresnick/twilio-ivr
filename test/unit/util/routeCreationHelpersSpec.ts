@@ -30,19 +30,19 @@ describe("route creation utilities", () => {
     });
 
     describe("handling branching, non-renderable states", () => {
-      let g = {
+      const g = {
         name: "g",
         processTransitionUri: "/whatevs",
         twimlFor: () => "",
-        transitionOut: (<sinon.SinonSpy>((input) => Promise.resolve(this)))
+        transitionOut: (<sinon.SinonSpy>((input) => Promise.resolve(undefined)))
       };
 
-      let h = {
+      const h = {
         name: "h",
         transitionOut: (<sinon.SinonSpy>((input) => Promise.resolve(g)))
       };
 
-      let i = {
+      const i = {
         name: "i",
         transitionOut: (<sinon.SinonSpy>((input) => Promise.resolve(h))),
       };
@@ -52,7 +52,7 @@ describe("route creation utilities", () => {
       });
 
       afterEach(() => {
-        [g, h, i].forEach(it => it.transitionOut.restore());
+        [g, h, i].forEach(it => { it.transitionOut.restore() });
       })
 
       it("should pass any input data to the first non-renderable state, but not subsequent ones", () => {
@@ -83,7 +83,7 @@ describe("route creation utilities", () => {
   // with that code is subject to change. So, rather than unit testing it,
   // probably makes more sense just to do end to end tests on the server
   // responses, maybe using mock states to check that the right args were provided.
-  describe("renderState", () => { });
+  describe("renderState", () => { }); // tslint:disable-line
 
   describe("urlFor", () => {
     const urlFor = sut.makeUrlFor("ftp", "localhost", (it) => it + '?v=1');
