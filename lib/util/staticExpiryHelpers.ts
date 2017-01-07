@@ -10,9 +10,10 @@ import express = require("express");
 import expiry = require("static-expiry");
 
 export function makeServingMiddlewareAndFurl(app: Application, mountPath: string, staticFilesPath: string): [Handler[], furl] {
-  let oneYearInSeconds = (60 * 60 * 24 * 365);
+  const oneYearInSeconds = (60 * 60 * 24 * 365); // tslint:disable-line
+  const oneYearInMilliseconds = oneYearInSeconds*1000; // tslint:disable-line
 
-  let staticExpiryOpts: expiry.config = {
+  const staticExpiryOpts: expiry.config = {
     location: 'query',
     loadCache: 'startup',
 
@@ -33,12 +34,12 @@ export function makeServingMiddlewareAndFurl(app: Application, mountPath: string
 
   // We need to create the middleware below before reading app.locals.furl,
   // because expiry actually adds the furl function as a side effect. Annoying.
-  let middlewares = [
+  const middlewares = [
     expiry(app, staticExpiryOpts),
-    express.static(staticFilesPath, { maxAge: oneYearInSeconds*1000, index: false })
+    express.static(staticFilesPath, { maxAge: oneYearInMilliseconds, index: false })
   ];
 
-  let furl = mountPathAwareFurl(mountPath, app.locals.furl);
+  const furl = mountPathAwareFurl(mountPath, app.locals.furl);
 
   return [middlewares, furl];
 }

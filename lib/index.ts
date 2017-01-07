@@ -23,7 +23,7 @@ export default function(states: State.UsableState[], config: config): Express {
   // Note: this requires the properties on express's req object to match the
   // properties of the request as twilio sent it (i.e., protocol, host, etc.
   // can't have been rewritten internally).
-  let { validate = true } = config.twilio;
+  const { validate = true } = config.twilio;
   app.use(twilioWebhook(config.twilio.authToken, { validate: validate }));
 
   // Declare our urlFingerprinter variable. Do so out here, because we pass it
@@ -35,7 +35,7 @@ export default function(states: State.UsableState[], config: config): Express {
   // Serve static files (probably audio or twiml) with
   // auto-invalidated, far-future caching headers.
   if (config.staticFiles) {
-    let staticFilesMountPath = config.staticFiles.mountPath || "";
+    const staticFilesMountPath = config.staticFiles.mountPath || "";
     let serveStaticMiddleware: Handler[];
 
     [serveStaticMiddleware, urlFingerprinter] = ((staticFilesConf) => {
@@ -46,11 +46,13 @@ export default function(states: State.UsableState[], config: config): Express {
       }
 
       else if(staticFilesConf.path) {
-        let [middleware, furl] =
+        const [defaultMiddleware, furl] =
           makeServingMiddlewareAndFurl(app, staticFilesMountPath, staticFilesConf.path);
 
         // user's middleware always overrides, even if we're using built-in furl.
-        middleware = staticFilesConf.middleware ? [staticFilesConf.middleware] : middleware;
+        const middleware = staticFilesConf.middleware ?
+          [staticFilesConf.middleware] :
+          defaultMiddleware;
 
         return <ReturnTuple>[middleware, furl];
       }
@@ -108,8 +110,8 @@ export default function(states: State.UsableState[], config: config): Express {
       // GET request for it. But it's also not just a static file, because it
       // has dynamic content (i.e., the fingerprint of the hold music file and
       // the host name of the server, because twilio won't accept a relative URI).
-      let holdMusicMiddleware = express().get(holdMusicEndpoint, (req, res, next) => {
-        let urlFor = makeUrlFor(req.protocol, req.get('Host'), urlFingerprinter);
+      const holdMusicMiddleware = express().get(holdMusicEndpoint, (req, res, next) => {
+        const urlFor = makeUrlFor(req.protocol, req.get('Host'), urlFingerprinter);
         res.set('Cache-Control', 'public, max-age=31536000');
         res.send(holdMusicTwimlFor(urlFor));
       });

@@ -3,7 +3,7 @@ import request = require("supertest");
 import lib from "../../lib/";
 import { UsableState } from "../../lib/state";
 
-let states: UsableState[] = [<UsableState>{
+const states: UsableState[] = [<UsableState>{
   uri: "/",
   name: "DUMMY",
   isEndState: true,
@@ -11,12 +11,12 @@ let states: UsableState[] = [<UsableState>{
 }];
 
 describe("request signing", () => {
-  let fakeToken = 'abcdefghijklmnopqrstuvwxyz1234567890';
-  let fakeBody = { dummy: "val" };
+  const fakeToken = 'abcdefghijklmnopqrstuvwxyz1234567890';
+  const fakeBody = { dummy: "val" };
 
   describe("default behavior", () => {
-    let app = lib(states, { twilio: { authToken: fakeToken } });
-    let agent = request.agent(app);
+    const app = lib(states, { twilio: { authToken: fakeToken } });
+    const agent = request.agent(app);
 
     it("should reject unsigned requests", () => {
       return agent
@@ -26,12 +26,12 @@ describe("request signing", () => {
   });
 
   describe("validate: true", () => {
-    let app = lib(states, { twilio: { authToken: fakeToken, validate: true } });
-    let agent = request.agent(app);
+    const app = lib(states, { twilio: { authToken: fakeToken, validate: true } });
+    const agent = request.agent(app);
 
     it("should allow signed requests", () => {
-      let test = agent.post("/");
-      let testSig = makeDummySignature(fakeToken, test.url, fakeBody);
+      const test = agent.post("/");
+      const testSig = makeDummySignature(fakeToken, test.url, fakeBody);
 
       return test
         .type('form')
@@ -48,19 +48,19 @@ describe("request signing", () => {
   });
 
   describe("validate: false", () => {
-    let app = lib(states, { twilio: { authToken: fakeToken, validate: false } });
-    let agent = request.agent(app);
+    const app = lib(states, { twilio: { authToken: fakeToken, validate: false } });
+    const agent = request.agent(app);
 
     it("should allow all requests", () => {
-      let test = agent.post("/");
-      let testSig = makeDummySignature(fakeToken, test.url, fakeBody);
+      const test = agent.post("/");
+      const testSig = makeDummySignature(fakeToken, test.url, fakeBody);
 
-      let unsignedRequestAllowed =
+      const unsignedRequestAllowed =
         agent
           .post("/")
           .expect(200);
 
-      let signedRequestAllowed =
+      const signedRequestAllowed =
         test
           .type('form')
           .send(fakeBody)
@@ -73,7 +73,7 @@ describe("request signing", () => {
 });
 
 function makeDummySignature(authToken: string, url: string, body: any) {
-  let finalUrl = Object.keys(body).sort().reduce((prev, key) => {
+  const finalUrl = Object.keys(body).sort().reduce((prev, key) => {
     return prev + key + body[key];
   }, url);
 
