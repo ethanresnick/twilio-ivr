@@ -6,7 +6,7 @@ import { BranchingState, RoutableState } from "../../lib/state";
 describe("error handling (at component integration points)", () => {
   describe("an invalid state transition (to undefined, an error, or an invalid state)", () => {
     it("should trigger the express app's error handling middleware", () => {
-      let statesWithInvalidTransition = <(BranchingState & RoutableState)[]>[
+      const statesWithInvalidTransition = <(BranchingState & RoutableState)[]>[
         { uri: "/1",
           transitionOut() {
           return undefined;
@@ -26,7 +26,7 @@ describe("error handling (at component integration points)", () => {
         }
       ];
 
-      let app = lib(statesWithInvalidTransition, {twilio: { authToken: "", validate: false}});
+      const app = lib(statesWithInvalidTransition, {twilio: { authToken: "", validate: false}});
       app.use(<ErrorRequestHandler>function(err, req, res, next) {
         res.status(500).send('error handler reached');
       });

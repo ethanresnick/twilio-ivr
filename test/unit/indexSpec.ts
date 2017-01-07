@@ -7,13 +7,13 @@ const { expect } = chai;
 
 describe("main express app creation function", () => {
   it("should return an express app", () => {
-    let result = sut([], { twilio: {authToken: ""} });
+    const result = sut([], { twilio: {authToken: ""} });
     expect(isExpressApp(result)).to.be.true;
   });
 
   it("should error at creation time when given a state with an invalid shape", () => {
-    let statesWithInvalidState = states.normalStates.concat(states.invalidStates[0]);
-    let makeApp = () => {
+    const statesWithInvalidState = states.normalStates.concat(states.invalidStates[0]);
+    const makeApp = () => {
       return sut(statesWithInvalidState, {twilio: {authToken: ""}});
     };
 
@@ -24,7 +24,7 @@ describe("main express app creation function", () => {
 // A crude way to check if a value is an express app,
 // since an elegant way doesn't seem to exist.
 function isExpressApp(v: any) {
-  let appProtoish = (<any>express).application;
+  const appProtoish = (<any>express).application;
 
   return v.set === (appProtoish && appProtoish.set);
 }

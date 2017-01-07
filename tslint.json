@@ -3,15 +3,22 @@
   "rules": {
     "adjacent-overload-signatures": true,
     "member-access": false,
+    "no-empty-interface": true,
     "no-internal-module": true,
-    "no-namespace": true,
+    "no-namespace": [true, "allow-declarations"],
+    "no-var-requires": true,
     "no-mergeable-namespace": true,
     "no-reference": true,
     "no-string-literal": true,
     "typedef": [true, "property-declaration", "member-variable-declaration"],
+    "unified-signatures": false,
+    "array-type": false,
+    "interface-over-type-literal": false,
 
     "curly": true,
     "forin": true,
+    "prefer-for-of": true,
+    "prefer-const": true,
     "label-position": true,
     "radix": true,
     "switch-default": true,
@@ -19,12 +26,15 @@
     "use-isnan": true,
     "variable-name": [true, "ban-keywords"],
     "only-arrow-functions": false,
+    "typeof-compare": true,
+    "cyclomatic-complexity": true,
 
     "no-duplicate-variable": true,
     "no-var-keyword": true,
     "no-arg": true,
     "no-bitwise": true,
     "no-for-in-array": true,
+    "no-void-expression": true,
     "no-conditional-assignment": true,
     "no-construct": true,
     "no-console": [true,
@@ -42,6 +52,8 @@
     "no-unsafe-finally": true,
     "no-unused-expression": true,
     "no-unused-new": true,
+    "no-string-throw": true,
+    "no-magic-numbers": false,
 
     "interface-name": [true, "never-prefix"],
     "class-name": true,
@@ -71,6 +83,7 @@
     "quotemark": false,
     "semicolon": false,
     "whitespace": false,
-    "array-type": false
+    "space-before-function-paren": false,
+    "import-spacing": false
   }
 }

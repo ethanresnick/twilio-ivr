@@ -7,20 +7,20 @@ const musicPath = path.join(__dirname, "../fixtures/music");
 const hashOfHoldMusic = "a9f9bd368e461c339e9b79b9afadd97c";
 
 describe("the hold music endpoint", () => {
-  let baseStaticConfig = {
+  const baseStaticConfig = {
     holdMusic: { endpoint: "/hold-music", fileRelativeUri: "./theCalling.mp3" },
     path: musicPath
   };
-  let mountedStaticConfig =
+  const mountedStaticConfig =
     Object.assign({}, baseStaticConfig, { mountPath: "/static/" });
 
-  let holdMusicUrlStates = {
+  const holdMusicUrlStates = {
     normal: stateRenderingUrlFor("/hold-music", "/get-hold-music-endpoint"),
     mounted: stateRenderingUrlFor("/static/hold-music", "/get-hold-music-endpoint")
   }
 
-  let agent = request(lib([holdMusicUrlStates.normal], filesConfig(baseStaticConfig)));
-  let mountPathAgent = request(lib([holdMusicUrlStates.mounted], filesConfig(mountedStaticConfig)));
+  const agent = request(lib([holdMusicUrlStates.normal], filesConfig(baseStaticConfig)));
+  const mountPathAgent = request(lib([holdMusicUrlStates.mounted], filesConfig(mountedStaticConfig)));
 
   describe("retrieval", () => {
     it("should respect static files mount path for purposes of its url", () => {
@@ -47,18 +47,18 @@ describe("the hold music endpoint", () => {
     });
 
     it("should still work if the holdMusicEndpoint starts with the same string as the static mount path", () => {
-      let baseStaticConfig = {
+      const staticConfig = {
         holdMusic: { endpoint: "/public-music", fileRelativeUri: "theCalling.mp3" },
         path: musicPath,
         mountPath: "/public"
       };
 
-      let holdMusicUrlState =
+      const holdMusicUrlState =
         stateRenderingUrlFor("/public/public-music", "/get-hold-music-endpoint");
 
-      let agent = request(lib([holdMusicUrlState], filesConfig(baseStaticConfig)));
+      const thisTestAgent = request(lib([holdMusicUrlState], filesConfig(staticConfig)));
 
-      return agent
+      return thisTestAgent
         .post("/get-hold-music-endpoint")
         .expect(`/public/public-music?v=${hashOfHoldMusic}`);
     });

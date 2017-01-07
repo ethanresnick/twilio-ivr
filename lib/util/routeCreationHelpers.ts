@@ -111,7 +111,7 @@ export function renderState(state: UsableState, req: express.Request,
     // Find whether the error came from attempting to find the state to render,
     // or from attempting to render it. Then log the error and re-throw it.
     const origStateName = stateToString(state);
-    const errorToString = (e: any) => e && e.message ? e.message : String(e);
+    const errorToString = (err: any) => err && err.message ? err.message : String(err);
 
     const [errorToThrow, genericMessageForErrorType] =
       (e && (<any>e).type === couldNotFindRenderableStateError) ?
@@ -126,7 +126,7 @@ export function renderState(state: UsableState, req: express.Request,
 
 export type fingerprintUrl = (path: string) => string;
 export type urlFor = (path: string, options?: UrlForOptions) => string;
-export type UrlForOptions = {query?: any, fingerprint?: boolean, absolute?: boolean};
+export type UrlForOptions = { query?: any, fingerprint?: boolean, absolute?: boolean };
 
 export function makeUrlFor(protocol: string, host: string, furl?: fingerprintUrl): urlFor {
   return (path: string, { query, absolute = false, fingerprint }: UrlForOptions = {}) => {
