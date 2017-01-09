@@ -74,7 +74,7 @@
     "@types/chai-as-promised": "0.0.29",
     "@types/debug": "0.0.29",
     "@types/mocha": "2.2.36",
-    "@types/node": "6.0.58",
+    "@types/node": "6.0.59",
     "@types/q": "0.0.x",
     "@types/sinon": "^1.16.32",
     "@types/sinon-chai": "^2.7.27",
