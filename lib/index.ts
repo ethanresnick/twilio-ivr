@@ -150,9 +150,9 @@ export default function(states: State.UsableState[], config: config): Express {
 
     if (State.isRoutableState(thisState)) {
       app.post(thisState.uri, function (req, res, next) {
-        renderState(thisState, req, urlFingerprinter, req.body).then(twiml => {
-          res.send(twiml);
-        }, next);
+        renderState(thisState, req, urlFingerprinter, req.body)
+          .then(twiml => { res.send(twiml);  })
+          .catch(next);
       });
     }
 
@@ -163,11 +163,12 @@ export default function(states: State.UsableState[], config: config): Express {
 
         // Then, do what we do for renderable states, except don't pass
         // req.body anywhere, as we've already used that input to transition out.
-        nextStatePromise.then(nextState => {
-          renderState(nextState, req, urlFingerprinter, undefined).then(twiml => {
-            res.send(twiml);
-          }, next);
-        });
+        nextStatePromise
+          .then(nextState => {
+            return renderState(nextState, req, urlFingerprinter, undefined);
+          })
+          .then(twiml => { res.send(twiml); })
+          .catch(next);
       });
     }
   });
