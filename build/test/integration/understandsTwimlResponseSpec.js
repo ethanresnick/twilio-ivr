@@ -2,7 +2,7 @@
 const twilio = require("twilio");
 const request = require("supertest");
 const _1 = require("../../lib/");
-let states = [{
+const states = [{
         uri: "/returns-twiml-response",
         name: "DUMMY",
         isEndState: true,
@@ -14,7 +14,7 @@ let states = [{
         twimlFor() { return 'Test'; }
     }];
 describe("rending Twiml", () => {
-    let app = _1.default(states, { twilio: { authToken: "", validate: false } });
+    const app = _1.default(states, { twilio: { authToken: "", validate: false } });
     it("should render TwimlResponse object", () => {
         return request(app)
             .post("/returns-twiml-response")

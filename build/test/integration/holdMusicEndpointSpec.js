@@ -6,17 +6,17 @@ const util_1 = require("../util");
 const musicPath = path.join(__dirname, "../fixtures/music");
 const hashOfHoldMusic = "a9f9bd368e461c339e9b79b9afadd97c";
 describe("the hold music endpoint", () => {
-    let baseStaticConfig = {
+    const baseStaticConfig = {
         holdMusic: { endpoint: "/hold-music", fileRelativeUri: "./theCalling.mp3" },
         path: musicPath
     };
-    let mountedStaticConfig = Object.assign({}, baseStaticConfig, { mountPath: "/static/" });
-    let holdMusicUrlStates = {
+    const mountedStaticConfig = Object.assign({}, baseStaticConfig, { mountPath: "/static/" });
+    const holdMusicUrlStates = {
         normal: util_1.stateRenderingUrlFor("/hold-music", "/get-hold-music-endpoint"),
         mounted: util_1.stateRenderingUrlFor("/static/hold-music", "/get-hold-music-endpoint")
     };
-    let agent = request(_1.default([holdMusicUrlStates.normal], util_1.filesConfig(baseStaticConfig)));
-    let mountPathAgent = request(_1.default([holdMusicUrlStates.mounted], util_1.filesConfig(mountedStaticConfig)));
+    const agent = request(_1.default([holdMusicUrlStates.normal], util_1.filesConfig(baseStaticConfig)));
+    const mountPathAgent = request(_1.default([holdMusicUrlStates.mounted], util_1.filesConfig(mountedStaticConfig)));
     describe("retrieval", () => {
         it("should respect static files mount path for purposes of its url", () => {
             return Promise.all([
@@ -39,14 +39,14 @@ describe("the hold music endpoint", () => {
                 .expect("/hold-music?v=" + hashOfHoldMusic);
         });
         it("should still work if the holdMusicEndpoint starts with the same string as the static mount path", () => {
-            let baseStaticConfig = {
+            const staticConfig = {
                 holdMusic: { endpoint: "/public-music", fileRelativeUri: "theCalling.mp3" },
                 path: musicPath,
                 mountPath: "/public"
             };
-            let holdMusicUrlState = util_1.stateRenderingUrlFor("/public/public-music", "/get-hold-music-endpoint");
-            let agent = request(_1.default([holdMusicUrlState], util_1.filesConfig(baseStaticConfig)));
-            return agent
+            const holdMusicUrlState = util_1.stateRenderingUrlFor("/public/public-music", "/get-hold-music-endpoint");
+            const thisTestAgent = request(_1.default([holdMusicUrlState], util_1.filesConfig(staticConfig)));
+            return thisTestAgent
                 .post("/get-hold-music-endpoint")
                 .expect(`/public/public-music?v=${hashOfHoldMusic}`);
         });

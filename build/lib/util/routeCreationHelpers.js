@@ -31,7 +31,7 @@ function renderState(state, req, furl, inputData) {
         throw { type: couldNotFindRenderableStateError, origError: e };
     }).catch((e) => {
         const origStateName = state_1.stateToString(state);
-        const errorToString = (e) => e && e.message ? e.message : String(e);
+        const errorToString = (err) => err && err.message ? err.message : String(err);
         const [errorToThrow, genericMessageForErrorType] = (e && e.type === couldNotFindRenderableStateError) ?
             [e.origError, `Error while attempting to find the next state to render after ${origStateName}.`] :
             [e, `Error while attempting to render next state after ${origStateName}.`];

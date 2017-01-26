@@ -7,12 +7,12 @@ require("../../lib/twilioAugments");
 const _1 = require("../../lib/");
 const objectValuesEntries_1 = require("../../lib/util/objectValuesEntries");
 chai_1.use(sinonChai);
-let states = {
+const states = {
     routableBranching: {
         name: "CALL_RECEIVED_BRANCH",
         uri: "/routable-branching",
         transitionOut: ((input) => {
-            return input && input.CallerZip == "00000" ?
+            return input && input.CallerZip === "00000" ?
                 states.nonRoutableBranching :
                 states.routableEnd;
         })
@@ -67,13 +67,13 @@ let states = {
         }
     }
 };
-let appConfig = { twilio: { authToken: "", validate: false } };
-let app = _1.default(objectValuesEntries_1.values(states), appConfig);
-let requestApp = request(app);
+const appConfig = { twilio: { authToken: "", validate: false } };
+const app = _1.default(objectValuesEntries_1.values(states), appConfig);
+const requestApp = request(app);
 describe("state routing & rendering", () => {
     describe("routable states", () => {
         describe("branching (non-renderable) routable states", () => {
-            let spiedOn = [
+            const spiedOn = [
                 states.routableBranching,
                 states.routableEnd,
                 states.nonRoutableBranching,
@@ -129,7 +129,7 @@ describe("state routing & rendering", () => {
             });
         });
         describe("renderable states", () => {
-            let spiedOn = [
+            const spiedOn = [
                 states.routableNormal, states.routableAsync
             ];
             before(() => {
@@ -139,7 +139,7 @@ describe("state routing & rendering", () => {
                 unSpyOn(spiedOn);
             });
             it("should render state and pass the post data to twimlFor", () => {
-                let dummyData = { To: "+18005555555" };
+                const dummyData = { To: "+18005555555" };
                 return requestApp
                     .post("/routable-normal")
                     .type("form")
@@ -174,13 +174,13 @@ describe("state routing & rendering", () => {
         });
     });
     describe("processing input from prior states", () => {
-        let spiedOn = [
+        const spiedOn = [
             states.routableNormal,
             states.nonRoutableNormal,
             states.nonRoutableBranching2,
             states.routableAsync
         ];
-        let dummyData = { Dummy: "Data" };
+        const dummyData = { Dummy: "Data" };
         beforeEach(() => {
             spyOn(spiedOn);
         });
@@ -237,7 +237,7 @@ describe("state routing & rendering", () => {
     });
 });
 function spyOn(toSpyOn) {
-    let methods = ["transitionOut", "backgroundTrigger", "twimlFor"];
+    const methods = ["transitionOut", "backgroundTrigger", "twimlFor"];
     toSpyOn.forEach(it => {
         methods.forEach(method => {
             if (it[method]) {
@@ -247,7 +247,7 @@ function spyOn(toSpyOn) {
     });
 }
 function unSpyOn(toSpyOn) {
-    let methods = ["transitionOut", "backgroundTrigger", "twimlFor"];
+    const methods = ["transitionOut", "backgroundTrigger", "twimlFor"];
     toSpyOn.forEach(it => {
         methods.forEach(method => {
             if (it[method]) {

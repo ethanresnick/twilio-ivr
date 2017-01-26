@@ -11,22 +11,22 @@ const hashOfTammyMp3 = "23241bfb2abddb6f58a1e67e99565ec5";
 describe("versioned static files", () => {
     describe("serving static files", () => {
         const parseMp3FileResponse = (res, cb) => {
-            let musicStream = fs.createReadStream(path.join(musicPath, "Tammy.mp3"));
+            const musicStream = fs.createReadStream(path.join(musicPath, "Tammy.mp3"));
             streamEqual(res, musicStream, (err, streamsAreEqual) => {
                 cb(err, streamsAreEqual ? { msg: "True" } : { msg: "Unequal Contents" });
             });
         };
         it("should work when there's no static files url prefix (mount path)", () => {
-            let app = _1.default([], util_1.filesConfig({ path: musicPath }));
-            let agent = request.agent(app);
+            const app = _1.default([], util_1.filesConfig({ path: musicPath }));
+            const agent = request.agent(app);
             return agent
                 .get("/Tammy.mp3")
                 .parse(parseMp3FileResponse)
                 .expect({ msg: "True" });
         });
         it("should work when there is a static files url prefix (mount path)", () => {
-            let app = _1.default([], util_1.filesConfig({ path: musicPath, mountPath: '/static' }));
-            let agent = request.agent(app);
+            const app = _1.default([], util_1.filesConfig({ path: musicPath, mountPath: '/static' }));
+            const agent = request.agent(app);
             return agent
                 .get("/static/Tammy.mp3")
                 .parse(parseMp3FileResponse)
@@ -34,19 +34,20 @@ describe("versioned static files", () => {
                 .expect({ msg: "True" });
         });
         it("should include a far future cache header with the files", () => {
-            let app = _1.default([], util_1.filesConfig({ path: musicPath }));
-            let agent = request.agent(app);
+            const app = _1.default([], util_1.filesConfig({ path: musicPath }));
+            const agent = request.agent(app);
             return agent
                 .get(`/Tammy.mp3?v=${hashOfTammyMp3}`)
                 .expect("Cache-Control", "public, max-age=31536000")
                 .expect((res) => {
-                if (!res.header.expires)
+                if (!res.header.expires) {
                     throw new Error("expires header expected");
+                }
             });
         });
         it("should fall through when the file doesn't exist", () => {
-            let outerApp = express();
-            let app = _1.default([], util_1.filesConfig({ path: musicPath }));
+            const outerApp = express();
+            const app = _1.default([], util_1.filesConfig({ path: musicPath }));
             outerApp.use(app);
             outerApp.use((req, res, next) => {
                 res.status(404).send("My Custom 404zzz.");
@@ -80,7 +81,7 @@ describe("versioned static files", () => {
         const tammyUrlState = util_1.stateRenderingUrlFor("/static/Tammy.mp3", "/only-state");
         const conf = util_1.filesConfig({
             fingerprintUrl: (path) => {
-                let pathParts = path.split('.');
+                const pathParts = path.split('.');
                 pathParts.splice(pathParts.length - 1, 0, 'abc');
                 return pathParts.join('.');
             },

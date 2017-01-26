@@ -20,17 +20,17 @@ describe("route creation utilities", () => {
             });
         });
         describe("handling branching, non-renderable states", () => {
-            let g = {
+            const g = {
                 name: "g",
                 processTransitionUri: "/whatevs",
                 twimlFor: () => "",
-                transitionOut: ((input) => Promise.resolve(this))
+                transitionOut: ((input) => Promise.resolve(undefined))
             };
-            let h = {
+            const h = {
                 name: "h",
                 transitionOut: ((input) => Promise.resolve(g))
             };
-            let i = {
+            const i = {
                 name: "i",
                 transitionOut: ((input) => Promise.resolve(h)),
             };
@@ -38,7 +38,7 @@ describe("route creation utilities", () => {
                 [g, h, i].forEach(it => sinon.spy(it, "transitionOut"));
             });
             afterEach(() => {
-                [g, h, i].forEach(it => it.transitionOut.restore());
+                [g, h, i].forEach(it => { it.transitionOut.restore(); });
             });
             it("should pass any input data to the first non-renderable state, but not subsequent ones", () => {
                 return sut.resolveBranches(i, {}).then(state => {

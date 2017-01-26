@@ -4,7 +4,7 @@ const _1 = require("../../lib/");
 describe("error handling (at component integration points)", () => {
     describe("an invalid state transition (to undefined, an error, or an invalid state)", () => {
         it("should trigger the express app's error handling middleware", () => {
-            let statesWithInvalidTransition = [
+            const statesWithInvalidTransition = [
                 { uri: "/1",
                     transitionOut() {
                         return undefined;
@@ -23,7 +23,7 @@ describe("error handling (at component integration points)", () => {
                     }
                 }
             ];
-            let app = _1.default(statesWithInvalidTransition, { twilio: { authToken: "", validate: false } });
+            const app = _1.default(statesWithInvalidTransition, { twilio: { authToken: "", validate: false } });
             app.use(function (err, req, res, next) {
                 res.status(500).send('error handler reached');
             });

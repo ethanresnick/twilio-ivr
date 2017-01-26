@@ -10,19 +10,21 @@ require("./twilioAugments");
 function default_1(states, config) {
     const app = express();
     app.use(bodyParser.urlencoded({ extended: false }));
-    let { validate = true } = config.twilio;
+    const { validate = true } = config.twilio;
     app.use(twilio_1.webhook(config.twilio.authToken, { validate: validate }));
     let urlFingerprinter;
     if (config.staticFiles) {
-        let staticFilesMountPath = config.staticFiles.mountPath || "";
+        const staticFilesMountPath = config.staticFiles.mountPath || "";
         let serveStaticMiddleware;
         [serveStaticMiddleware, urlFingerprinter] = ((staticFilesConf) => {
             if (staticFilesConf.fingerprintUrl && staticFilesConf.middleware) {
                 return [[staticFilesConf.middleware], staticFilesConf.fingerprintUrl];
             }
             else if (staticFilesConf.path) {
-                let [middleware, furl] = staticExpiryHelpers_1.makeServingMiddlewareAndFurl(app, staticFilesMountPath, staticFilesConf.path);
-                middleware = staticFilesConf.middleware ? [staticFilesConf.middleware] : middleware;
+                const [defaultMiddleware, furl] = staticExpiryHelpers_1.makeServingMiddlewareAndFurl(app, staticFilesMountPath, staticFilesConf.path);
+                const middleware = staticFilesConf.middleware ?
+                    [staticFilesConf.middleware] :
+                    defaultMiddleware;
                 return [middleware, furl];
             }
             else {
@@ -55,8 +57,8 @@ function default_1(states, config) {
                         origUrlFingerprinter(path);
                 };
             }
-            let holdMusicMiddleware = express().get(holdMusicEndpoint, (req, res, next) => {
-                let urlFor = routeCreationHelpers_1.makeUrlFor(req.protocol, req.get('Host'), urlFingerprinter);
+            const holdMusicMiddleware = express().get(holdMusicEndpoint, (req, res, next) => {
+                const urlFor = routeCreationHelpers_1.makeUrlFor(req.protocol, req.get('Host'), urlFingerprinter);
                 res.set('Cache-Control', 'public, max-age=31536000');
                 res.send(holdMusicTwimlFor(urlFor));
             });
@@ -71,19 +73,20 @@ function default_1(states, config) {
         }
         if (State.isRoutableState(thisState)) {
             app.post(thisState.uri, function (req, res, next) {
-                routeCreationHelpers_1.renderState(thisState, req, urlFingerprinter, req.body).then(twiml => {
-                    res.send(twiml);
-                }, next);
+                routeCreationHelpers_1.renderState(thisState, req, urlFingerprinter, req.body)
+                    .then(twiml => { res.send(twiml); })
+                    .catch(next);
             });
         }
         if (State.isNormalState(thisState)) {
             app.post(thisState.processTransitionUri, function (req, res, next) {
                 const nextStatePromise = Promise.resolve(thisState.transitionOut(req.body));
-                nextStatePromise.then(nextState => {
-                    routeCreationHelpers_1.renderState(nextState, req, urlFingerprinter, undefined).then(twiml => {
-                        res.send(twiml);
-                    }, next);
-                });
+                nextStatePromise
+                    .then(nextState => {
+                    return routeCreationHelpers_1.renderState(nextState, req, urlFingerprinter, undefined);
+                })
+                    .then(twiml => { res.send(twiml); })
+                    .catch(next);
             });
         }
     });
