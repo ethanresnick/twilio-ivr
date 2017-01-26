@@ -90,7 +90,7 @@
     "stream-equal": "^0.1.9",
     "supertest": "^2.0.1",
     "ts-node": "^2.0.0",
-    "tslint": "4.4.1",
+    "tslint": "4.4.2",
     "typescript": "2.1.5"
   },
   "engines": {
