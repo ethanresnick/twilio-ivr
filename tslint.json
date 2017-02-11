@@ -89,7 +89,6 @@
     "quotemark": false,
     "semicolon": false,
     "whitespace": false,
-    "array-type": false,
     "space-before-function-paren": false,
     "import-spacing": false
   }
