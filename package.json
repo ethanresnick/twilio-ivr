@@ -70,7 +70,7 @@
   },
   "devDependencies": {
     "@types/body-parser": "0.0.33",
-    "@types/chai": "3.4.34",
+    "@types/chai": "3.4.35",
     "@types/chai-as-promised": "0.0.29",
     "@types/debug": "0.0.29",
     "@types/mocha": "2.2.39",
