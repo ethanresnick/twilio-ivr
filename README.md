@@ -246,7 +246,7 @@ The `urlFor` function optionally takes other [options](https://github.com/ethanr
 
   * `holdMusic` (optional): an object containing keys specifically related to setting up the [hold music endpoint](#hold-music); if not provided, no hold music endpoint will be created.
     * `fileRelativeUri` (**required**, if the holdMusic object is present): the URI of your hold music audio file, *relative to/excluding the base URI where all your static files are served from*. So, if your static files are served out of `https://example.com/static`, and your hold music file is at `https://example.com/static/hold.mp3`, you'd set this option to `hold.mp3` (or `./hold.mp3`).
-    * `endpoint` (optional, defaults to `/hold-music`): the uri to use for the hold music endpoint. This uri will be nested under the static files mount path if one is provided. I.e., if the mountPath is `/static` and the endpoint is `/hold-music`, the full hold music uri will `/static/hold-music`.
+    * `endpoint` (optional, defaults to `/hold-music`): the unfingerprinted uri to use for the hold music endpoint. This uri will be nested under the static files mount path if one is provided. I.e., if the mountPath is `/static` and the endpoint is `/hold-music`, the full, unfingerprinted hold music uri will `/static/hold-music`.
     * `twimlFor(urlFor)` (optional): a function you can provide to override the built-in logic for generating the hold music endpoint's Twiml.
 
 ### Hold Music
