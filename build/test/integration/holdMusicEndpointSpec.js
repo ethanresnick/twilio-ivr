@@ -63,4 +63,33 @@ describe("the hold music endpoint", () => {
             ]);
         });
     });
+    describe("with custom fingerprintUrl and middleware", () => {
+        const appConfig = util_1.filesConfig({
+            fingerprintUrl: (path) => {
+                const pathParts = path.split('.');
+                if (pathParts.length > 1) {
+                    pathParts.splice(pathParts.length - 1, 0, 'abc');
+                    return pathParts.join('.');
+                }
+                else {
+                    return path + '--abc';
+                }
+            },
+            mountPath: '/static',
+            middleware: ((req, res, next) => {
+                if (req.url === '/hold-music--abc') {
+                    req.url = '/hold-music';
+                    next();
+                    return;
+                }
+                res.send("Hi from " + req.url);
+            }),
+            holdMusic: { endpoint: "/hold-music", fileRelativeUri: "./theCalling.mp3" }
+        });
+        const customFingerprintAgent = request(_1.default([holdMusicUrlStates.mounted], appConfig));
+        it("should work with path-changing fingerprint functions", () => {
+            return customFingerprintAgent.get('/static/hold-music--abc')
+                .expect(new RegExp(`http\\://[\\d\\.\\:]+/static/theCalling\\.abc.mp3`));
+        });
+    });
 });
