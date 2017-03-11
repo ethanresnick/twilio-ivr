@@ -41,10 +41,14 @@ export default function(states: State.UsableState[], config: config): Express {
     [serveStaticMiddleware, urlFingerprinter] = ((staticFilesConf) => {
       type ReturnTuple = [Handler[], fingerprintUrl];
 
+      // If the user's given us both of a way to generate fingerprinted urls
+      // and to serve the static files, that's sufficient to totally obviate
+      // the built in static expiry middleware and configure urlFor.
       if (staticFilesConf.fingerprintUrl && staticFilesConf.middleware) {
         return <ReturnTuple>[[staticFilesConf.middleware], staticFilesConf.fingerprintUrl];
       }
 
+      // But a path works too, with the option for them to override the middleware.
       else if(staticFilesConf.path) {
         const [defaultMiddleware, furl] =
           makeServingMiddlewareAndFurl(app, staticFilesMountPath, staticFilesConf.path);

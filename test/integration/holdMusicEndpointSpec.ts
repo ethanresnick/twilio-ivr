@@ -1,5 +1,6 @@
 import path = require("path");
 import request = require("supertest");
+import { Handler } from "express";
 import lib from "../../lib/";
 import { filesConfig, stateRenderingUrlFor } from "../util";
 
@@ -76,5 +77,44 @@ describe("the hold music endpoint", () => {
           .expect(new RegExp(`http\\://[\\d\\.\\:]+/static/theCalling\\.mp3\\?v=${hashOfHoldMusic}`))
       ]);
     })
+  });
+
+  describe("with custom fingerprintUrl and middleware", () => {
+    const appConfig = filesConfig({
+      fingerprintUrl: (path: string) => {
+        const pathParts = path.split('.');
+        if(pathParts.length > 1) {
+          pathParts.splice(pathParts.length - 1, 0, 'abc');
+          return pathParts.join('.');
+        }
+        else {
+          return path + '--abc';
+        }
+      },
+      mountPath: '/static',
+      middleware: <Handler>((req, res, next) => {
+        // If user provides their own middleware but wants to serve the hold
+        // music with the built in middleware, they should remove the fingerprint
+        // from the url and then just call next to get to the built-in one.
+        if(req.url === '/hold-music--abc') {
+          req.url = '/hold-music';
+          next();
+          return;
+        }
+        res.send("Hi from " + req.url);
+      }),
+      holdMusic: { endpoint: "/hold-music", fileRelativeUri: "./theCalling.mp3" }
+    });
+
+    const customFingerprintAgent = request(lib([holdMusicUrlStates.mounted], appConfig));
+
+    // Fingerprint url may changet the url path, such that it doesn't match
+    // the route registered for the for the hold music endpoint. We want to
+    // test that the route is unfingerprinted first, so the built-in hold
+    // music middleware still sees it.
+    it("should work with path-changing fingerprint functions", () => {
+      return customFingerprintAgent.get('/static/hold-music--abc')
+        .expect(new RegExp(`http\\://[\\d\\.\\:]+/static/theCalling\\.abc.mp3`))
+    });
   });
 })
