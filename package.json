@@ -4,8 +4,8 @@
   "description": "Easily build phone/sms trees with twilio and express.",
   "license": "MIT",
   "repository": {
-    "type" : "git",
-    "url" : "https://github.com/ethanresnick/twilio-ivr.git"
+    "type": "git",
+    "url": "https://github.com/ethanresnick/twilio-ivr.git"
   },
   "author": "Ethan Resnick",
   "keywords": [
@@ -63,10 +63,12 @@
     "@types/body-parser": "1.16.0",
     "@types/debug": "0.0.29",
     "@types/express": "^4.0.34",
+    "@types/ramda": "0.0.4",
     "@types/twilio": "0.0.6",
     "body-parser": "^1.15.2",
     "debug": "^2.2.0",
     "express": "^4.14.0",
+    "ramda": "^0.23.0",
     "static-expiry": "paulwalker/connect-static-expiry#f18d288a6a5ccaff07c9805c498a9a79e6473f99",
     "twilio": "ethanresnick/twilio-node#patch-1"
   },
