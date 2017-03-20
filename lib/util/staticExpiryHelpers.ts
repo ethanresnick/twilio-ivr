@@ -9,6 +9,15 @@ import path = require("path");
 import express = require("express");
 import expiry = require("static-expiry");
 
+/**
+ * Generates an array of middleware used to serve static files, and a function
+ * to generate fingerprinted urls. These middleware and function may be used,
+ * or may be replaced with user provided ones.
+ *
+ * @param {Application} app The express app
+ * @param {string} mountPath The static files' mount path from the global config.
+ * @param {string} staticFilesPath The static files' path on disk from the global config.
+ */
 export function makeServingMiddlewareAndFurl(app: Application, mountPath: string, staticFilesPath: string): [Handler[], furl] {
   const oneYearInSeconds = (60 * 60 * 24 * 365); // tslint:disable-line
   const oneYearInMilliseconds = oneYearInSeconds*1000; // tslint:disable-line
@@ -44,6 +53,13 @@ export function makeServingMiddlewareAndFurl(app: Application, mountPath: string
   return [middlewares, furl];
 }
 
+/**
+ * Looks up the fingerprint for a file -- ONLY applies when static expiry
+ * is being used to generate the fingerprints (hence its place in this file).
+ *
+ * @param {string} relativeFilePath A path to the file relative to the
+ *   static files mount path.
+ */
 export function getFingerprintForFile(relativeFilePath: string) {
   const fileCacheKey = path.resolve("/", relativeFilePath);
   const origFingerprintedUrl = (<expiryReal>(<any>expiry)).urlCache[fileCacheKey];

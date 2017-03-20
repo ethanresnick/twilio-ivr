@@ -45,29 +45,58 @@ export interface NormalState extends BranchingState, RenderableState {
 
 
 
-
+/**
+ * Tests if a state is a RoutableState
+ * @param {State} it A state to test
+ * @return {boolean} Whether the state is a RoutableState
+ */
 export function isRoutableState(it: State): it is RoutableState {
   return it && (<RoutableState>it).uri !== undefined;
 }
 
+/**
+ * Tests if a state is a BranchingState
+ * @param {State} it A state to test
+ * @return {boolean} Whether the state is a BranchingState
+ */
 export function isBranchingState(it: State): it is BranchingState {
   return it && (<BranchingState>it).transitionOut !== undefined;
 }
 
+/**
+ * Tests if a state is a RenderableState
+ * @param {State} it A state to test
+ * @return {boolean} Whether the state is a RenderableState
+ */
 export function isRenderableState(it: State): it is RenderableState {
   return it && (<RenderableState>it).twimlFor !== undefined;
 }
 
+/**
+ * Tests if a state is an EndState
+ * @param {State} it A state to test
+ * @return {boolean} Whether the state is an EndState
+ */
 export function isEndState(it: State): it is EndState {
   return it && (<EndState>it).isEndState === true;
 }
 
+/**
+ * Tests if a state is an AsynchronousState
+ * @param {State} it A state to test
+ * @return {boolean} Whether the state is an AsynchronousState
+ */
 export function isAsynchronousState(it: State): it is AsynchronousState {
   const state = <AsynchronousState>it;
 
   return state && state.twimlFor !== undefined && state.backgroundTrigger !== undefined;
 }
 
+/**
+ * Tests if a state is a NormalState
+ * @param {State} it A state to test
+ * @return {boolean} Whether the state is a NormalState
+ */
 export function isNormalState(it: State): it is NormalState {
   return it && (<NormalState>it).processTransitionUri !== undefined;
 }
@@ -86,6 +115,10 @@ export function isValidState(it: State): boolean {
     || (isBranchingState(it) && !isRenderableState(it));
 }
 
+/**
+ * Converts a state to a string, attempting to read its name.
+ * @return {string} The state's name property or "unnamed state" if none exists.
+ */
 export function stateToString(it: State): string {
   return (it && it.name) || "unnamed state";
 }

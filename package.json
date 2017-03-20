@@ -4,8 +4,8 @@
   "description": "Easily build phone/sms trees with twilio and express.",
   "license": "MIT",
   "repository": {
-    "type" : "git",
-    "url" : "https://github.com/ethanresnick/twilio-ivr.git"
+    "type": "git",
+    "url": "https://github.com/ethanresnick/twilio-ivr.git"
   },
   "author": "Ethan Resnick",
   "keywords": [
@@ -60,22 +60,23 @@
     "all": true
   },
   "dependencies": {
+    "@types/body-parser": "1.16.0",
+    "@types/debug": "0.0.29",
     "@types/express": "^4.0.34",
+    "@types/ramda": "0.0.4",
     "@types/twilio": "0.0.8",
     "body-parser": "^1.15.2",
     "debug": "^2.2.0",
     "express": "^4.14.0",
+    "ramda": "^0.23.0",
     "static-expiry": "paulwalker/connect-static-expiry#f18d288a6a5ccaff07c9805c498a9a79e6473f99",
     "twilio": "ethanresnick/twilio-node#patch-1"
   },
   "devDependencies": {
-    "@types/body-parser": "1.16.0",
     "@types/chai": "3.4.35",
     "@types/chai-as-promised": "0.0.30",
-    "@types/debug": "0.0.29",
-    "@types/mocha": "2.2.39",
+    "@types/mocha": "2.2.40",
     "@types/node": "6.0.59",
-    "@types/q": "0.0.x",
     "@types/sinon": "^1.16.32",
     "@types/sinon-chai": "^2.7.27",
     "@types/supertest": "^2.0.0",
@@ -90,7 +91,7 @@
     "stream-equal": "^1.0.0",
     "supertest": "^2.0.1",
     "ts-node": "^2.0.0",
-    "tslint": "4.4.2",
+    "tslint": "4.5.1",
     "typescript": "2.2.1"
   },
   "engines": {

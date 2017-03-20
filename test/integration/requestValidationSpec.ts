@@ -1,4 +1,5 @@
 import crypto = require("crypto");
+import R = require("ramda");
 import request = require("supertest");
 import lib from "../../lib/";
 import { UsableState } from "../../lib/state";
@@ -31,7 +32,7 @@ describe("request signing", () => {
 
     it("should allow signed requests", () => {
       const test = agent.post("/");
-      const testSig = makeDummySignature(fakeToken, test.url, fakeBody);
+      const testSig = makeSignature(fakeToken, test.url, fakeBody);
 
       return test
         .type('form')
@@ -45,6 +46,15 @@ describe("request signing", () => {
         .post("/")
         .expect(403);
     });
+
+    it('should reject requests with an invalid signature', () => {
+      const test = agent.post("/");
+      const invalidSig = makeInvalidSignature(fakeToken, test.url, fakeBody);
+
+      return test
+        .set('X-Twilio-Signature', invalidSig)
+        .expect(403);
+    });
   });
 
   describe("validate: false", () => {
@@ -53,7 +63,7 @@ describe("request signing", () => {
 
     it("should allow all requests", () => {
       const test = agent.post("/");
-      const testSig = makeDummySignature(fakeToken, test.url, fakeBody);
+      const testSig = makeSignature(fakeToken, test.url, fakeBody);
 
       const unsignedRequestAllowed =
         agent
@@ -72,7 +82,13 @@ describe("request signing", () => {
   });
 });
 
-function makeDummySignature(authToken: string, url: string, body: any) {
+/**
+ * Makes a valid signature for the provided url/body pair, given a (dummy) auth token.
+ * @param {string} authToken An auth token (not your real one!) used to sign the request.
+ * @param {string} url The url for the request to sign
+ * @param {object} body The request's body, as an object of string-valued params.
+ */
+function makeSignature(authToken: string, url: string, body: {[k: string]: string}) {
   const finalUrl = Object.keys(body).sort().reduce((prev, key) => {
     return prev + key + body[key];
   }, url);
@@ -80,3 +96,10 @@ function makeDummySignature(authToken: string, url: string, body: any) {
   return crypto.createHmac('sha1', authToken)
     .update(new Buffer(finalUrl, 'utf-8')).digest('base64');
 }
+
+const makeInvalidSignature = R.pipe(
+  makeSignature,
+  R.split(''),
+  R.map((c: string) => String.fromCharCode(c.charCodeAt(0) + 1)),
+  R.join('')
+);
