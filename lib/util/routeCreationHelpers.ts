@@ -128,6 +128,13 @@ export type fingerprintUrl = (path: string) => string;
 export type urlFor = (path: string, options?: UrlForOptions) => string;
 export type UrlForOptions = { query?: any, fingerprint?: boolean, absolute?: boolean };
 
+/**
+ * This function produces the urlFor function that is actually passed to each state.
+ * @param {string} protocol The protocol to include when generating absolute urls.
+ * @param {string} host The host to include when generating absolute urls.
+ * @param {fingerprintUrl} furl The function used to actually fingerprint a root-relative url.
+ * @return {urlFor} A final function, with options, for fingerpinting a root-relative url.
+ */
 export function makeUrlFor(protocol: string, host: string, furl?: fingerprintUrl): urlFor {
   return (path: string, { query, absolute = false, fingerprint }: UrlForOptions = {}) => {
     // Static files are the only ones that can be fingerprinted, and they

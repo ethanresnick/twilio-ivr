@@ -9,6 +9,7 @@
     "no-var-requires": true,
     "no-mergeable-namespace": true,
     "no-reference": true,
+    "no-non-null-assertion": true,
     "no-string-literal": true,
     "typedef": [true, "property-declaration", "member-variable-declaration"],
     "unified-signatures": false,
@@ -16,6 +17,7 @@
     "interface-over-type-literal": false,
     "strict-type-predicates": false,
     "no-misused-new": true,
+    "ban-types": [true, ["String", "Use 'string' instead."], ["Object"]],
 
     "curly": true,
     "forin": true,
@@ -57,7 +59,9 @@
     "no-unused-new": true,
     "no-string-throw": true,
     "no-magic-numbers": false,
+    "no-duplicate-super": true,
 
+    "completed-docs": [true, "functions"],
     "interface-name": [true, "never-prefix"],
     "class-name": true,
     "jsdoc-format": true,
@@ -90,6 +94,7 @@
     "semicolon": false,
     "whitespace": false,
     "space-before-function-paren": false,
-    "import-spacing": false
+    "import-spacing": false,
+    "newline-before-return": false
   }
 }

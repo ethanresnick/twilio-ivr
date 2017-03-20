@@ -282,6 +282,12 @@ describe("state routing & rendering", () => {
   });
 });
 
+/**
+ * Takes an array of states and replaces their transitionOut, backgroundTwiml,
+ * and twimlFor methods (for each of those methods that exists) with sinon spies
+ * for those methods.
+ * @param {any[]} toSpyOn An array of states.
+ */
 function spyOn(toSpyOn: any[]) {
   const methods = ["transitionOut", "backgroundTrigger", "twimlFor"];
   toSpyOn.forEach(it => {
@@ -291,9 +297,14 @@ function spyOn(toSpyOn: any[]) {
   });
 }
 
-function unSpyOn(toSpyOn: any[]) {
+/**
+ * Takes an array of states whose transitionOut, backgroundTwiml, and/or twimlFor
+ * methods have been replaced with sinon spies and restores the original methods.
+ * @param {any[]} toUnSpyOn An array of states.
+ */
+function unSpyOn(toUnSpyOn: any[]) {
   const methods = ["transitionOut", "backgroundTrigger", "twimlFor"];
-  toSpyOn.forEach(it => {
+  toUnSpyOn.forEach(it => {
     methods.forEach(method => {
       if(it[method]) { it[method].restore(); }
     });
