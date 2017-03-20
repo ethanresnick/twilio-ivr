@@ -21,8 +21,13 @@ describe("main express app creation function", () => {
   });
 });
 
-// A crude way to check if a value is an express app,
-// since an elegant way doesn't seem to exist.
+/**
+ * A crude way to check if a value is an express app,
+ * since an elegant way doesn't seem to exist.
+ *
+ * @param {any} v
+ * @return {boolean} Whether the argument is an express app.
+ */
 function isExpressApp(v: any) {
   const appProtoish = (<any>express).application;
 

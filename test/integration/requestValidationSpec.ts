@@ -72,7 +72,13 @@ describe("request signing", () => {
   });
 });
 
-function makeDummySignature(authToken: string, url: string, body: any) {
+/**
+ * Makes a valid signature for the provided url/body pair, given a (dummy) auth token.
+ * @param {string} authToken An auth token (not your real one!) used to sign the request.
+ * @param {string} url The url for the request to sign
+ * @param {object} body The request's body, as an object of string-valued params.
+ */
+function makeDummySignature(authToken: string, url: string, body: {[k: string]: string}) {
   const finalUrl = Object.keys(body).sort().reduce((prev, key) => {
     return prev + key + body[key];
   }, url);

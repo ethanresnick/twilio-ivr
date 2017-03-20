@@ -16,7 +16,7 @@ declare module "twilio" {
     ForwardedFrom?: string;
     CallerName?: string;
 
-    // "To" is the the phone number, SIP address or Client identifier
+    // "To" is the phone number, SIP address or Client identifier
     // that received this call.
     To: string;
     ToCountry?: string;
@@ -46,6 +46,13 @@ declare module "twilio" {
     ApiVersion: '2010-04-01';
   }
 
+  /**
+   * Tests wheter a value matches the CallDataTwiml type. Normally, we should know
+   * whether twilio's going to give us that type back, so this is just defensive.
+   *
+   * @param  {any} it A value (usually a parsed request body) to test
+   * @return {boolean} Whether the object matches CallDataTwiml
+   */
   export function isCallDataTwiml(it: any): it is CallDataTwiml;
 
   export interface GatherDataTwiml extends CallDataTwiml {
@@ -110,6 +117,7 @@ declare module "twilio" {
   }
 }
 
+// See comment attached to type definition above.
 twilio.isCallDataTwiml = function(it: any): it is twilio.CallDataTwiml {
   return it && it.CallSid !== undefined;
 }
