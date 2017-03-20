@@ -75,7 +75,7 @@
     "@types/debug": "0.0.29",
     "@types/mocha": "2.2.40",
     "@types/node": "6.0.59",
-    "@types/q": "0.0.x",
+    "@types/q": "~1.0.0",
     "@types/sinon": "^1.16.32",
     "@types/sinon-chai": "^2.7.27",
     "@types/supertest": "^2.0.0",
