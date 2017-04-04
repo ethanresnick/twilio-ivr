@@ -6,10 +6,10 @@ const staticExpiryHelpers_1 = require("./staticExpiryHelpers");
 require("../twilioAugments");
 const url = require("url");
 const state_2 = require("../state");
-function resolveBranches(state, inputData) {
+function resolveBranches(state, inputData, query) {
     if (state_2.isBranchingState(state) && !state_2.isRenderableState(state)) {
-        return Promise.resolve(state.transitionOut(inputData)).then(nextState => {
-            return resolveBranches(nextState);
+        return Promise.resolve(state.transitionOut(inputData, query)).then(nextState => {
+            return resolveBranches(nextState, undefined, query);
         });
     }
     return Promise.resolve(state);
@@ -17,7 +17,7 @@ function resolveBranches(state, inputData) {
 exports.resolveBranches = resolveBranches;
 function renderState(state, req, furl, inputData) {
     const urlForBound = makeUrlFor(req.protocol, req.get('Host'), furl);
-    const renderableStatePromise = resolveBranches(state, inputData);
+    const renderableStatePromise = resolveBranches(state, inputData, req.query);
     const inputToRenderWith = state_2.isRenderableState(state) ? inputData : undefined;
     const couldNotFindRenderableStateError = Symbol();
     return renderableStatePromise.then(stateToRender => {

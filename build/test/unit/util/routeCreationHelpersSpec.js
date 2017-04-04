@@ -42,9 +42,9 @@ describe("route creation utilities", () => {
                 [g, h, i].forEach(it => { it.transitionOut.restore(); });
             });
             it("should pass any input data to the first non-renderable state, but not subsequent ones", () => {
-                return sut.resolveBranches(i, {}).then(state => {
-                    chai_1.expect(i.transitionOut).calledWithExactly({});
-                    chai_1.expect(h.transitionOut).calledWithExactly(undefined);
+                return sut.resolveBranches(i, {}, {}).then(state => {
+                    chai_1.expect(i.transitionOut).calledWithExactly({}, {});
+                    chai_1.expect(h.transitionOut).calledWithExactly(undefined, {});
                 });
             });
             it("should finally return a promise for the first renderable state", () => {
