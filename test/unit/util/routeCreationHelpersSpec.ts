@@ -56,9 +56,9 @@ describe("route creation utilities", () => {
       })
 
       it("should pass any input data to the first non-renderable state, but not subsequent ones", () => {
-        return sut.resolveBranches(i, <CallDataTwiml>{}).then(state => {
-          expect(i.transitionOut).calledWithExactly({});
-          expect(h.transitionOut).calledWithExactly(undefined);
+        return sut.resolveBranches(i, <CallDataTwiml>{}, {}).then(state => {
+          expect(i.transitionOut).calledWithExactly({}, {});
+          expect(h.transitionOut).calledWithExactly(undefined, {});
         });
       });
 

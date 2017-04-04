@@ -1,4 +1,5 @@
 "use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
 const url = require("url");
 const path = require("path");
 const express = require("express");

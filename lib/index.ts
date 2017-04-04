@@ -163,13 +163,15 @@ export default function(states: State.UsableState[], config: config): Express {
     if (State.isNormalState(thisState)) {
       app.post(thisState.processTransitionUri, function (req, res, next) {
         // Use the input to transition to the next state.
-        const nextStatePromise = Promise.resolve(thisState.transitionOut(req.body));
+        const nextStatePromise = Promise.resolve(thisState.transitionOut(req.body, req.query));
 
         // Then, do what we do for renderable states, except don't pass
         // req.body anywhere, as we've already used that input to transition out.
         nextStatePromise
           .then(nextState => {
-            return renderState(nextState, req, urlFingerprinter, undefined);
+            // NOTE: (EL) current hotline code relies on req.body being passed through,
+            // so i'm going to do that for now
+            return renderState(nextState, req, urlFingerprinter, req.body);
           })
           .then(twiml => { res.send(twiml); })
           .catch(next);

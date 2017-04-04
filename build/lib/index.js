@@ -1,4 +1,5 @@
 "use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
 const State = require("./state");
 const staticExpiryHelpers_1 = require("./util/staticExpiryHelpers");
 const routeCreationHelpers_1 = require("./util/routeCreationHelpers");
@@ -80,10 +81,10 @@ function default_1(states, config) {
         }
         if (State.isNormalState(thisState)) {
             app.post(thisState.processTransitionUri, function (req, res, next) {
-                const nextStatePromise = Promise.resolve(thisState.transitionOut(req.body));
+                const nextStatePromise = Promise.resolve(thisState.transitionOut(req.body, req.query));
                 nextStatePromise
                     .then(nextState => {
-                    return routeCreationHelpers_1.renderState(nextState, req, urlFingerprinter, undefined);
+                    return routeCreationHelpers_1.renderState(nextState, req, urlFingerprinter, req.body);
                 })
                     .then(twiml => { res.send(twiml); })
                     .catch(next);
@@ -92,5 +93,4 @@ function default_1(states, config) {
     });
     return app;
 }
-Object.defineProperty(exports, "__esModule", { value: true });
 exports.default = default_1;

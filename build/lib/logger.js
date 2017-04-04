@@ -1,4 +1,5 @@
 "use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
 const debug = require("debug");
 const objectValuesEntries_1 = require("./util/objectValuesEntries");
 const loggers = {
@@ -9,5 +10,4 @@ const loggers = {
 objectValuesEntries_1.entries(loggers).forEach(([name, logger]) => {
     logger.log = console[name].bind(console);
 });
-Object.defineProperty(exports, "__esModule", { value: true });
 exports.default = loggers;
