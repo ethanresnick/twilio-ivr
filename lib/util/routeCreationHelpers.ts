@@ -27,11 +27,11 @@ import {
  * @return {Promise<RenderableState>} The final renderable state.
  */
 export function resolveBranches(state: UsableState,
-  inputData?: CallDataTwiml): Promise<RenderableState> {
+  inputData?: CallDataTwiml, query?: any): Promise<RenderableState> {
 
   if (isBranchingState(state) && !isRenderableState(state)) {
-    return Promise.resolve(state.transitionOut(inputData)).then(nextState => {
-      return resolveBranches(nextState);
+    return Promise.resolve(state.transitionOut(inputData, query)).then(nextState => {
+      return resolveBranches(nextState, undefined, query);
     });
   }
 
@@ -71,7 +71,7 @@ export function renderState(state: UsableState, req: express.Request,
 
   // If this state is non-renderable, follow the branches until we get
   // to a renderable state.
-  const renderableStatePromise = resolveBranches(state, inputData);
+  const renderableStatePromise = resolveBranches(state, inputData, req.query);
 
 
   // Below, if our stateToRender was arrived at through a branch, then the

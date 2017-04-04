@@ -19,7 +19,7 @@ const states: any = {
   routableBranching: <RoutableState & BranchingState>{
     name: "CALL_RECEIVED_BRANCH",
     uri: "/routable-branching",
-    transitionOut: (<sinon.SinonSpy>((input?: twilio.CallDataTwiml) => {
+    transitionOut: (<sinon.SinonSpy>((input?: twilio.CallDataTwiml, query?: any) => {
       return input && input.CallerZip === "00000" ?
         states.nonRoutableBranching :
         states.routableEnd;
@@ -33,7 +33,7 @@ const states: any = {
     twimlFor(urlFor: urlFor, input?: twilio.CallDataTwiml, query?: any) {
       return "input to routableNormal was: " + JSON.stringify(input);
     },
-    transitionOut(input?: twilio.CallDataTwiml) {
+    transitionOut(input?: twilio.CallDataTwiml, query?: any) {
       return Promise.resolve(states.nonRoutableNormal);
     }
   },
@@ -58,14 +58,14 @@ const states: any = {
 
   nonRoutableBranching: <BranchingState>{
     name: "INNER_BRANCH",
-    transitionOut: (<sinon.SinonSpy>((input?: twilio.CallDataTwiml) => {
+    transitionOut: (<sinon.SinonSpy>((input?: twilio.CallDataTwiml, query?: any) => {
       return states.nonRoutableNormal;
     }))
   },
 
   nonRoutableBranching2: <BranchingState>{
     name: "INNER_BRANCH_2",
-    transitionOut: (<sinon.SinonSpy>((input?: twilio.CallDataTwiml) => {
+    transitionOut: (<sinon.SinonSpy>((input?: twilio.CallDataTwiml, query?: any) => {
       return Promise.resolve(states.routableAsync);
     }))
   },
@@ -76,7 +76,7 @@ const states: any = {
     twimlFor(urlFor: urlFor, input?: twilio.CallDataTwiml, query?: any) {
       return "input to nonRoutableNormal was: " + JSON.stringify(input);
     },
-    transitionOut(input?: twilio.CallDataTwiml) {
+    transitionOut(input?: twilio.CallDataTwiml, query?: any) {
       return Promise.resolve(states.nonRoutableBranching2);
     }
   }
@@ -119,10 +119,10 @@ describe("state routing & rendering", () => {
           .send({CallerZip: "00000"})
           .then(() => {
             expect(states.routableBranching.transitionOut)
-              .calledWithExactly({CallerZip: "00000"});
+              .calledWithExactly({CallerZip: "00000"}, {});
 
             expect(states.nonRoutableBranching.transitionOut)
-              .calledWithExactly(undefined);
+              .calledWithExactly(undefined, {});
           });
       });
 
@@ -145,7 +145,7 @@ describe("state routing & rendering", () => {
           .expect("Sorry, no one home. Bye.")
           .then(() => {
             expect(states.routableBranching.transitionOut)
-              .calledWithExactly({CallerZip: ""});
+              .calledWithExactly({CallerZip: ""}, {});
 
             expect(states.routableEnd.twimlFor)
               .calledWithExactly(sinon.match.func, undefined, {});
@@ -246,7 +246,7 @@ describe("state routing & rendering", () => {
         .send(dummyData)
         .then(() => {
           expect(states.nonRoutableBranching2.transitionOut)
-            .calledWithExactly(undefined);
+            .calledWithExactly(undefined, {});
         });
     });
 
