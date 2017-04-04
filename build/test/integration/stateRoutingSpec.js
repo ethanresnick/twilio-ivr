@@ -1,4 +1,5 @@
 "use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
 const sinon = require("sinon");
 const sinonChai = require("sinon-chai");
 const chai_1 = require("chai");
@@ -246,9 +247,9 @@ function spyOn(toSpyOn) {
         });
     });
 }
-function unSpyOn(toSpyOn) {
+function unSpyOn(toUnSpyOn) {
     const methods = ["transitionOut", "backgroundTrigger", "twimlFor"];
-    toSpyOn.forEach(it => {
+    toUnSpyOn.forEach(it => {
         methods.forEach(method => {
             if (it[method]) {
                 it[method].restore();

@@ -1,4 +1,5 @@
 "use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
 const url = require("url");
 const path = require("path");
 const express = require("express");
@@ -48,7 +49,9 @@ class UrlToFingerprintNotUnderMountPathError extends Error {
         super(`You tried to fingerprint a url (${path}) whose path isn\'t under the` +
             `static files mount path (${mountPath}). However, when using the built-in ` +
             'fingerprint function, only urls for static files can be fingerprinted, ' +
-            'and all static files have their URL under the static files mount path.');
+            'and all static files have their URL under the static files mount path. ' +
+            'Note: urlFor\'s `fingerprint` option defaults to true, so you may just ' +
+            'have forgotten to explicitly set it to false.');
     }
 }
 exports.UrlToFingerprintNotUnderMountPathError = UrlToFingerprintNotUnderMountPathError;

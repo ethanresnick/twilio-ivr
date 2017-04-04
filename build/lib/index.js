@@ -1,7 +1,9 @@
 "use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
 const State = require("./state");
 const staticExpiryHelpers_1 = require("./util/staticExpiryHelpers");
 const routeCreationHelpers_1 = require("./util/routeCreationHelpers");
+const urlFor_1 = require("./urlFor");
 const express = require("express");
 const bodyParser = require("body-parser");
 const path = require("path");
@@ -58,7 +60,7 @@ function default_1(states, config) {
                 };
             }
             const holdMusicMiddleware = express().get(holdMusicEndpoint, (req, res, next) => {
-                const urlFor = routeCreationHelpers_1.makeUrlFor(req.protocol, req.get('Host'), urlFingerprinter);
+                const urlFor = urlFor_1.makeUrlFor(req.protocol, req.get('Host'), urlFingerprinter);
                 res.set('Cache-Control', 'public, max-age=31536000');
                 res.send(holdMusicTwimlFor(urlFor));
             });
@@ -92,5 +94,4 @@ function default_1(states, config) {
     });
     return app;
 }
-Object.defineProperty(exports, "__esModule", { value: true });
 exports.default = default_1;

@@ -1,4 +1,5 @@
 "use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
 const chai = require("chai");
 const sut = require("../../lib/state");
 const states = require("../fixtures/states");
