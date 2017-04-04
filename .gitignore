@@ -16,3 +16,5 @@ coverage/
 
 # Editor settings
 .vscode
+
+.DS_STORE
