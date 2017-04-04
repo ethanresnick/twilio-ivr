@@ -2,7 +2,7 @@
  * This file contains helper functions that wrap the functionality in the
  * static-expiry module to make it more suitable for our needs.
  */
-import { Application, Handler } from "express";
+import { Handler } from "express";
 import { fingerprintUrl as furl } from "../urlFor";
 import url = require("url");
 import path = require("path");
@@ -18,7 +18,7 @@ import expiry = require("static-expiry");
  * @param {string} mountPath The static files' mount path from the global config.
  * @param {string} staticFilesPath The static files' path on disk from the global config.
  */
-export function makeServingMiddlewareAndFurl(app: Application, mountPath: string, staticFilesPath: string): [Handler[], furl] {
+export function makeServingMiddlewareAndFurl(mountPath: string, staticFilesPath: string): [Handler[], furl] {
   const oneYearInSeconds = (60 * 60 * 24 * 365); // tslint:disable-line
   const oneYearInMilliseconds = oneYearInSeconds*1000; // tslint:disable-line
 
@@ -43,12 +43,13 @@ export function makeServingMiddlewareAndFurl(app: Application, mountPath: string
 
   // We need to create the middleware below before reading app.locals.furl,
   // because expiry actually adds the furl function as a side effect. Annoying.
+  const staticExpiryMiddleware = expiry(null, staticExpiryOpts);
   const middlewares = [
-    expiry(app, staticExpiryOpts),
+    staticExpiryMiddleware,
     express.static(staticFilesPath, { maxAge: oneYearInMilliseconds, index: false })
   ];
 
-  const furl = mountPathAwareFurl(mountPath, app.locals.furl);
+  const furl = mountPathAwareFurl(mountPath, staticExpiryMiddleware.furl);
 
   return [middlewares, furl];
 }

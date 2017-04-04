@@ -52,7 +52,7 @@ export default function(states: State.UsableState[], config: config): Express {
       // But a path works too, with the option for them to override the middleware.
       else if(staticFilesConf.path) {
         const [defaultMiddleware, furl] =
-          makeServingMiddlewareAndFurl(app, staticFilesMountPath, staticFilesConf.path);
+          makeServingMiddlewareAndFurl(staticFilesMountPath, staticFilesConf.path);
 
         // user's middleware always overrides, even if we're using built-in furl.
         const middleware = staticFilesConf.middleware ?
