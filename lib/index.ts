@@ -1,6 +1,7 @@
 import * as State from "./state";
 import { makeServingMiddlewareAndFurl, getFingerprintForFile } from "./util/staticExpiryHelpers";
-import { renderState, makeUrlFor, fingerprintUrl } from "./util/routeCreationHelpers";
+import { renderState } from "./util/routeCreationHelpers";
+import { makeUrlFor, fingerprintUrl } from "./urlFor";
 
 import { Express, Handler } from "express";
 import express = require("express");

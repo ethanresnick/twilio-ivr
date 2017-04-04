@@ -3,7 +3,7 @@
  * static-expiry module to make it more suitable for our needs.
  */
 import { Application, Handler } from "express";
-import { fingerprintUrl as furl } from "./routeCreationHelpers";
+import { fingerprintUrl as furl } from "../urlFor";
 import url = require("url");
 import path = require("path");
 import express = require("express");
@@ -110,7 +110,9 @@ export class UrlToFingerprintNotUnderMountPathError extends Error {
       `You tried to fingerprint a url (${path}) whose path isn\'t under the` +
       `static files mount path (${mountPath}). However, when using the built-in ` +
       'fingerprint function, only urls for static files can be fingerprinted, ' +
-      'and all static files have their URL under the static files mount path.'
+      'and all static files have their URL under the static files mount path. ' +
+      'Note: urlFor\'s `fingerprint` option defaults to true, so you may just ' +
+      'have forgotten to explicitly set it to false.'
     );
   }
 };
