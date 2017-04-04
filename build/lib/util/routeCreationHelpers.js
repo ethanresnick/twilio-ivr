@@ -1,4 +1,5 @@
 "use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
 const logger_1 = require("../logger");
 const state_1 = require("../state");
 const staticExpiryHelpers_1 = require("./staticExpiryHelpers");
@@ -23,10 +24,10 @@ function renderState(state, req, furl, inputData) {
         const stateName = state_1.stateToString(stateToRender);
         if (state_2.isAsynchronousState(stateToRender)) {
             logger_1.default.info("Began asynchronous processing for " + stateName);
-            stateToRender.backgroundTrigger(urlForBound, inputToRenderWith);
+            stateToRender.backgroundTrigger(urlForBound, inputToRenderWith, req.query);
         }
         logger_1.default.info("Produced twiml for " + stateName);
-        return stateToRender.twimlFor(urlForBound, inputToRenderWith);
+        return stateToRender.twimlFor(urlForBound, inputToRenderWith, req.query);
     }, (e) => {
         throw { type: couldNotFindRenderableStateError, origError: e };
     }).catch((e) => {

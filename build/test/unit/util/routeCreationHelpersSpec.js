@@ -1,4 +1,5 @@
 "use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
 const sinon = require("sinon");
 const sinonChai = require("sinon-chai");
 const chai_1 = require("chai");

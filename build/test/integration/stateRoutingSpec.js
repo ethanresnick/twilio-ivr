@@ -1,4 +1,5 @@
 "use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
 const sinon = require("sinon");
 const sinonChai = require("sinon-chai");
 const chai_1 = require("chai");
@@ -21,7 +22,7 @@ const states = {
         name: "CALL_RECEIVED_RENDER",
         uri: "/routable-normal",
         processTransitionUri: "/process-renderable-entry",
-        twimlFor(urlFor, input) {
+        twimlFor(urlFor, input, query) {
             return "input to routableNormal was: " + JSON.stringify(input);
         },
         transitionOut(input) {
@@ -32,14 +33,14 @@ const states = {
         name: "CALL_RECEIVED_END",
         uri: "/routable-end",
         isEndState: true,
-        twimlFor(urlFor, input) {
+        twimlFor(urlFor, input, query) {
             return "Sorry, no one home. Bye.";
         }
     },
     routableAsync: {
         name: "CALL_RECEIVED_ASYNC",
         uri: "/routable-async",
-        twimlFor(urlFor, input) {
+        twimlFor(urlFor, input, query) {
             return "We're doing something...";
         },
         backgroundTrigger() { return "do some effect..."; }
@@ -59,7 +60,7 @@ const states = {
     nonRoutableNormal: {
         name: "INNER_RENDER",
         processTransitionUri: "/process-inner-renderable",
-        twimlFor(urlFor, input) {
+        twimlFor(urlFor, input, query) {
             return "input to nonRoutableNormal was: " + JSON.stringify(input);
         },
         transitionOut(input) {
@@ -111,7 +112,7 @@ describe("state routing & rendering", () => {
                     .send({ CallerZip: "00000" })
                     .then(() => {
                     chai_1.expect(states.nonRoutableNormal.twimlFor)
-                        .calledWithExactly(sinon.match.func, undefined);
+                        .calledWithExactly(sinon.match.func, undefined, {});
                 });
             });
             it("should not matter if the first renderable state is also routable or an end state", () => {
@@ -124,7 +125,7 @@ describe("state routing & rendering", () => {
                     chai_1.expect(states.routableBranching.transitionOut)
                         .calledWithExactly({ CallerZip: "" });
                     chai_1.expect(states.routableEnd.twimlFor)
-                        .calledWithExactly(sinon.match.func, undefined);
+                        .calledWithExactly(sinon.match.func, undefined, {});
                 });
             });
         });
@@ -167,7 +168,7 @@ describe("state routing & rendering", () => {
                         chai_1.expect(states.routableAsync.backgroundTrigger)
                             .calledBefore(states.routableAsync.twimlFor);
                         chai_1.expect(states.routableAsync.backgroundTrigger)
-                            .calledWithExactly(sinon.match.func, { "Test": "true" });
+                            .calledWithExactly(sinon.match.func, { "Test": "true" }, {});
                     });
                 });
             });
@@ -194,7 +195,7 @@ describe("state routing & rendering", () => {
                 .send(dummyData)
                 .then(() => {
                 chai_1.expect(states.routableNormal.transitionOut)
-                    .calledWithExactly(dummyData);
+                    .calledWithExactly(dummyData, {});
             });
         });
         it("should find the next renderable state, branching without passing along input", () => {
@@ -230,7 +231,7 @@ describe("state routing & rendering", () => {
                     .expect("We're doing something...")
                     .then(() => {
                     chai_1.expect(states.routableAsync.twimlFor)
-                        .calledWithExactly(sinon.match.func, undefined);
+                        .calledWithExactly(sinon.match.func, undefined, {});
                 })
             ]);
         });
@@ -246,9 +247,9 @@ function spyOn(toSpyOn) {
         });
     });
 }
-function unSpyOn(toSpyOn) {
+function unSpyOn(toUnSpyOn) {
     const methods = ["transitionOut", "backgroundTrigger", "twimlFor"];
-    toSpyOn.forEach(it => {
+    toUnSpyOn.forEach(it => {
         methods.forEach(method => {
             if (it[method]) {
                 it[method].restore();

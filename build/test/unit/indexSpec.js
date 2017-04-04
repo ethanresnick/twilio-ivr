@@ -1,4 +1,5 @@
 "use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
 const chai = require("chai");
 const express = require("express");
 const index_1 = require("../../lib/index");

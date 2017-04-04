@@ -1,5 +1,7 @@
 "use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
 const crypto = require("crypto");
+const R = require("ramda");
 const request = require("supertest");
 const _1 = require("../../lib/");
 const states = [{
@@ -25,7 +27,7 @@ describe("request signing", () => {
         const agent = request.agent(app);
         it("should allow signed requests", () => {
             const test = agent.post("/");
-            const testSig = makeDummySignature(fakeToken, test.url, fakeBody);
+            const testSig = makeSignature(fakeToken, test.url, fakeBody);
             return test
                 .type('form')
                 .send(fakeBody)
@@ -37,13 +39,20 @@ describe("request signing", () => {
                 .post("/")
                 .expect(403);
         });
+        it('should reject requests with an invalid signature', () => {
+            const test = agent.post("/");
+            const invalidSig = makeInvalidSignature(fakeToken, test.url, fakeBody);
+            return test
+                .set('X-Twilio-Signature', invalidSig)
+                .expect(403);
+        });
     });
     describe("validate: false", () => {
         const app = _1.default(states, { twilio: { authToken: fakeToken, validate: false } });
         const agent = request.agent(app);
         it("should allow all requests", () => {
             const test = agent.post("/");
-            const testSig = makeDummySignature(fakeToken, test.url, fakeBody);
+            const testSig = makeSignature(fakeToken, test.url, fakeBody);
             const unsignedRequestAllowed = agent
                 .post("/")
                 .expect(200);
@@ -56,10 +65,11 @@ describe("request signing", () => {
         });
     });
 });
-function makeDummySignature(authToken, url, body) {
+function makeSignature(authToken, url, body) {
     const finalUrl = Object.keys(body).sort().reduce((prev, key) => {
         return prev + key + body[key];
     }, url);
     return crypto.createHmac('sha1', authToken)
         .update(new Buffer(finalUrl, 'utf-8')).digest('base64');
 }
+const makeInvalidSignature = R.pipe(makeSignature, R.split(''), R.map((c) => String.fromCharCode(c.charCodeAt(0) + 1)), R.join(''));

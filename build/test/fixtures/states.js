@@ -1,4 +1,5 @@
 "use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
 const twilio_1 = require("twilio");
 const emptyTwimlFn = () => new twilio_1.TwimlResponse();
 exports.d = {
