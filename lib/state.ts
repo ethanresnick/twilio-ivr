@@ -24,11 +24,11 @@ export interface BranchingState extends AbstractState {
   // Take an immutable session data and some input; return a promise for the
   // modified session data (if being at this state told us something about the
   // call we want to store) and the next state to go to.
-  transitionOut(inputData?: CallDataTwiml): Promise<UsableState>|UsableState;
+  transitionOut(inputData?: CallDataTwiml, query?: any): Promise<UsableState>|UsableState;
 }
 
 export interface RenderableState extends AbstractState {
-  twimlFor(urlFor: urlFor, inputData?: CallDataTwiml): TwimlResponse | string;
+  twimlFor(urlFor: urlFor, inputData?: CallDataTwiml, query?: any): TwimlResponse | string;
 }
 
 export interface EndState extends RenderableState {
@@ -36,7 +36,7 @@ export interface EndState extends RenderableState {
 }
 
 export interface AsynchronousState extends RenderableState {
-  backgroundTrigger(urlFor: urlFor, inputData?: CallDataTwiml): void;
+  backgroundTrigger(urlFor: urlFor, inputData?: CallDataTwiml, query?: any): void;
 }
 
 export interface NormalState extends BranchingState, RenderableState {

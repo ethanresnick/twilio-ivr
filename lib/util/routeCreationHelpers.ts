@@ -91,11 +91,11 @@ export function renderState(state: UsableState, req: express.Request,
     const stateName = stateToString(stateToRender);
     if (isAsynchronousState(stateToRender)) {
       logger.info("Began asynchronous processing for " + stateName);
-      stateToRender.backgroundTrigger(urlForBound, inputToRenderWith);
+      stateToRender.backgroundTrigger(urlForBound, inputToRenderWith, req.query);
     }
 
     logger.info("Produced twiml for " + stateName);
-    return stateToRender.twimlFor(urlForBound, inputToRenderWith);
+    return stateToRender.twimlFor(urlForBound, inputToRenderWith, req.query);
   }, (e: Error) => {
     // Here, we got an error while finding the next state to render (because
     // renderableStatePromise rejected) and we want to re-throw it, because we
