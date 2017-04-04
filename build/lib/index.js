@@ -84,7 +84,7 @@ function default_1(states, config) {
                 const nextStatePromise = Promise.resolve(thisState.transitionOut(req.body, req.query));
                 nextStatePromise
                     .then(nextState => {
-                    return routeCreationHelpers_1.renderState(nextState, req, urlFingerprinter, undefined);
+                    return routeCreationHelpers_1.renderState(nextState, req, urlFingerprinter, req.body);
                 })
                     .then(twiml => { res.send(twiml); })
                     .catch(next);

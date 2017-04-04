@@ -198,16 +198,6 @@ describe("state routing & rendering", () => {
                     .calledWithExactly(dummyData, {});
             });
         });
-        it("should find the next renderable state, branching without passing along input", () => {
-            return requestApp
-                .post(states.nonRoutableNormal.processTransitionUri)
-                .type("form")
-                .send(dummyData)
-                .then(() => {
-                chai_1.expect(states.nonRoutableBranching2.transitionOut)
-                    .calledWithExactly(undefined, {});
-            });
-        });
         it("should not call transitionOut if the next state's already renderable", () => {
             return requestApp
                 .post(states.routableNormal.processTransitionUri)
@@ -216,24 +206,6 @@ describe("state routing & rendering", () => {
                 .then(() => {
                 chai_1.expect(states.nonRoutableNormal.transitionOut).to.not.have.been.called;
             });
-        });
-        it("should render the next state, with no input provided, calling bgTrigger if relevant", () => {
-            return Promise.all([
-                requestApp
-                    .post(states.routableNormal.processTransitionUri)
-                    .type("form")
-                    .send(dummyData)
-                    .expect("input to nonRoutableNormal was: undefined"),
-                requestApp
-                    .post(states.nonRoutableNormal.processTransitionUri)
-                    .type("form")
-                    .send(dummyData)
-                    .expect("We're doing something...")
-                    .then(() => {
-                    chai_1.expect(states.routableAsync.twimlFor)
-                        .calledWithExactly(sinon.match.func, undefined, {});
-                })
-            ]);
         });
     });
 });
