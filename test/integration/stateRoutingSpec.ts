@@ -30,7 +30,7 @@ const states: any = {
     name: "CALL_RECEIVED_RENDER",
     uri: "/routable-normal",
     processTransitionUri: "/process-renderable-entry",
-    twimlFor(urlFor: urlFor, input?: twilio.CallDataTwiml) {
+    twimlFor(urlFor: urlFor, input?: twilio.CallDataTwiml, query?: any) {
       return "input to routableNormal was: " + JSON.stringify(input);
     },
     transitionOut(input?: twilio.CallDataTwiml) {
@@ -42,7 +42,7 @@ const states: any = {
     name: "CALL_RECEIVED_END",
     uri: "/routable-end",
     isEndState: true,
-    twimlFor(urlFor: urlFor, input?: twilio.CallDataTwiml) {
+    twimlFor(urlFor: urlFor, input?: twilio.CallDataTwiml, query?: any) {
       return "Sorry, no one home. Bye.";
     }
   },
@@ -50,7 +50,7 @@ const states: any = {
   routableAsync: <RoutableState & AsynchronousState>{
     name: "CALL_RECEIVED_ASYNC",
     uri: "/routable-async",
-    twimlFor(urlFor: urlFor, input?: twilio.CallDataTwiml) {
+    twimlFor(urlFor: urlFor, input?: twilio.CallDataTwiml, query?: any) {
       return "We're doing something...";
     },
     backgroundTrigger() { return "do some effect..."; }
@@ -73,7 +73,7 @@ const states: any = {
   nonRoutableNormal: <NormalState>{
     name: "INNER_RENDER",
     processTransitionUri: "/process-inner-renderable",
-    twimlFor(urlFor: urlFor, input?: twilio.CallDataTwiml) {
+    twimlFor(urlFor: urlFor, input?: twilio.CallDataTwiml, query?: any) {
       return "input to nonRoutableNormal was: " + JSON.stringify(input);
     },
     transitionOut(input?: twilio.CallDataTwiml) {
@@ -133,7 +133,7 @@ describe("state routing & rendering", () => {
           .send({CallerZip: "00000"})
           .then(() => {
             expect(states.nonRoutableNormal.twimlFor)
-              .calledWithExactly(sinon.match.func, undefined);
+              .calledWithExactly(sinon.match.func, undefined, {});
           });
       });
 
@@ -148,7 +148,7 @@ describe("state routing & rendering", () => {
               .calledWithExactly({CallerZip: ""});
 
             expect(states.routableEnd.twimlFor)
-              .calledWithExactly(sinon.match.func, undefined);
+              .calledWithExactly(sinon.match.func, undefined, {});
           });
       });
     });
@@ -202,7 +202,7 @@ describe("state routing & rendering", () => {
               // Below, we quote "true" in recognition of the fact that
               // all data is converted to strings as part of POSTing it.
               expect(states.routableAsync.backgroundTrigger)
-                .calledWithExactly(sinon.match.func, {"Test": "true"});
+                .calledWithExactly(sinon.match.func, {"Test": "true"}, {});
             });
         });
       });
@@ -235,7 +235,7 @@ describe("state routing & rendering", () => {
         .send(dummyData)
         .then(() => {
           expect(states.routableNormal.transitionOut)
-            .calledWithExactly(dummyData);
+            .calledWithExactly(dummyData, {});
         });
     });
 
@@ -275,7 +275,7 @@ describe("state routing & rendering", () => {
           .expect("We're doing something...")
           .then(() => {
             expect(states.routableAsync.twimlFor)
-              .calledWithExactly(sinon.match.func, undefined);
+              .calledWithExactly(sinon.match.func, undefined, {});
           })
       ]);
     });
