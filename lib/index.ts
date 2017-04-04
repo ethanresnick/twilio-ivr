@@ -169,7 +169,9 @@ export default function(states: State.UsableState[], config: config): Express {
         // req.body anywhere, as we've already used that input to transition out.
         nextStatePromise
           .then(nextState => {
-            return renderState(nextState, req, urlFingerprinter, undefined);
+            // NOTE: (EL) current hotline code relies on req.body being passed through,
+            // so i'm going to do that for now
+            return renderState(nextState, req, urlFingerprinter, req.body);
           })
           .then(twiml => { res.send(twiml); })
           .catch(next);
