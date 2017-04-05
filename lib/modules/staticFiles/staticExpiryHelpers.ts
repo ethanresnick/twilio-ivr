@@ -14,7 +14,6 @@ import expiry = require("static-expiry");
  * to generate fingerprinted urls. These middleware and function may be used,
  * or may be replaced with user provided ones.
  *
- * @param {Application} app The express app
  * @param {string} mountPath The static files' mount path from the global config.
  * @param {string} staticFilesPath The static files' path on disk from the global config.
  */

@@ -2,7 +2,7 @@ import logger from "../logger";
 import * as express from "express";
 import { CallDataTwiml } from "twilio";
 import { stateToString } from "../state";
-import { fingerprintUrl, makeUrlFor } from "../urlFor";
+import { fingerprintUrl, makeUrlFor } from "../modules/urlFor";
 import "../twilioAugments";
 
 import {

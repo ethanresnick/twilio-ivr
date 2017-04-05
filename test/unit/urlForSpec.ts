@@ -1,5 +1,5 @@
 import { expect } from "chai";
-import { makeUrlFor } from "../../lib/urlFor";
+import { makeUrlFor } from "../../lib/modules/urlFor";
 
 describe("urlFor", () => {
   const urlFor = makeUrlFor("ftp", "localhost", (it) => it + '?v=1');

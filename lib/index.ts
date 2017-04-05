@@ -1,14 +1,13 @@
 import * as State from "./state";
-import { makeServingMiddlewareAndFurl, getFingerprintForFile } from "./util/staticExpiryHelpers";
 import { renderState } from "./util/routeCreationHelpers";
-import { makeUrlFor, fingerprintUrl } from "./urlFor";
+import { fingerprintUrl } from "./modules/urlFor";
+import { default as makeMiddlewareAndFurl, StaticFilesConfig } from "./modules/staticFiles";
 
 import { Express, Handler } from "express";
 import express = require("express");
 import bodyParser = require("body-parser");
-import path = require("path");
 
-import { webhook as twilioWebhook, TwimlResponse } from "twilio";
+import { webhook as twilioWebhook } from "twilio";
 import "./twilioAugments";
 
 
@@ -27,113 +26,21 @@ export default function(states: State.UsableState[], config: config): Express {
   const { validate = true } = config.twilio;
   app.use(twilioWebhook(config.twilio.authToken, { validate: validate }));
 
-  // Declare our urlFingerprinter variable. Do so out here, because we pass it
-  // to renderState even if static file handling is disabled, as its required to
-  // create urlFor. Note: if the user doesn't provide any static files config,
-  // this is intentionally left undefined.
+  // Set up our url fingerprinter. This will stay undefined if the user doesn't
+  // opt in to any of our static file handling; if they do, we'll fill it with
+  // the fingerprinting function returned by the static files module.
   let urlFingerprinter: fingerprintUrl | undefined;
 
-  // Serve static files (probably audio or twiml) with
-  // auto-invalidated, far-future caching headers.
   if (config.staticFiles) {
-    const staticFilesMountPath = config.staticFiles.mountPath || "";
-    let serveStaticMiddleware: Handler[];
+    // Create the middleware and url fingerprinter function that we're going
+    // to use to serve static files. Save the calculated fingerprinting function.
+    let serveStaticMiddlewares: Handler[];
+    [serveStaticMiddlewares, urlFingerprinter] = makeMiddlewareAndFurl(config.staticFiles);
 
-    [serveStaticMiddleware, urlFingerprinter] = ((staticFilesConf) => {
-      type ReturnTuple = [Handler[], fingerprintUrl];
-
-      // If the user's given us both of a way to generate fingerprinted urls
-      // and to serve the static files, that's sufficient to totally obviate
-      // the built in static expiry middleware and configure urlFor.
-      if (staticFilesConf.fingerprintUrl && staticFilesConf.middleware) {
-        return <ReturnTuple>[[staticFilesConf.middleware], staticFilesConf.fingerprintUrl];
-      }
-
-      // But a path works too, with the option for them to override the middleware.
-      else if(staticFilesConf.path) {
-        const [defaultMiddleware, furl] =
-          makeServingMiddlewareAndFurl(staticFilesMountPath, staticFilesConf.path);
-
-        // user's middleware always overrides, even if we're using built-in furl.
-        const middleware = staticFilesConf.middleware ?
-          [staticFilesConf.middleware] :
-          defaultMiddleware;
-
-        return <ReturnTuple>[middleware, furl];
-      }
-
-      else {
-        throw new Error(
-          "To use twilio-ivr's built-in static files handling, you must set " +
-          "either the path option or the fingerprintUrl and middleware options."
-        );
-      }
-    })(config.staticFiles);
-
-    if (config.staticFiles.holdMusic) {
-      const holdMusicFileUri = config.staticFiles.holdMusic.fileRelativeUri;
-      const holdMusicEndpoint = config.staticFiles.holdMusic.endpoint || "/hold-music";
-      const holdMusicEndpointMounted = path.normalize(staticFilesMountPath + '/' + holdMusicEndpoint);
-
-      const holdMusicTwimlFor = config.staticFiles.holdMusic.twimlFor ||
-        ((urlFor: State.urlFor) =>
-          (new TwimlResponse()).play({ loop: 1000 }, urlFor(
-            path.normalize(staticFilesMountPath + '/' + holdMusicFileUri), { absolute: true }
-          )));
-
-      if(!holdMusicFileUri) {
-        throw new Error("You must provide a relative uri to your hold music file.");
-      }
-
-      // If the built-in furl is in use, make it fingerpint the hold music
-      // endpoint with the current fingerprint of the file at holdMusicPath,
-      // so both expire at the same time.
-      if(!config.staticFiles.fingerprintUrl) {
-        const origUrlFingerprinter = urlFingerprinter;
-        const musicFileFingerprint = (() => {
-          try {
-            return getFingerprintForFile(holdMusicFileUri);
-          }
-          catch (e) {
-            throw new Error("Your hold music file could not be found.");
-          }
-        })();
-
-        urlFingerprinter = (path: string) => {
-          return (path === holdMusicEndpointMounted) ?
-            `${holdMusicEndpointMounted}?v=${musicFileFingerprint}` :
-            origUrlFingerprinter(path);
-        };
-      }
-
-      // Define the middleware for our hold music, which isn't handled as a state
-      // because it's not a state conceptually (it doesn't have the transition
-      // logic of a normal state, since twilio stops playing it automatically
-      // when another party connects to the call, and it's not an end state
-      // either) and -- more importantly -- it doesn't fit in with the routing
-      // for states because we want twilio to make a cacheable, un-parameterized
-      // GET request for it. But it's also not just a static file, because it
-      // has dynamic content (i.e., the fingerprint of the hold music file and
-      // the host name of the server, because twilio won't accept a relative URI).
-      const holdMusicMiddleware = express().get(holdMusicEndpoint, (req, res, next) => {
-        const urlFor = makeUrlFor(req.protocol, req.get('Host'), urlFingerprinter);
-        res.set('Cache-Control', 'public, max-age=31536000');
-        res.send(holdMusicTwimlFor(urlFor));
-      });
-
-      // Then add the middleware either: at the beginning of the static serving
-      // chain, if we're using the built-in static-expiry-derived middleware
-      // (because we don't want to try to look up a static file for the hold
-      // music endpoint); but at the end if the user has provided their own
-      // static files middleware (because we want them to rewrite the
-      // fingerprinted url as needed and then call next to get this middleware).
-      serveStaticMiddleware[config.staticFiles.middleware ? "push" : "unshift"](holdMusicMiddleware);
-    }
-
-    // Register middleware for handling static files and hold music.
-    // Note: even if staticFilesMountPath is an empty string, this still works
+    // Register the middlewares to actually serve the static files/hold music.
+    // Note: registering middlewares with an empty string mountPath is supported.
     // (see https://github.com/expressjs/express/blob/master/test/app.use.js#L515)
-    app.use(staticFilesMountPath, serveStaticMiddleware);
+    app.use(config.staticFiles.mountPath || "", serveStaticMiddlewares);
   }
 
   // Below, we iterate over all the states and set up routes to handle them.
@@ -180,31 +87,6 @@ export default function(states: State.UsableState[], config: config): Express {
 
   return app;
 }
-
-// For the static files config, basically, the user either gives us a
-// fingerprintUrl fn and a middleware for handling those urls, or gives us a
-// path so we can fall back to using static-expiry + express-static for that.
-type BuiltinStaticFilesHandlingConfig = {
-  readonly path: string;
-  readonly middleware?: Handler;
-  readonly fingerprintUrl: undefined;
-};
-
-type CustomStaticFilesHandlingConfig = {
-  readonly path: undefined;
-  readonly middleware: Handler;
-  readonly fingerprintUrl: fingerprintUrl;
-}
-
-type StaticFilesConfig =
-  (BuiltinStaticFilesHandlingConfig | CustomStaticFilesHandlingConfig) & {
-    readonly mountPath?: string;
-    readonly holdMusic?: {
-      readonly fileRelativeUri: string;
-      readonly endpoint?: string;
-      readonly twimlFor?: (urlFor: State.urlFor) => TwimlResponse | string;
-    }
-  };
 
 export type config = {
   readonly twilio: {

@@ -1,6 +1,6 @@
 import { TwimlResponse, CallDataTwiml } from "twilio";
 import "./twilioAugments";
-import { urlFor } from "./urlFor";
+import { urlFor } from "./modules/urlFor";
 
 // A RoutableState that's not also either a BranchingState, or a RenderableState
 // subtype is invalid, so we don't include RoutableState in the UsableState type.
