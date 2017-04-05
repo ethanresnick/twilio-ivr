@@ -1,12 +1,10 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const State = require("./state");
-const staticExpiryHelpers_1 = require("./util/staticExpiryHelpers");
 const routeCreationHelpers_1 = require("./util/routeCreationHelpers");
-const urlFor_1 = require("./urlFor");
+const staticFiles_1 = require("./modules/staticFiles");
 const express = require("express");
 const bodyParser = require("body-parser");
-const path = require("path");
 const twilio_1 = require("twilio");
 require("./twilioAugments");
 function default_1(states, config) {
@@ -16,57 +14,9 @@ function default_1(states, config) {
     app.use(twilio_1.webhook(config.twilio.authToken, { validate: validate }));
     let urlFingerprinter;
     if (config.staticFiles) {
-        const staticFilesMountPath = config.staticFiles.mountPath || "";
-        let serveStaticMiddleware;
-        [serveStaticMiddleware, urlFingerprinter] = ((staticFilesConf) => {
-            if (staticFilesConf.fingerprintUrl && staticFilesConf.middleware) {
-                return [[staticFilesConf.middleware], staticFilesConf.fingerprintUrl];
-            }
-            else if (staticFilesConf.path) {
-                const [defaultMiddleware, furl] = staticExpiryHelpers_1.makeServingMiddlewareAndFurl(app, staticFilesMountPath, staticFilesConf.path);
-                const middleware = staticFilesConf.middleware ?
-                    [staticFilesConf.middleware] :
-                    defaultMiddleware;
-                return [middleware, furl];
-            }
-            else {
-                throw new Error("To use twilio-ivr's built-in static files handling, you must set " +
-                    "either the path option or the fingerprintUrl and middleware options.");
-            }
-        })(config.staticFiles);
-        if (config.staticFiles.holdMusic) {
-            const holdMusicFileUri = config.staticFiles.holdMusic.fileRelativeUri;
-            const holdMusicEndpoint = config.staticFiles.holdMusic.endpoint || "/hold-music";
-            const holdMusicEndpointMounted = path.normalize(staticFilesMountPath + '/' + holdMusicEndpoint);
-            const holdMusicTwimlFor = config.staticFiles.holdMusic.twimlFor ||
-                ((urlFor) => (new twilio_1.TwimlResponse()).play({ loop: 1000 }, urlFor(path.normalize(staticFilesMountPath + '/' + holdMusicFileUri), { absolute: true })));
-            if (!holdMusicFileUri) {
-                throw new Error("You must provide a relative uri to your hold music file.");
-            }
-            if (!config.staticFiles.fingerprintUrl) {
-                const origUrlFingerprinter = urlFingerprinter;
-                const musicFileFingerprint = (() => {
-                    try {
-                        return staticExpiryHelpers_1.getFingerprintForFile(holdMusicFileUri);
-                    }
-                    catch (e) {
-                        throw new Error("Your hold music file could not be found.");
-                    }
-                })();
-                urlFingerprinter = (path) => {
-                    return (path === holdMusicEndpointMounted) ?
-                        `${holdMusicEndpointMounted}?v=${musicFileFingerprint}` :
-                        origUrlFingerprinter(path);
-                };
-            }
-            const holdMusicMiddleware = express().get(holdMusicEndpoint, (req, res, next) => {
-                const urlFor = urlFor_1.makeUrlFor(req.protocol, req.get('Host'), urlFingerprinter);
-                res.set('Cache-Control', 'public, max-age=31536000');
-                res.send(holdMusicTwimlFor(urlFor));
-            });
-            serveStaticMiddleware[config.staticFiles.middleware ? "push" : "unshift"](holdMusicMiddleware);
-        }
-        app.use(staticFilesMountPath, serveStaticMiddleware);
+        let serveStaticMiddlewares;
+        [serveStaticMiddlewares, urlFingerprinter] = staticFiles_1.default(config.staticFiles);
+        app.use(config.staticFiles.mountPath || "", serveStaticMiddlewares);
     }
     states.forEach(thisState => {
         if (!State.isValidState(thisState)) {

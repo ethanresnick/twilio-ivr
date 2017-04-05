@@ -4,7 +4,7 @@ const url = require("url");
 const path = require("path");
 const express = require("express");
 const expiry = require("static-expiry");
-function makeServingMiddlewareAndFurl(app, mountPath, staticFilesPath) {
+function makeServingMiddlewareAndFurl(mountPath, staticFilesPath) {
     const oneYearInSeconds = (60 * 60 * 24 * 365);
     const oneYearInMilliseconds = oneYearInSeconds * 1000;
     const staticExpiryOpts = {
@@ -15,11 +15,12 @@ function makeServingMiddlewareAndFurl(app, mountPath, staticFilesPath) {
         duration: oneYearInSeconds,
         dir: staticFilesPath.replace(/\/$/, '')
     };
+    const staticExpiryMiddleware = expiry(null, staticExpiryOpts);
     const middlewares = [
-        expiry(app, staticExpiryOpts),
+        staticExpiryMiddleware,
         express.static(staticFilesPath, { maxAge: oneYearInMilliseconds, index: false })
     ];
-    const furl = mountPathAwareFurl(mountPath, app.locals.furl);
+    const furl = mountPathAwareFurl(mountPath, staticExpiryMiddleware.furl);
     return [middlewares, furl];
 }
 exports.makeServingMiddlewareAndFurl = makeServingMiddlewareAndFurl;

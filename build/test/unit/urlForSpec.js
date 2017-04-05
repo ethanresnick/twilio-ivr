@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const chai_1 = require("chai");
-const urlFor_1 = require("../../lib/urlFor");
+const urlFor_1 = require("../../lib/modules/urlFor");
 describe("urlFor", () => {
     const urlFor = urlFor_1.makeUrlFor("ftp", "localhost", (it) => it + '?v=1');
     it("should reject an attempt to fingerprint a uri with a query parameter", () => {

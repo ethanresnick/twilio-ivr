@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const logger_1 = require("../logger");
 const state_1 = require("../state");
-const urlFor_1 = require("../urlFor");
+const urlFor_1 = require("../modules/urlFor");
 require("../twilioAugments");
 const state_2 = require("../state");
 function resolveBranches(state, inputData) {

@@ -24,7 +24,7 @@ import { makeServingMiddlewareAndFurl, getFingerprintForFile } from "./staticExp
 type MiddlewaresAndFurl = [Handler[], furl];
 export default function(options: StaticFilesConfig): MiddlewaresAndFurl {
   const staticFilesMountPath = options.mountPath || "";
-  let [serveStaticMiddlewares, urlFingerprinter] = (() => {
+  let [serveStaticMiddlewares, urlFingerprinter] = (() => { // tslint:disable-line
     // If the user's given us both of a way to generate fingerprinted urls
     // and to serve the static files, that's sufficient to totally obviate
     // the built in static expiry middleware and configure urlFor.
