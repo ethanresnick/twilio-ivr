@@ -21,6 +21,10 @@ export type config = {
       twimlFor?: (urlFor: urlFor) => TwimlResponse | string;
     };
   };
+  session: {
+    secret: string;
+    cookie?: any;
+  }
 };
 
 export type fingerprintUrl = (path: string) => string;

@@ -217,6 +217,7 @@ export type config = {
   };
   readonly staticFiles?: StaticFilesConfig;
   readonly session: {
-    readonly secret: string
+    readonly secret: string;
+    readonly cookie?: any;
   };
 }
