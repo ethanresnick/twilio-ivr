@@ -5,6 +5,10 @@ import { TwimlResponse } from "twilio";
 
 export default function (states: UsableState[], config: config): Express;
 
+export interface Request extends ExpressRequest {
+  session: any;
+}
+
 export type config = {
   twilio: {
     authToken: string;
@@ -47,11 +51,11 @@ export interface RoutableState extends AbstractState {
 }
 
 export interface BranchingState extends AbstractState {
-  transitionOut(inputData?: CallDataTwiml, query?: any): Promise<UsableState> | UsableState;
+  transitionOut(req: Request, inputData?: CallDataTwiml): Promise<UsableState> | UsableState;
 }
 
 export interface RenderableState extends AbstractState {
-  twimlFor(urlFor: urlFor, inputData?: CallDataTwiml, query?: any): TwimlResponse | string;
+  twimlFor(urlFor: urlFor, req: Request, inputData?: CallDataTwiml): TwimlResponse | string;
 }
 
 export interface EndState extends RenderableState {
@@ -59,7 +63,7 @@ export interface EndState extends RenderableState {
 }
 
 export interface AsynchronousState extends RenderableState {
-  backgroundTrigger(urlFor: urlFor, inputData?: CallDataTwiml, query?: any): void;
+  backgroundTrigger(urlFor: urlFor, req: Request, inputData?: CallDataTwiml): void;
 }
 
 export interface NormalState extends BranchingState, RenderableState {
@@ -128,8 +132,4 @@ export interface CallDataAPI {
   to: string;
   from: string;
   apiVersion: string;
-}
-
-export interface Request extends ExpressRequest {
-  session: any;
 }
