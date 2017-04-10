@@ -127,5 +127,5 @@ export interface CallDataAPI {
 }
 
 export interface Request extends Express.Request {
-  session: [any];
+  session: any;
 }
