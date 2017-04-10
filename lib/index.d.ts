@@ -125,3 +125,7 @@ export interface CallDataAPI {
   from: string;
   apiVersion: string;
 }
+
+export interface Request extends Express.Request {
+  session: [any];
+}
