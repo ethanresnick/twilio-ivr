@@ -12,7 +12,7 @@ const states = {
     routableBranching: {
         name: "CALL_RECEIVED_BRANCH",
         uri: "/routable-branching",
-        transitionOut: ((input, query) => {
+        transitionOut: ((req, input) => {
             return input && input.CallerZip === "00000" ?
                 states.nonRoutableBranching :
                 states.routableEnd;
@@ -22,10 +22,10 @@ const states = {
         name: "CALL_RECEIVED_RENDER",
         uri: "/routable-normal",
         processTransitionUri: "/process-renderable-entry",
-        twimlFor(urlFor, input, query) {
+        twimlFor(urlFor, req, input) {
             return "input to routableNormal was: " + JSON.stringify(input);
         },
-        transitionOut(input, query) {
+        transitionOut(req, input) {
             return Promise.resolve(states.nonRoutableNormal);
         }
     },
@@ -33,42 +33,42 @@ const states = {
         name: "CALL_RECEIVED_END",
         uri: "/routable-end",
         isEndState: true,
-        twimlFor(urlFor, input, query) {
+        twimlFor(urlFor, req, input) {
             return "Sorry, no one home. Bye.";
         }
     },
     routableAsync: {
         name: "CALL_RECEIVED_ASYNC",
         uri: "/routable-async",
-        twimlFor(urlFor, input, query) {
+        twimlFor(urlFor, req, input) {
             return "We're doing something...";
         },
         backgroundTrigger() { return "do some effect..."; }
     },
     nonRoutableBranching: {
         name: "INNER_BRANCH",
-        transitionOut: ((input, query) => {
+        transitionOut: ((req, input) => {
             return states.nonRoutableNormal;
         })
     },
     nonRoutableBranching2: {
         name: "INNER_BRANCH_2",
-        transitionOut: ((input, query) => {
+        transitionOut: ((req, input) => {
             return Promise.resolve(states.routableAsync);
         })
     },
     nonRoutableNormal: {
         name: "INNER_RENDER",
         processTransitionUri: "/process-inner-renderable",
-        twimlFor(urlFor, input, query) {
+        twimlFor(urlFor, req, input) {
             return "input to nonRoutableNormal was: " + JSON.stringify(input);
         },
-        transitionOut(input, query) {
+        transitionOut(req, input) {
             return Promise.resolve(states.nonRoutableBranching2);
         }
     }
 };
-const appConfig = { twilio: { authToken: "", validate: false } };
+const appConfig = { twilio: { authToken: "", validate: false }, session: { secret: 'fuck' } };
 const app = _1.default(objectValuesEntries_1.values(states), appConfig);
 const requestApp = request(app);
 describe("state routing & rendering", () => {
@@ -100,9 +100,9 @@ describe("state routing & rendering", () => {
                     .send({ CallerZip: "00000" })
                     .then(() => {
                     chai_1.expect(states.routableBranching.transitionOut)
-                        .calledWithExactly({ CallerZip: "00000" }, {});
+                        .calledWithExactly(sinon.match.any, { CallerZip: "00000" });
                     chai_1.expect(states.nonRoutableBranching.transitionOut)
-                        .calledWithExactly(undefined, {});
+                        .calledWithExactly(sinon.match.any, undefined);
                 });
             });
             it("should not pass input to the ultimate twimlFor", () => {
@@ -112,7 +112,7 @@ describe("state routing & rendering", () => {
                     .send({ CallerZip: "00000" })
                     .then(() => {
                     chai_1.expect(states.nonRoutableNormal.twimlFor)
-                        .calledWithExactly(sinon.match.func, undefined, {});
+                        .calledWithExactly(sinon.match.func, sinon.match.any, undefined);
                 });
             });
             it("should not matter if the first renderable state is also routable or an end state", () => {
@@ -123,9 +123,9 @@ describe("state routing & rendering", () => {
                     .expect("Sorry, no one home. Bye.")
                     .then(() => {
                     chai_1.expect(states.routableBranching.transitionOut)
-                        .calledWithExactly({ CallerZip: "" }, {});
+                        .calledWithExactly(sinon.match.any, { CallerZip: "" });
                     chai_1.expect(states.routableEnd.twimlFor)
-                        .calledWithExactly(sinon.match.func, undefined, {});
+                        .calledWithExactly(sinon.match.func, sinon.match.any, undefined);
                 });
             });
         });
@@ -168,7 +168,7 @@ describe("state routing & rendering", () => {
                         chai_1.expect(states.routableAsync.backgroundTrigger)
                             .calledBefore(states.routableAsync.twimlFor);
                         chai_1.expect(states.routableAsync.backgroundTrigger)
-                            .calledWithExactly(sinon.match.func, { "Test": "true" }, {});
+                            .calledWithExactly(sinon.match.func, sinon.match.any, { "Test": "true" });
                     });
                 });
             });
@@ -195,7 +195,7 @@ describe("state routing & rendering", () => {
                 .send(dummyData)
                 .then(() => {
                 chai_1.expect(states.routableNormal.transitionOut)
-                    .calledWithExactly(dummyData, {});
+                    .calledWithExactly(sinon.match.any, dummyData);
             });
         });
         it("should not call transitionOut if the next state's already renderable", () => {

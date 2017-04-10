@@ -3,7 +3,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 function filesConfig(obj) {
     return {
         twilio: { authToken: "", validate: false },
-        staticFiles: obj
+        staticFiles: obj,
+        session: { secret: 'fuck' }
     };
 }
 exports.filesConfig = filesConfig;

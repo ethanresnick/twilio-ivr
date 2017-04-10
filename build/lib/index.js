@@ -4,12 +4,14 @@ const State = require("./state");
 const staticExpiryHelpers_1 = require("./util/staticExpiryHelpers");
 const routeCreationHelpers_1 = require("./util/routeCreationHelpers");
 const express = require("express");
+const session = require("express-session");
 const bodyParser = require("body-parser");
 const path = require("path");
 const twilio_1 = require("twilio");
 require("./twilioAugments");
 function default_1(states, config) {
     const app = express();
+    app.use(session(config.session));
     app.use(bodyParser.urlencoded({ extended: false }));
     const { validate = true } = config.twilio;
     app.use(twilio_1.webhook(config.twilio.authToken, { validate: validate }));
@@ -81,7 +83,7 @@ function default_1(states, config) {
         }
         if (State.isNormalState(thisState)) {
             app.post(thisState.processTransitionUri, function (req, res, next) {
-                const nextStatePromise = Promise.resolve(thisState.transitionOut(req.body, req.query));
+                const nextStatePromise = Promise.resolve(thisState.transitionOut(req, req.body));
                 nextStatePromise
                     .then(nextState => {
                     return routeCreationHelpers_1.renderState(nextState, req, urlFingerprinter, req.body);

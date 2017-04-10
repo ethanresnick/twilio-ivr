@@ -6,10 +6,10 @@ const staticExpiryHelpers_1 = require("./staticExpiryHelpers");
 require("../twilioAugments");
 const url = require("url");
 const state_2 = require("../state");
-function resolveBranches(state, inputData, query) {
+function resolveBranches(state, req, inputData) {
     if (state_2.isBranchingState(state) && !state_2.isRenderableState(state)) {
-        return Promise.resolve(state.transitionOut(inputData, query)).then(nextState => {
-            return resolveBranches(nextState, undefined, query);
+        return Promise.resolve(state.transitionOut(req, inputData)).then(nextState => {
+            return resolveBranches(nextState, req);
         });
     }
     return Promise.resolve(state);
@@ -17,17 +17,17 @@ function resolveBranches(state, inputData, query) {
 exports.resolveBranches = resolveBranches;
 function renderState(state, req, furl, inputData) {
     const urlForBound = makeUrlFor(req.protocol, req.get('Host'), furl);
-    const renderableStatePromise = resolveBranches(state, inputData, req.query);
+    const renderableStatePromise = resolveBranches(state, req, inputData);
     const inputToRenderWith = state_2.isRenderableState(state) ? inputData : undefined;
     const couldNotFindRenderableStateError = Symbol();
     return renderableStatePromise.then(stateToRender => {
         const stateName = state_1.stateToString(stateToRender);
         if (state_2.isAsynchronousState(stateToRender)) {
             logger_1.default.info("Began asynchronous processing for " + stateName);
-            stateToRender.backgroundTrigger(urlForBound, inputToRenderWith, req.query);
+            stateToRender.backgroundTrigger(urlForBound, req, inputToRenderWith);
         }
         logger_1.default.info("Produced twiml for " + stateName);
-        return stateToRender.twimlFor(urlForBound, inputToRenderWith, req.query);
+        return stateToRender.twimlFor(urlForBound, req, inputToRenderWith);
     }, (e) => {
         throw { type: couldNotFindRenderableStateError, origError: e };
     }).catch((e) => {
