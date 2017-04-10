@@ -1,6 +1,6 @@
 /// <reference types="express" />
 /// <reference types="twilio" />
-import { Express, Handler } from "express";
+import { Express, Handler, Request as ExpressRequest } from "express";
 import { TwimlResponse } from "twilio";
 
 export default function (states: UsableState[], config: config): Express;
@@ -126,6 +126,6 @@ export interface CallDataAPI {
   apiVersion: string;
 }
 
-export interface Request extends Express.Request {
+export interface Request extends ExpressRequest {
   session: any;
 }
