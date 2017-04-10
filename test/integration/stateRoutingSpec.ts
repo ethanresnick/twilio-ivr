@@ -6,6 +6,7 @@ import twilio = require("twilio");
 import "../../lib/twilioAugments";
 import lib from "../../lib/";
 import { values as objectValues } from "../../lib/util/objectValuesEntries";
+import * as express from "express"
 
 import {
   RoutableState, BranchingState, NormalState, AsynchronousState,
@@ -19,7 +20,7 @@ const states: any = {
   routableBranching: <RoutableState & BranchingState>{
     name: "CALL_RECEIVED_BRANCH",
     uri: "/routable-branching",
-    transitionOut: (<sinon.SinonSpy>((input?: twilio.CallDataTwiml, query?: any) => {
+    transitionOut: (<sinon.SinonSpy>((req: express.Request, input?: twilio.CallDataTwiml) => {
       return input && input.CallerZip === "00000" ?
         states.nonRoutableBranching :
         states.routableEnd;
@@ -30,10 +31,10 @@ const states: any = {
     name: "CALL_RECEIVED_RENDER",
     uri: "/routable-normal",
     processTransitionUri: "/process-renderable-entry",
-    twimlFor(urlFor: urlFor, input?: twilio.CallDataTwiml, query?: any) {
+    twimlFor(urlFor: urlFor, req: express.Request, input?: twilio.CallDataTwiml) {
       return "input to routableNormal was: " + JSON.stringify(input);
     },
-    transitionOut(input?: twilio.CallDataTwiml, query?: any) {
+    transitionOut(req: express.Request, input?: twilio.CallDataTwiml) {
       return Promise.resolve(states.nonRoutableNormal);
     }
   },
@@ -42,7 +43,7 @@ const states: any = {
     name: "CALL_RECEIVED_END",
     uri: "/routable-end",
     isEndState: true,
-    twimlFor(urlFor: urlFor, input?: twilio.CallDataTwiml, query?: any) {
+    twimlFor(urlFor: urlFor, req: express.Request, input?: twilio.CallDataTwiml) {
       return "Sorry, no one home. Bye.";
     }
   },
@@ -50,7 +51,7 @@ const states: any = {
   routableAsync: <RoutableState & AsynchronousState>{
     name: "CALL_RECEIVED_ASYNC",
     uri: "/routable-async",
-    twimlFor(urlFor: urlFor, input?: twilio.CallDataTwiml, query?: any) {
+    twimlFor(urlFor: urlFor, req: express.Request, input?: twilio.CallDataTwiml) {
       return "We're doing something...";
     },
     backgroundTrigger() { return "do some effect..."; }
@@ -58,14 +59,14 @@ const states: any = {
 
   nonRoutableBranching: <BranchingState>{
     name: "INNER_BRANCH",
-    transitionOut: (<sinon.SinonSpy>((input?: twilio.CallDataTwiml, query?: any) => {
+    transitionOut: (<sinon.SinonSpy>((req: express.Request, input?: twilio.CallDataTwiml) => {
       return states.nonRoutableNormal;
     }))
   },
 
   nonRoutableBranching2: <BranchingState>{
     name: "INNER_BRANCH_2",
-    transitionOut: (<sinon.SinonSpy>((input?: twilio.CallDataTwiml, query?: any) => {
+    transitionOut: (<sinon.SinonSpy>((req: express.Request, input?: twilio.CallDataTwiml) => {
       return Promise.resolve(states.routableAsync);
     }))
   },
@@ -73,16 +74,16 @@ const states: any = {
   nonRoutableNormal: <NormalState>{
     name: "INNER_RENDER",
     processTransitionUri: "/process-inner-renderable",
-    twimlFor(urlFor: urlFor, input?: twilio.CallDataTwiml, query?: any) {
+    twimlFor(urlFor: urlFor, req: express.Request, input?: twilio.CallDataTwiml) {
       return "input to nonRoutableNormal was: " + JSON.stringify(input);
     },
-    transitionOut(input?: twilio.CallDataTwiml, query?: any) {
+    transitionOut(req: express.Request, input?: twilio.CallDataTwiml) {
       return Promise.resolve(states.nonRoutableBranching2);
     }
   }
 }
 
-const appConfig = { twilio: { authToken: "", validate: false } };
+const appConfig = { twilio: { authToken: "", validate: false }, session: { secret: 'fuck' } };
 const app = lib(objectValues<UsableState>(states), appConfig);
 const requestApp = request(app);
 
@@ -114,15 +115,14 @@ describe("state routing & rendering", () => {
 
       it("should pass input to the first transitionOut, but not subsequent ones", () => {
         return requestApp
-          .post("/routable-branching")
+          .post("/routable-branching") // can i get the request object anywhere?
           .type("form")
           .send({CallerZip: "00000"})
           .then(() => {
             expect(states.routableBranching.transitionOut)
-              .calledWithExactly({CallerZip: "00000"}, {});
-
+              .calledWithExactly(sinon.match.any, { CallerZip: "00000" });
             expect(states.nonRoutableBranching.transitionOut)
-              .calledWithExactly(undefined, {});
+              .calledWithExactly(sinon.match.any, undefined);
           });
       });
 
@@ -133,7 +133,7 @@ describe("state routing & rendering", () => {
           .send({CallerZip: "00000"})
           .then(() => {
             expect(states.nonRoutableNormal.twimlFor)
-              .calledWithExactly(sinon.match.func, undefined, {});
+              .calledWithExactly(sinon.match.func, sinon.match.any, undefined);
           });
       });
 
@@ -145,10 +145,10 @@ describe("state routing & rendering", () => {
           .expect("Sorry, no one home. Bye.")
           .then(() => {
             expect(states.routableBranching.transitionOut)
-              .calledWithExactly({CallerZip: ""}, {});
+              .calledWithExactly(sinon.match.any, {CallerZip: ""});
 
             expect(states.routableEnd.twimlFor)
-              .calledWithExactly(sinon.match.func, undefined, {});
+              .calledWithExactly(sinon.match.func, sinon.match.any, undefined);
           });
       });
     });
@@ -202,7 +202,7 @@ describe("state routing & rendering", () => {
               // Below, we quote "true" in recognition of the fact that
               // all data is converted to strings as part of POSTing it.
               expect(states.routableAsync.backgroundTrigger)
-                .calledWithExactly(sinon.match.func, {"Test": "true"}, {});
+                .calledWithExactly(sinon.match.func, sinon.match.any, {"Test": "true"});
             });
         });
       });
@@ -235,7 +235,7 @@ describe("state routing & rendering", () => {
         .send(dummyData)
         .then(() => {
           expect(states.routableNormal.transitionOut)
-            .calledWithExactly(dummyData, {});
+            .calledWithExactly(sinon.match.any, dummyData);
         });
     });
 

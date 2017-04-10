@@ -22,19 +22,17 @@ import {
  *
  * @param  {UsableState} state The initial state, which may or may
  *   not be renderable.
+ * @param  {express.Request} req The express request
  * @param  {CallDataTwiml} inputData Any user input taht should be passed to
  *   the initial state, and the initial state only, if it's not renderable.
  * @return {Promise<RenderableState>} The final renderable state.
  */
-export function resolveBranches(state: UsableState,
-  inputData?: CallDataTwiml, query?: any): Promise<RenderableState> {
-
+export function resolveBranches(state: UsableState, req: express.Request, inputData?: CallDataTwiml): Promise<RenderableState> {
   if (isBranchingState(state) && !isRenderableState(state)) {
-    return Promise.resolve(state.transitionOut(inputData, query)).then(nextState => {
-      return resolveBranches(nextState, undefined, query);
+    return Promise.resolve(state.transitionOut(req, inputData)).then(nextState => {
+      return resolveBranches(nextState, req);
     });
   }
-
   return Promise.resolve(state);
 }
 
@@ -71,7 +69,7 @@ export function renderState(state: UsableState, req: express.Request,
 
   // If this state is non-renderable, follow the branches until we get
   // to a renderable state.
-  const renderableStatePromise = resolveBranches(state, inputData, req.query);
+  const renderableStatePromise = resolveBranches(state, req, inputData);
 
 
   // Below, if our stateToRender was arrived at through a branch, then the
@@ -91,11 +89,11 @@ export function renderState(state: UsableState, req: express.Request,
     const stateName = stateToString(stateToRender);
     if (isAsynchronousState(stateToRender)) {
       logger.info("Began asynchronous processing for " + stateName);
-      stateToRender.backgroundTrigger(urlForBound, inputToRenderWith, req.query);
+      stateToRender.backgroundTrigger(urlForBound, req, inputToRenderWith);
     }
 
     logger.info("Produced twiml for " + stateName);
-    return stateToRender.twimlFor(urlForBound, inputToRenderWith, req.query);
+    return stateToRender.twimlFor(urlForBound, req, inputToRenderWith);
   }, (e: Error) => {
     // Here, we got an error while finding the next state to render (because
     // renderableStatePromise rejected) and we want to re-throw it, because we

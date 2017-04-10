@@ -2,6 +2,7 @@ import sinon = require("sinon");
 import sinonChai = require("sinon-chai");
 import { expect, use as chaiUse } from "chai";
 import { CallDataTwiml } from "twilio";
+import * as express from "express";
 import "../../../lib/twilioAugments";
 import * as sut from "../../../lib/util/routeCreationHelpers";
 import * as State from "../../../lib/state";
@@ -16,7 +17,7 @@ describe("route creation utilities", () => {
     describe("handling renderable input states", () => {
       it("should return a promise for the input state", () => {
         const results: any[] = states.renderableStates.map(state =>
-          [state, sut.resolveBranches(state, <CallDataTwiml>{})]
+          [state, sut.resolveBranches(state, <express.Request>{}, <CallDataTwiml>{})]
         );
 
         const assertions = results.map(([state, resultPromise]) => {
@@ -56,20 +57,20 @@ describe("route creation utilities", () => {
       })
 
       it("should pass any input data to the first non-renderable state, but not subsequent ones", () => {
-        return sut.resolveBranches(i, <CallDataTwiml>{}, {}).then(state => {
-          expect(i.transitionOut).calledWithExactly({}, {});
-          expect(h.transitionOut).calledWithExactly(undefined, {});
+        return sut.resolveBranches(i, <express.Request>{}, <CallDataTwiml>{}).then(state => {
+          expect(i.transitionOut).calledWithExactly(sinon.match.any, {});
+          expect(h.transitionOut).calledWithExactly(sinon.match.any, undefined);
         });
       });
 
       it("should finally return a promise for the first renderable state", () => {
-        return sut.resolveBranches(i, <CallDataTwiml>{}).then(state => {
+        return sut.resolveBranches(i, <express.Request>{}, <CallDataTwiml>{}).then(state => {
           expect(state.name).to.equal("g");
         });
       });
 
       it("should not call transition out on the renderable state, once found", () => {
-        return sut.resolveBranches(i, <CallDataTwiml>{}).then(state => {
+        return sut.resolveBranches(i, <express.Request>{}, <CallDataTwiml>{}).then(state => {
           expect(g.transitionOut).to.not.have.been.called;
         });
       });

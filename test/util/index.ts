@@ -8,7 +8,8 @@ import { urlFor, EndState, RoutableState } from "../../lib/state";
 export function filesConfig(obj: any) {
   return {
     twilio: { authToken: "", validate: false},
-    staticFiles: obj
+    staticFiles: obj,
+    session: { secret: 'fuck' }
   };
 }
 

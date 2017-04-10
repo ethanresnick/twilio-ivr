@@ -4,6 +4,7 @@ import { renderState, makeUrlFor, fingerprintUrl } from "./util/routeCreationHel
 
 import { Express, Handler } from "express";
 import express = require("express");
+import session = require("express-session");
 import bodyParser = require("body-parser");
 import path = require("path");
 
@@ -14,6 +15,8 @@ import "./twilioAugments";
 export default function(states: State.UsableState[], config: config): Express {
   // Set up express
   const app = express();
+
+  app.use(session(config.session))
 
   // Parse twilio POST payloads, which come as urlencoded strings...
   // TODO: handle pre-parsed bodies
@@ -163,7 +166,7 @@ export default function(states: State.UsableState[], config: config): Express {
     if (State.isNormalState(thisState)) {
       app.post(thisState.processTransitionUri, function (req, res, next) {
         // Use the input to transition to the next state.
-        const nextStatePromise = Promise.resolve(thisState.transitionOut(req.body, req.query));
+        const nextStatePromise = Promise.resolve(thisState.transitionOut(req, req.body));
 
         // Then, do what we do for renderable states, except don't pass
         // req.body anywhere, as we've already used that input to transition out.
@@ -213,4 +216,7 @@ export type config = {
     readonly validate?: boolean;
   };
   readonly staticFiles?: StaticFilesConfig;
+  readonly session: {
+    readonly secret: string
+  };
 }
