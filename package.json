@@ -73,7 +73,7 @@
     "twilio": "ethanresnick/twilio-node#patch-1"
   },
   "devDependencies": {
-    "@types/chai": "3.4.35",
+    "@types/chai": "3.5.0",
     "@types/chai-as-promised": "0.0.30",
     "@types/mocha": "2.2.40",
     "@types/node": "6.0.59",
