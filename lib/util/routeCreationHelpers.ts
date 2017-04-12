@@ -134,7 +134,7 @@ export type UrlForOptions = { query?: any, fingerprint?: boolean, absolute?: boo
  * @return {urlFor} A final function, with options, for fingerpinting a root-relative url.
  */
 export function makeUrlFor(protocol: string, host: string, furl?: fingerprintUrl): urlFor {
-  return (path: string, { query, absolute = false, fingerprint }: UrlForOptions = {}) => {
+  return (path: string, { query = {}, absolute = false, fingerprint }: UrlForOptions = {}) => {
     // Static files are the only ones that can be fingerprinted, and they
     // shouldn't have query parameters. Enforcing this simplies the logic below.
     if(fingerprint && query) {
