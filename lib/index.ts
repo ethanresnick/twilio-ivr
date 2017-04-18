@@ -16,6 +16,8 @@ export default function(states: State.UsableState[], config: config): Express {
   // Set up express
   const app = express();
 
+  if (config.trustProxy) { app.set('trust proxy', 1) }
+  
   app.use(session(config.session))
 
   // Parse twilio POST payloads, which come as urlencoded strings...
@@ -220,4 +222,5 @@ export type config = {
     readonly secret: string;
     readonly cookie?: any;
   };
+  readonly trustProxy: boolean;
 }
