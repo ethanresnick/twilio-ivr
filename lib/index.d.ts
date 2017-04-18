@@ -28,7 +28,8 @@ export type config = {
   session: {
     secret: string;
     cookie?: any;
-  }
+  };
+  trustProxy: boolean;
 };
 
 export type fingerprintUrl = (path: string) => string;
