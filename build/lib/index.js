@@ -11,6 +11,9 @@ const twilio_1 = require("twilio");
 require("./twilioAugments");
 function default_1(states, config) {
     const app = express();
+    if (config.trustProxy) {
+        app.set('trust proxy', 1);
+    }
     app.use(session(config.session));
     app.use(bodyParser.urlencoded({ extended: false }));
     const { validate = true } = config.twilio;
