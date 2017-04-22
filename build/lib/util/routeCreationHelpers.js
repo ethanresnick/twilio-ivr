@@ -43,7 +43,7 @@ function renderState(state, req, furl, inputData) {
 }
 exports.renderState = renderState;
 function makeUrlFor(protocol, host, furl) {
-    return (path, { query, absolute = false, fingerprint } = {}) => {
+    return (path, { query = {}, absolute = false, fingerprint } = {}) => {
         if (fingerprint && query) {
             throw new Error("Can't combine fingerprinting with query parameters.");
         }

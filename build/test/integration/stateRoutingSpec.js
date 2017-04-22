@@ -68,7 +68,7 @@ const states = {
         }
     }
 };
-const appConfig = { twilio: { authToken: "", validate: false }, session: { secret: 'fuck' } };
+const appConfig = { twilio: { authToken: "", validate: false } };
 const app = _1.default(objectValuesEntries_1.values(states), appConfig);
 const requestApp = request(app);
 describe("state routing & rendering", () => {

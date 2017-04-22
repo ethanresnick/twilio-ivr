@@ -4,7 +4,6 @@ const State = require("./state");
 const staticExpiryHelpers_1 = require("./util/staticExpiryHelpers");
 const routeCreationHelpers_1 = require("./util/routeCreationHelpers");
 const express = require("express");
-const session = require("express-session");
 const bodyParser = require("body-parser");
 const path = require("path");
 const twilio_1 = require("twilio");
@@ -14,7 +13,9 @@ function default_1(states, config) {
     if (config.trustProxy) {
         app.set('trust proxy', 1);
     }
-    app.use(session(config.session));
+    if (config.session) {
+        app.use(config.session);
+    }
     app.use(bodyParser.urlencoded({ extended: false }));
     const { validate = true } = config.twilio;
     app.use(twilio_1.webhook(config.twilio.authToken, { validate: validate }));

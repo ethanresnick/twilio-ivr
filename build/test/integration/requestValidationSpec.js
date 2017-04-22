@@ -14,7 +14,7 @@ describe("request signing", () => {
     const fakeToken = 'abcdefghijklmnopqrstuvwxyz1234567890';
     const fakeBody = { dummy: "val" };
     describe("default behavior", () => {
-        const app = _1.default(states, { twilio: { authToken: fakeToken }, session: { secret: 'fuck' } });
+        const app = _1.default(states, { twilio: { authToken: fakeToken } });
         const agent = request.agent(app);
         it("should reject unsigned requests", () => {
             return agent
@@ -23,7 +23,7 @@ describe("request signing", () => {
         });
     });
     describe("validate: true", () => {
-        const app = _1.default(states, { twilio: { authToken: fakeToken, validate: true }, session: { secret: 'fuck' } });
+        const app = _1.default(states, { twilio: { authToken: fakeToken, validate: true } });
         const agent = request.agent(app);
         it("should allow signed requests", () => {
             const test = agent.post("/");
@@ -48,7 +48,7 @@ describe("request signing", () => {
         });
     });
     describe("validate: false", () => {
-        const app = _1.default(states, { twilio: { authToken: fakeToken, validate: false }, session: { secret: 'fuck' } });
+        const app = _1.default(states, { twilio: { authToken: fakeToken, validate: false } });
         const agent = request.agent(app);
         it("should allow all requests", () => {
             const test = agent.post("/");

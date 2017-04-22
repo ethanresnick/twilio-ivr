@@ -24,7 +24,7 @@ describe("error handling (at component integration points)", () => {
                     }
                 }
             ];
-            const app = _1.default(statesWithInvalidTransition, { twilio: { authToken: "", validate: false }, session: { secret: 'fuck' } });
+            const app = _1.default(statesWithInvalidTransition, { twilio: { authToken: "", validate: false } });
             app.use(function (err, req, res, next) {
                 res.status(500).send('error handler reached');
             });

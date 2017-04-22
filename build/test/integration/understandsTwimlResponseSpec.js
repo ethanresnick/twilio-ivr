@@ -15,7 +15,7 @@ const states = [{
         twimlFor() { return 'Test'; }
     }];
 describe("rending Twiml", () => {
-    const app = _1.default(states, { twilio: { authToken: "", validate: false }, session: { secret: 'fuck' } });
+    const app = _1.default(states, { twilio: { authToken: "", validate: false } });
     it("should render TwimlResponse object", () => {
         return request(app)
             .post("/returns-twiml-response")
