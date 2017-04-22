@@ -16,7 +16,7 @@ const states: UsableState[] = [<UsableState>{
 }];
 
 describe("rending Twiml", () => {
-  const app = lib(states, { twilio: { authToken: "", validate: false }, session: { secret: 'fuck' } });
+  const app = lib(states, { twilio: { authToken: "", validate: false } });
 
   it("should render TwimlResponse object", () => {
     return request(app)

@@ -1,12 +1,12 @@
 /// <reference types="express" />
 /// <reference types="twilio" />
-import { Express, Handler, Request as ExpressRequest } from "express";
+import { Express, Handler, RequestHandler, Request as ExpressRequest } from "express";
 import { TwimlResponse } from "twilio";
 
 export default function (states: UsableState[], config: config): Express;
 
 export interface Request extends ExpressRequest {
-  session: any;
+  session?: any;
 }
 
 export type config = {
@@ -25,11 +25,8 @@ export type config = {
       twimlFor?: (urlFor: urlFor) => TwimlResponse | string;
     };
   };
-  session: {
-    secret: string;
-    cookie?: any;
-  };
-  trustProxy: boolean;
+  session?: RequestHandler;
+  trustProxy?: boolean;
 };
 
 export type fingerprintUrl = (path: string) => string;

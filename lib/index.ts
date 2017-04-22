@@ -2,9 +2,8 @@ import * as State from "./state";
 import { makeServingMiddlewareAndFurl, getFingerprintForFile } from "./util/staticExpiryHelpers";
 import { renderState, makeUrlFor, fingerprintUrl } from "./util/routeCreationHelpers";
 
-import { Express, Handler } from "express";
+import { Express, Handler, RequestHandler } from "express";
 import express = require("express");
-import session = require("express-session");
 import bodyParser = require("body-parser");
 import path = require("path");
 
@@ -17,8 +16,7 @@ export default function(states: State.UsableState[], config: config): Express {
   const app = express();
 
   if (config.trustProxy) { app.set('trust proxy', 1) }
-  
-  app.use(session(config.session))
+  if (config.session) { app.use(config.session) }
 
   // Parse twilio POST payloads, which come as urlencoded strings...
   // TODO: handle pre-parsed bodies
@@ -218,9 +216,6 @@ export type config = {
     readonly validate?: boolean;
   };
   readonly staticFiles?: StaticFilesConfig;
-  readonly session: {
-    readonly secret: string;
-    readonly cookie?: any;
-  };
-  readonly trustProxy: boolean;
+  session?: RequestHandler;
+  readonly trustProxy?: boolean;
 }

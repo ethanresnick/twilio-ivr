@@ -83,7 +83,7 @@ const states: any = {
   }
 }
 
-const appConfig = { twilio: { authToken: "", validate: false }, session: { secret: 'fuck' } };
+const appConfig = { twilio: { authToken: "", validate: false } };
 const app = lib(objectValues<UsableState>(states), appConfig);
 const requestApp = request(app);
 
