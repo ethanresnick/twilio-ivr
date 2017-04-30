@@ -76,7 +76,7 @@
     "@types/chai": "3.5.1",
     "@types/chai-as-promised": "0.0.30",
     "@types/mocha": "2.2.40",
-    "@types/node": "6.0.59",
+    "@types/node": "7.0.9",
     "@types/sinon": "^1.16.32",
     "@types/sinon-chai": "^2.7.27",
     "@types/supertest": "^2.0.0",
