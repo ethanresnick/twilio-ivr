@@ -113,14 +113,16 @@ describe("versioned static files", () => {
     });
   });
 
-  describe("user-provided middleware and fingerprinting function", () => {
+  describe("user-provided fingerprinting function", () => {
     const tammyUrlState = stateRenderingUrlFor("/static/Tammy.mp3", "/only-state");
-    const conf = filesConfig({
-      fingerprintUrl: (path: string) => {
-        const pathParts = path.split('.');
-        pathParts.splice(pathParts.length - 1, 0, 'abc');
-        return pathParts.join('.');
-      },
+    const fingerprinter = (path: string) => {
+      const pathParts = path.split('.');
+      pathParts.splice(pathParts.length - 1, 0, 'abc');
+      return pathParts.join('.');
+    };
+
+    const confWithMiddleware = filesConfig({
+      fingerprintUrl: fingerprinter,
       mountPath: '/static',
       middleware: <Handler>((req, res, next) => {
         // note, middleware shouldn't see the mountpath.
@@ -128,7 +130,13 @@ describe("versioned static files", () => {
       })
     });
 
-    const app = lib([tammyUrlState], conf);
+    const confNoMiddleware = filesConfig({
+      fingerprintUrl: fingerprinter,
+      mountPath: '/static'
+    });
+
+    const app = lib([tammyUrlState], confWithMiddleware);
+    const app2 = lib([tammyUrlState], confNoMiddleware);
 
     it("should use the user-provided fingerprinting function in urlFor", () => {
       return request(app)
@@ -140,6 +148,12 @@ describe("versioned static files", () => {
       return request(app)
         .get("/static/Tammy.abc.mp3")
         .expect("Hi from /Tammy.abc.mp3");
+    });
+
+    it("should forward the request along (usually out of twilio-ivr) if the user doesn't provide a middleware", () => {
+      return request(app2)
+        .get("/static/Tammy.abc.mp3")
+        .expect(404);
     });
   });
 
