@@ -25,11 +25,19 @@ type MiddlewaresAndFurl = [Handler[], furl];
 export default function(options: StaticFilesConfig): MiddlewaresAndFurl {
   const staticFilesMountPath = options.mountPath || "";
   let [serveStaticMiddlewares, urlFingerprinter] = (() => { // tslint:disable-line
-    // If the user's given us both of a way to generate fingerprinted urls
-    // and to serve the static files, that's sufficient to totally obviate
-    // the built in static expiry middleware and configure urlFor.
-    if (options.fingerprintUrl && options.middleware) {
-      return <MiddlewaresAndFurl>[[options.middleware], options.fingerprintUrl];
+    // If the user's provided their own function for fingerprinting urls,
+    // we use that along with any middleware they may have provided.
+    // (If they haven't provided middleware, the user doesn't want to use
+    // twilio-ivr to serve their static files, so we just make a no-op
+    // middleware that calls next to trigger whatever error handler's in place.
+    // We create this no-op middleware, rather than not having a middleware,
+    // so that the user could still have twilio-ivr serve the hold music.)
+    if (options.fingerprintUrl) {
+      const middleware = [
+        options.middleware || <Handler>((req, res, next) => { next(); })
+      ];
+
+      return <MiddlewaresAndFurl>[middleware, options.fingerprintUrl];
     }
 
     // But a path works too, with the option for them to override the middleware.
@@ -48,7 +56,7 @@ export default function(options: StaticFilesConfig): MiddlewaresAndFurl {
     else {
       throw new Error(
         "To use twilio-ivr's built-in static files handling, you must set " +
-        "either the path option or the fingerprintUrl and middleware options."
+        "either the path option or the fingerprintUrl option."
       );
     }
   })();
@@ -126,6 +134,7 @@ export default function(options: StaticFilesConfig): MiddlewaresAndFurl {
 export type StaticFilesConfig =
   (BuiltinStaticFilesHandlingConfig | CustomStaticFilesHandlingConfig) & {
     readonly mountPath?: string;
+    readonly middleware?: Handler;
     readonly holdMusic?: {
       readonly fileRelativeUri: string;
       readonly endpoint?: string;
@@ -135,12 +144,10 @@ export type StaticFilesConfig =
 
 type BuiltinStaticFilesHandlingConfig = {
   readonly path: string;
-  readonly middleware?: Handler;
   readonly fingerprintUrl: undefined;
 };
 
 type CustomStaticFilesHandlingConfig = {
   readonly path: undefined;
-  readonly middleware: Handler;
   readonly fingerprintUrl: furl;
 }
