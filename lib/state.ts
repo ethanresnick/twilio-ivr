@@ -72,7 +72,8 @@ export function isRenderableState(it: State): it is RenderableState {
  * @return {boolean} Whether the state is a NormalState
  */
 export function isNormalState(it: State): it is NormalState {
-  return it && (<NormalState>it).processTransitionUri !== undefined;
+  return isRenderableState(it) && isBranchingState(it) &&
+    (<NormalState>it).processTransitionUri !== undefined;
 }
 
 /**
