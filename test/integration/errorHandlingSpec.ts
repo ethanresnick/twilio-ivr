@@ -1,15 +1,14 @@
 import request = require("supertest");
 import lib from "../../lib/";
 import { ErrorRequestHandler } from "express";
-import { BranchingState, RoutableState } from "../../lib/state";
 
 describe("error handling (at component integration points)", () => {
   describe("an invalid state transition (to undefined, an error, or an invalid state)", () => {
     it("should trigger the express app's error handling middleware", () => {
-      const statesWithInvalidTransition = <(BranchingState & RoutableState)[]>[
+      const statesWithInvalidTransition = <any>[
         { uri: "/1",
           transitionOut() {
-          return undefined;
+            return undefined;
           }
         },
         {

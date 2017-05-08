@@ -8,8 +8,7 @@ import lib from "../../lib/";
 import { values as objectValues } from "../../lib/util/objectValuesEntries";
 
 import {
-  RoutableState, BranchingState, NormalState, AsynchronousState,
-  EndState, UsableState, urlFor
+  RoutableState, BranchingState, NormalState, RenderableState, ValidState, urlFor
 } from "../../lib/state";
 
 chaiUse(sinonChai);
@@ -38,7 +37,7 @@ const states: any = {
     }
   },
 
-  routableEnd: <RoutableState & EndState>{
+  routableEnd: <RoutableState & RenderableState>{
     name: "CALL_RECEIVED_END",
     uri: "/routable-end",
     isEndState: true,
@@ -47,7 +46,7 @@ const states: any = {
     }
   },
 
-  routableAsync: <RoutableState & AsynchronousState>{
+  routableAsync: <RoutableState & RenderableState>{
     name: "CALL_RECEIVED_ASYNC",
     uri: "/routable-async",
     twimlFor(urlFor: urlFor, input?: twilio.CallDataTwiml) {
@@ -83,7 +82,7 @@ const states: any = {
 }
 
 const appConfig = { twilio: { authToken: "", validate: false } };
-const app = lib(objectValues<UsableState>(states), appConfig);
+const app = lib(objectValues<ValidState>(states), appConfig);
 const requestApp = request(app);
 
 describe("state routing & rendering", () => {
