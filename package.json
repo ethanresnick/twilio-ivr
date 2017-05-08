@@ -90,7 +90,7 @@
     "sinon-chai": "^2.8.0",
     "stream-equal": "^1.0.0",
     "supertest": "^2.0.1",
-    "ts-node": "^2.0.0",
+    "ts-node": "^3.0.0",
     "tslint": "4.5.1",
     "typescript": "2.3.2"
   },
