@@ -11,7 +11,7 @@ import { webhook as twilioWebhook } from "twilio";
 import "./twilioAugments";
 
 
-export default function(states: State.UsableState[], config: config): Express {
+export default function(states: State.ValidState[], config: config): Express {
   // Set up express
   const app = express();
 

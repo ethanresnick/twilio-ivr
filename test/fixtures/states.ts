@@ -3,33 +3,29 @@ import { TwimlResponse } from "twilio";
 
 const emptyTwimlFn = () => new TwimlResponse();
 
-export const d = <any>{
-  name: "d",
-  twimlFor: emptyTwimlFn
-};
-
-export const e = <any>{
+export const e = <State.RoutableState>{
   name: "e",
   uri: "/go"
 };
 
-// An invalid state because it's branching and renderable without being normal!
-export const j = <State.UsableState>{
-  name: "f",
+// An invalid state because it's
+// branching and renderable without being normal!
+export const j = <State.BranchingState & State.RenderableState>{
+  name: "j",
   twimlFor: emptyTwimlFn,
   transitionOut: (it: any) => Promise.resolve(i)
 };
 
-export const h = <State.AsynchronousState>{
+export const d = <State.RenderableState>{
+  name: "d",
+  twimlFor: emptyTwimlFn
+};
+
+export const h = <State.RenderableState>{
   name: "h",
   twimlFor: emptyTwimlFn,
   backgroundTrigger: emptyTwimlFn
 };
-
-export const routableStates = [e];
-export const invalidStates = [d, e, j];
-
-
 
 export const f = <State.BranchingState>{
   name: "f",
@@ -43,20 +39,10 @@ export const i = <State.NormalState>{
   transitionOut: (it: any) => Promise.resolve(h),
 };
 
+export const routableStates = [e];
+export const invalidStates = [e, j];
+export const renderableStates = [j, d, h, i];
 export const branchingStates = [f, i, j];
-
-
-
-export const g = <State.EndState>{
-  name: "g",
-  isEndState: true,
-  twimlFor: emptyTwimlFn
-};
-
-export const endStates = [g];
 export const normalStates = [i];
-export const asynchronousStates = [h];
-export const renderableStates = [d, g, i, h, j];
-
 
 export const allStates = (<any[]>invalidStates).concat(branchingStates, renderableStates);

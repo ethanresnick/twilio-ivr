@@ -6,8 +6,8 @@ import { fingerprintUrl, makeUrlFor } from "../modules/urlFor";
 import "../twilioAugments";
 
 import {
-  RenderableState, UsableState,
-  isRenderableState, isBranchingState, isAsynchronousState
+  RenderableState, ValidState,
+  isRenderableState, isBranchingState
 } from "../state";
 
 /**
@@ -19,13 +19,13 @@ import {
  * each transitionOut call, it keeps track of the new state, and ultimately
  * returns a promise for that.
  *
- * @param  {UsableState} state The initial state, which may or may
+ * @param  {ValidState} state The initial state, which may or may
  *   not be renderable.
  * @param  {CallDataTwiml} inputData Any user input taht should be passed to
  *   the initial state, and the initial state only, if it's not renderable.
  * @return {Promise<RenderableState>} The final renderable state.
  */
-export function resolveBranches(state: UsableState,
+export function resolveBranches(state: ValidState,
   inputData?: CallDataTwiml): Promise<RenderableState> {
 
   if (isBranchingState(state) && !isRenderableState(state)) {
@@ -62,7 +62,7 @@ export function resolveBranches(state: UsableState,
  *   inputData should be undefined.
  * @return {TwimlResponse|string} The rendered next state.
  */
-export function renderState(state: UsableState, req: express.Request,
+export function renderState(state: ValidState, req: express.Request,
   furl: fingerprintUrl | undefined, inputData: CallDataTwiml | undefined) {
 
   // A utility function to help our states generate urls.
@@ -88,7 +88,7 @@ export function renderState(state: UsableState, req: express.Request,
   // Now that we have our renderable state, we need to render it.
   return renderableStatePromise.then(stateToRender => {
     const stateName = stateToString(stateToRender);
-    if (isAsynchronousState(stateToRender)) {
+    if (typeof stateToRender.backgroundTrigger === "function") {
       logger.info("Began asynchronous processing for " + stateName);
       stateToRender.backgroundTrigger(urlFor, inputToRenderWith);
     }

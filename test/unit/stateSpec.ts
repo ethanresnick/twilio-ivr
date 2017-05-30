@@ -51,21 +51,6 @@ describe("state types", () => {
     });
   });
 
-  describe("isEndState", () => {
-    it("should return true iff arg is an EndState", () => {
-      states.endStates.forEach(state => {
-        expect(sut.isEndState(state)).to.be.true;
-      });
-
-      const nonEndStates = states.allStates
-        .filter(it => states.endStates.indexOf(it) === -1);
-
-      nonEndStates.forEach(state => {
-        expect(sut.isEndState(state)).to.be.false;
-      });
-    });
-  });
-
   describe("isNormalState", () => {
     it("should return true iff arg is a NormalState", () => {
       states.normalStates.forEach(state => {
@@ -77,21 +62,6 @@ describe("state types", () => {
 
       nonNormalStates.forEach(state => {
         expect(sut.isNormalState(state)).to.be.false;
-      });
-    });
-  });
-
-  describe("isAsynchronousState", () => {
-    it("should return true iff arg is a RenderableState", () => {
-      states.asynchronousStates.forEach(state => {
-        expect(sut.isAsynchronousState(state)).to.be.true;
-      });
-
-      const nonAsyncStates = states.allStates
-        .filter(it => states.asynchronousStates.indexOf(it) === -1);
-
-      nonAsyncStates.forEach(state => {
-        expect(sut.isAsynchronousState(state)).to.be.false;
       });
     });
   });

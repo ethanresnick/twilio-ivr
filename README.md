@@ -53,50 +53,11 @@ A state is just an object (a [POJO](https://www.quora.com/What-is-a-plainObject-
 
 - `processTransitionUri` (optional): a relative uri where caller input data should be sent; data sent to this uri will be passed to the state's `transitionOut` method to determine the next state. (The `processTransitionUri` only applies states that are branching and renderable.) Like `uri`, the uri given here is turned into an express `POST` listener by the library. A state's `twimlFor()` method should render twiml that instructs twilio to send the relevant user input data to the `processTransitionUri` (see examples below). States with a `processTransitionUri` property, which are also renderable and branching states, are called **normal states** as they tend to be the most common state type.
 
-- `isEndState` (optional): this property, if present, can only have one value: `true`. It's used to mark a state as an **end state** of your call (see below).
-
 - `name` (optional): a string that uniquely identifies the state (among all your states). Will be used in the logs for easier debugging.
 
 ### Valid States
 
 As you can see, almost all properties on a state are optional, and many of the properties can be used together to create states with interesting behaviors. However, not all combinations are valid. Below are all the valid combinations, with an example of where you might use each:
-
-### End States (Routable or Not)
-An End State is a renderable state that doesn't branch to anywhere else. As its name would suggest, an end state is (almost?) always the last state in your call. Here's an example end state that just hangs up, which is common behavior:
-
-```js
-var endState = {
-  name: "END_STATE",
-  isEndState: true,
-  twimlFor() {
-    // If you don't want to built raw XML, you can also return a TwimlResponse
-    // to simplify this. See https://twilio.github.io/twilio-node/
-    return `<?xml version="1.0" encoding="UTF-8"?>
-      <Response>
-        <Hangup />
-      </Response>`;
-  }
-}
-```
-
-The end state above isn't routable (i.e., other states can transition to it, but it doesn't have an HTTP endpoint that twilio can request directly to render it). That's usually what you want in your end state. If, however, you wanted to be able to [hijack a running call](https://www.twilio.com/docs/api/rest/change-call-state) to render an error message after some external condition had failed, you could have a routable end state like this:
-
-```js
-var endStateRoutable = {
-  name: "UNKNOWN_ERROR",
-  uri: "/unknown-error",
-  isEndState: true,
-  twimlFor() {
-    return `<?xml version="1.0" encoding="UTF-8"?>
-      <Response>
-        <Say>An unknown error has occurred. Please leave us a message after the beep.</Say>
-        <Record />
-      </Response>`
-  }
-}
-```
-
-Once registered with the library, this state would result in the creation of a `POST /unknown-error` endpoint that you could redirect the running call to, and that would render the above Twiml.
 
 ### Normal States (Routable or Not)
 Most states in your system will probably be normal states, as they have all the machinery for playing something to the user, gathering input, and deciding what to do based on that input.

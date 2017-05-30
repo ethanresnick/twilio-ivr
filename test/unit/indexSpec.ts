@@ -12,7 +12,9 @@ describe("main express app creation function", () => {
   });
 
   it("should error at creation time when given a state with an invalid shape", () => {
-    const statesWithInvalidState = states.normalStates.concat(states.invalidStates[0]);
+    const statesWithInvalidState =
+      (<any[]>states.normalStates).concat(states.invalidStates[0]);
+
     const makeApp = () => {
       return sut(statesWithInvalidState, {twilio: {authToken: ""}});
     };

@@ -1,17 +1,15 @@
 import twilio = require("twilio");
 import request = require("supertest");
 import lib from "../../lib/";
-import { UsableState } from "../../lib/state";
+import { ValidState } from "../../lib/state";
 
-const states: UsableState[] = [<UsableState>{
+const states: ValidState[] = [<ValidState>{
   uri: "/returns-twiml-response",
   name: "DUMMY",
-  isEndState: true,
   twimlFor() { return new twilio.TwimlResponse(); }
-}, <UsableState>{
+}, <ValidState>{
   uri: "/returns-twiml-string",
   name: "DUMMY",
-  isEndState: true,
   twimlFor() { return 'Test'; }
 }];
 

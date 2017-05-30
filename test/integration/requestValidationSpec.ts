@@ -2,12 +2,11 @@ import crypto = require("crypto");
 import R = require("ramda");
 import request = require("supertest");
 import lib from "../../lib/";
-import { UsableState } from "../../lib/state";
+import { ValidState } from "../../lib/state";
 
-const states: UsableState[] = [<UsableState>{
+const states: ValidState[] = [<ValidState>{
   uri: "/",
   name: "DUMMY",
-  isEndState: true,
   twimlFor() { return ""; }
 }];
 

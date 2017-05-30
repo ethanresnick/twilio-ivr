@@ -2,12 +2,14 @@ import { TwimlResponse, CallDataTwiml } from "twilio";
 import "./twilioAugments";
 import { urlFor } from "./modules/urlFor";
 
-// A RoutableState that's not also either a BranchingState, or a RenderableState
-// subtype is invalid, so we don't include RoutableState in the UsableState type.
-export type UsableState = BranchingState | EndState | NormalState | AsynchronousState;
-
 // This is a complete list of state types for the type guard functions below.
-export type State = UsableState | RenderableState | RoutableState;
+export type State = BranchingState | RenderableState | NormalState | RoutableState;
+
+// States that are branching + renderable, but not normal, are invalid because
+// the input from the rendered twiml can't be sent anywhere without a processTransitionUri.
+export type ValidState = NormalState |
+  (BranchingState & { render?: undefined }) |
+  (RenderableState & { transitionOut?: undefined });
 
 // Some types we share with consumers for convenience.
 export { urlFor };
@@ -24,25 +26,17 @@ export interface BranchingState extends AbstractState {
   // Take an immutable session data and some input; return a promise for the
   // modified session data (if being at this state told us something about the
   // call we want to store) and the next state to go to.
-  transitionOut(inputData?: CallDataTwiml): Promise<UsableState>|UsableState;
+  transitionOut(inputData?: CallDataTwiml): Promise<ValidState>|ValidState;
 }
 
 export interface RenderableState extends AbstractState {
   twimlFor(urlFor: urlFor, inputData?: CallDataTwiml): TwimlResponse | string;
-}
-
-export interface EndState extends RenderableState {
-  isEndState: true;
-}
-
-export interface AsynchronousState extends RenderableState {
-  backgroundTrigger(urlFor: urlFor, inputData?: CallDataTwiml): void;
+  backgroundTrigger?(urlFor: urlFor, inputData?: CallDataTwiml): void;
 }
 
 export interface NormalState extends BranchingState, RenderableState {
   processTransitionUri: string;
 }
-
 
 
 /**
@@ -73,46 +67,22 @@ export function isRenderableState(it: State): it is RenderableState {
 }
 
 /**
- * Tests if a state is an EndState
- * @param {State} it A state to test
- * @return {boolean} Whether the state is an EndState
- */
-export function isEndState(it: State): it is EndState {
-  return it && (<EndState>it).isEndState === true;
-}
-
-/**
- * Tests if a state is an AsynchronousState
- * @param {State} it A state to test
- * @return {boolean} Whether the state is an AsynchronousState
- */
-export function isAsynchronousState(it: State): it is AsynchronousState {
-  const state = <AsynchronousState>it;
-
-  return state && state.twimlFor !== undefined && state.backgroundTrigger !== undefined;
-}
-
-/**
  * Tests if a state is a NormalState
  * @param {State} it A state to test
  * @return {boolean} Whether the state is a NormalState
  */
 export function isNormalState(it: State): it is NormalState {
-  return it && (<NormalState>it).processTransitionUri !== undefined;
+  return isRenderableState(it) && isBranchingState(it) &&
+    (<NormalState>it).processTransitionUri !== undefined;
 }
 
 /**
- * Whether the state is not only a UsableState, but a "valid" one.
- * This rejects some states that typescript doesn't let us rule out statically,
- * but that are nevertheless invalid, namely: branching + renderable but
- * non-normal ones.
- *
- * @param  {State} it
- * @return {boolean} Whether the state is a valid state.
+ * Tests if a state is a valid state
+ * @param {State} it A state to test
+ * @return {boolean} Whether the state is a valid state
  */
-export function isValidState(it: State): boolean {
-  return isNormalState(it) || isAsynchronousState(it) || isEndState(it)
-    || (isBranchingState(it) && !isRenderableState(it));
+export function isValidState(it: State): it is ValidState {
+  return isNormalState(it) || (isBranchingState(it) !== isRenderableState(it));
 }
 
 /**

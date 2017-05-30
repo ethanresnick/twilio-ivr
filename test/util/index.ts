@@ -1,4 +1,4 @@
-import { urlFor, EndState, RoutableState } from "../../lib/state";
+import { urlFor, RoutableState, RenderableState } from "../../lib/state";
 
 /**
  * A small helper for generating a valid config object for the library, with the
@@ -20,11 +20,10 @@ export function filesConfig(obj: any) {
  * @param {string} urlToRender The root-relative url whose urlFor whe should render.
  * @param {string} stateUri The uri that this state will respond to, for use in tests.
  */
-export function stateRenderingUrlFor(urlToRender: string, stateUri: string): EndState & RoutableState {
+export function stateRenderingUrlFor(urlToRender: string, stateUri: string): RenderableState & RoutableState {
   return {
     name: "URL_FOR_TEST",
     uri: stateUri,
-    isEndState: true,
     twimlFor(urlFor: urlFor, input?: any) {
       return urlFor(urlToRender);
     }
