@@ -2,6 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const request = require("supertest");
 const _1 = require("../../lib/");
+const index_1 = require("../util/index");
 describe("error handling (at component integration points)", () => {
     describe("an invalid state transition (to undefined, an error, or an invalid state)", () => {
         it("should trigger the express app's error handling middleware", () => {
@@ -24,7 +25,7 @@ describe("error handling (at component integration points)", () => {
                     }
                 }
             ];
-            const app = _1.default(statesWithInvalidTransition, { twilio: { authToken: "", validate: false } });
+            const app = _1.default(statesWithInvalidTransition, index_1.DEFAULT_CONFIG);
             app.use(function (err, req, res, next) {
                 res.status(500).send('error handler reached');
             });

@@ -3,13 +3,15 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const path = require("path");
 const express = require("express");
 const twilio_1 = require("twilio");
-const urlFor_1 = require("../urlFor");
 const staticExpiryHelpers_1 = require("./staticExpiryHelpers");
-function default_1(options) {
+function default_1(options, makeUrlFor) {
     const staticFilesMountPath = options.mountPath || "";
     let [serveStaticMiddlewares, urlFingerprinter] = (() => {
-        if (options.fingerprintUrl && options.middleware) {
-            return [[options.middleware], options.fingerprintUrl];
+        if (options.fingerprintUrl) {
+            const middleware = [
+                options.middleware || ((req, res, next) => { next(); })
+            ];
+            return [middleware, options.fingerprintUrl];
         }
         else if (options.path) {
             const [defaultMiddleware, furl] = staticExpiryHelpers_1.makeServingMiddlewareAndFurl(staticFilesMountPath, options.path);
@@ -20,7 +22,7 @@ function default_1(options) {
         }
         else {
             throw new Error("To use twilio-ivr's built-in static files handling, you must set " +
-                "either the path option or the fingerprintUrl and middleware options.");
+                "either the path option or the fingerprintUrl option.");
         }
     })();
     if (options.holdMusic) {
@@ -48,10 +50,10 @@ function default_1(options) {
                     origUrlFingerprinter(path);
             };
         }
+        const createUrlForFromReq = makeUrlFor(urlFingerprinter);
         const holdMusicMiddleware = express().get(holdMusicEndpoint, (req, res, next) => {
-            const urlFor = urlFor_1.makeUrlFor(req.protocol, req.get('Host'), urlFingerprinter);
             res.set('Cache-Control', 'public, max-age=31536000');
-            res.send(holdMusicTwimlFor(urlFor));
+            res.send(holdMusicTwimlFor(createUrlForFromReq(req)));
         });
         serveStaticMiddlewares[options.middleware ? "push" : "unshift"](holdMusicMiddleware);
     }

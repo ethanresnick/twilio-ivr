@@ -2,6 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const State = require("./state");
 const routeCreationHelpers_1 = require("./util/routeCreationHelpers");
+const urlFor_1 = require("./modules/urlFor");
 const staticFiles_1 = require("./modules/staticFiles");
 const express = require("express");
 const bodyParser = require("body-parser");
@@ -12,12 +13,15 @@ function default_1(states, config) {
     app.use(bodyParser.urlencoded({ extended: false }));
     const { validate = true } = config.twilio;
     app.use(twilio_1.webhook(config.twilio.authToken, { validate: validate }));
+    const createUrlFor = urlFor_1.createUrlForFromConfig(config.urlFor);
     let urlFingerprinter;
     if (config.staticFiles) {
         let serveStaticMiddlewares;
-        [serveStaticMiddlewares, urlFingerprinter] = staticFiles_1.default(config.staticFiles);
+        [serveStaticMiddlewares, urlFingerprinter] =
+            staticFiles_1.default(config.staticFiles, createUrlFor);
         app.use(config.staticFiles.mountPath || "", serveStaticMiddlewares);
     }
+    const createUrlForFromReq = createUrlFor(urlFingerprinter);
     states.forEach(thisState => {
         if (!State.isValidState(thisState)) {
             const stateAsString = State.stateToString(thisState);
@@ -25,7 +29,7 @@ function default_1(states, config) {
         }
         if (State.isRoutableState(thisState)) {
             app.post(thisState.uri, function (req, res, next) {
-                routeCreationHelpers_1.renderState(thisState, req, urlFingerprinter, req.body)
+                routeCreationHelpers_1.renderState(thisState, req, createUrlForFromReq, req.body)
                     .then(twiml => { res.send(twiml); })
                     .catch(next);
             });
@@ -35,7 +39,7 @@ function default_1(states, config) {
                 const nextStatePromise = Promise.resolve(thisState.transitionOut(req.body));
                 nextStatePromise
                     .then(nextState => {
-                    return routeCreationHelpers_1.renderState(nextState, req, urlFingerprinter, undefined);
+                    return routeCreationHelpers_1.renderState(nextState, req, createUrlForFromReq, undefined);
                 })
                     .then(twiml => { res.send(twiml); })
                     .catch(next);

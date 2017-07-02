@@ -1,8 +1,13 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const url = require("url");
-function makeUrlFor(protocol, host, furl) {
-    return (path, { query, absolute = false, fingerprint } = {}) => {
+exports.createUrlForFromConfig = (config) => (furl) => (req) => {
+    const host = config.host(req);
+    const protocol = config.scheme ? config.scheme(req) : req.protocol;
+    return makeUrlFor(protocol, host, furl);
+};
+function makeUrlFor(defaultScheme, defaultHost, furl) {
+    return (path, { query, absolute = false, fingerprint, host, scheme } = {}) => {
         if (fingerprint && query) {
             throw new Error("Can't combine fingerprinting with query parameters.");
         }
@@ -18,8 +23,8 @@ function makeUrlFor(protocol, host, furl) {
             if (absolute) {
                 const relativeUriParts = url.parse(fingerprintedRelativeUri);
                 return url.format({
-                    protocol: protocol,
-                    host: host,
+                    protocol: scheme || defaultScheme,
+                    host: host || defaultHost,
                     pathname: relativeUriParts.pathname,
                     search: relativeUriParts.search
                 });
@@ -29,8 +34,8 @@ function makeUrlFor(protocol, host, furl) {
         else {
             const formatOptions = { pathname: path, query: query || undefined };
             if (absolute) {
-                formatOptions.protocol = protocol;
-                formatOptions.host = host;
+                formatOptions.protocol = scheme || defaultScheme;
+                formatOptions.host = host || defaultHost;
             }
             return url.format(formatOptions);
         }
