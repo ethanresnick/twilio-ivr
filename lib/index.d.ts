@@ -21,6 +21,10 @@ export type config = {
       twimlFor?: (urlFor: urlFor) => TwimlResponse | string;
     };
   };
+  urlFor: {
+    host: (req: Express.Request) => string;
+    scheme?: (req: Express.Request) => string;
+  }
 };
 
 export type fingerprintUrl = (path: string) => string;

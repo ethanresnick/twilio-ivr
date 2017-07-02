@@ -2,6 +2,7 @@ import twilio = require("twilio");
 import request = require("supertest");
 import lib from "../../lib/";
 import { UsableState } from "../../lib/state";
+import { DEFAULT_CONFIG } from "../util/index";
 
 const states: UsableState[] = [
   //tslint:disable-next-line:no-object-literal-type-assertion
@@ -22,7 +23,7 @@ const states: UsableState[] = [
 ];
 
 describe("rending Twiml", () => {
-  const app = lib(states, { twilio: { authToken: "", validate: false } });
+  const app = lib(states, DEFAULT_CONFIG);
 
   it("should render TwimlResponse object", () => {
     return request(app)

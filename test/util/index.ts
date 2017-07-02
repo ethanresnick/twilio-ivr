@@ -1,5 +1,19 @@
 import { urlFor, EndState, RoutableState } from "../../lib/state";
 
+export const DEFAULT_TWILIO_CONFIG = {
+  twilio: { authToken: "", validate: false}
+};
+
+export const DEFAULT_URLFOR_CONFIG = {
+  urlFor: { host() { return '127.0.0.1'; } }
+};
+
+export const DEFAULT_CONFIG = {
+  ...DEFAULT_TWILIO_CONFIG,
+  ...DEFAULT_URLFOR_CONFIG
+};
+
+
 /**
  * A small helper for generating a valid config object for the library, with the
  * caller just having to fill in how they want static file handling configured.
@@ -7,8 +21,8 @@ import { urlFor, EndState, RoutableState } from "../../lib/state";
  */
 export function filesConfig(obj: any) {
   return {
-    twilio: { authToken: "", validate: false},
-    staticFiles: obj
+    ...DEFAULT_CONFIG,
+    staticFiles: obj,
   };
 }
 

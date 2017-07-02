@@ -41,5 +41,19 @@ describe("urlFor", () => {
     expect(urlFor('/static/test', {query: undefined, fingerprint: false, absolute: true})).to.equal('ftp://localhost/static/test');
     expect(urlFor('/static/test', {query: undefined, fingerprint: false, absolute: false})).to.equal('/static/test');
   });
+
+  it("should allow overriding the scheme/host on each use (iff we're generating absolute urls)", () => {
+    const opts = {query: {a: 'b'}, host: 'test.com'};
+    expect(urlFor('/static/test', {...opts, absolute: true })).to.equal('ftp://test.com/static/test?a=b');
+    expect(urlFor('/static/test', {...opts, absolute: false })).to.equal('/static/test?a=b');
+
+    const opts2 = {scheme: 'https'};
+    expect(urlFor('/static/test', { ...opts2, absolute: false })).to.equal('/static/test?v=1');
+    expect(urlFor('/static/test', { ...opts2, absolute: true })).to.equal('https://localhost/static/test?v=1');
+
+    const opts3 = {query: undefined, fingerprint: false, host: 'true.com', scheme: 'gopher'};
+    expect(urlFor('/static/test', { ...opts3, absolute: false })).to.equal('/static/test');
+    expect(urlFor('/static/test', { ...opts3, absolute: true })).to.equal('gopher://true.com/static/test');
+  });
 });
 

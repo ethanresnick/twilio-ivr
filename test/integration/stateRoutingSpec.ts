@@ -6,6 +6,7 @@ import twilio = require("twilio");
 import "../../lib/twilioAugments";
 import lib from "../../lib/";
 import { values as objectValues } from "../../lib/util/objectValuesEntries";
+import { DEFAULT_CONFIG } from "../util/index";
 
 import {
   RoutableState, BranchingState, NormalState, AsynchronousState,
@@ -91,8 +92,7 @@ const states: statesToTest = {
   }
 }
 
-const appConfig = { twilio: { authToken: "", validate: false } };
-const app = lib(objectValues<UsableState>(states), appConfig);
+const app = lib(objectValues<UsableState>(states), DEFAULT_CONFIG);
 const requestApp = request(app);
 
 describe("state routing & rendering", () => {

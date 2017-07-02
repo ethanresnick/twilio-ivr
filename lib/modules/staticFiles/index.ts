@@ -22,7 +22,9 @@ import { makeServingMiddlewareAndFurl, getFingerprintForFile } from "./staticExp
  * @return {[Handler[], furl]} The middlewares and fingerprinting function.
  */
 type MiddlewaresAndFurl = [Handler[], furl];
-export default function(options: StaticFilesConfig): MiddlewaresAndFurl {
+type makeUrlFor = (fingerprinter: furl) => (req: express.Request) => urlFor;
+
+export default function(options: StaticFilesConfig, makeUrlFor: makeUrlFor): MiddlewaresAndFurl {
   const staticFilesMountPath = options.mountPath || "";
   let [serveStaticMiddlewares, urlFingerprinter] = (() => { // tslint:disable-line
     // If the user's provided their own function for fingerprinting urls,
@@ -110,10 +112,10 @@ export default function(options: StaticFilesConfig): MiddlewaresAndFurl {
     // GET request for it. But it's also not just a static file, because it
     // has dynamic content (i.e., the fingerprint of the hold music file and
     // the host name of the server, because twilio won't accept a relative URI).
+    const createUrlForFromReq = makeUrlFor(urlFingerprinter);
     const holdMusicMiddleware = express().get(holdMusicEndpoint, (req, res, next) => {
-      const urlFor = makeUrlFor(req.protocol, req.get('Host'), urlFingerprinter);
       res.set('Cache-Control', 'public, max-age=31536000');
-      res.send(holdMusicTwimlFor(urlFor));
+      res.send(holdMusicTwimlFor(createUrlForFromReq(req)));
     });
 
     // Then add the middleware either: at the beginning of the static serving

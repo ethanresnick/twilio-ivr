@@ -2,7 +2,7 @@ import logger from "../logger";
 import * as express from "express";
 import { CallDataTwiml } from "twilio";
 import { stateToString } from "../state";
-import { fingerprintUrl, makeUrlFor } from "../modules/urlFor";
+import { urlFor } from "../modules/urlFor";
 import "../twilioAugments";
 
 import {
@@ -53,8 +53,8 @@ export function resolveBranches(state: UsableState,
  * @param  {UsableState} state The state to render, or to use
  *   to find the one to render.
  * @param {express.Request} req The express request
- * @param {fingerprintUrl|undefined} furl A function to generate fingerprinted
- *   uris for static files.
+ * @param {Function} createUrlForFromReq A function to make urlFor function for
+ *   this request.
  * @param {CallDataTwiml|undefined} inputData Data we should pass to the first
  *   state that we encounter on our way to rendering the final state. Note: if
  *   the state passed in as `state` wasn't requested directly (see above comment),
@@ -63,10 +63,11 @@ export function resolveBranches(state: UsableState,
  * @return {TwimlResponse|string} The rendered next state.
  */
 export function renderState(state: UsableState, req: express.Request,
-  furl: fingerprintUrl | undefined, inputData: CallDataTwiml | undefined) {
+  createUrlForFromReq: (req: express.Request) => urlFor,
+  inputData: CallDataTwiml | undefined) {
 
   // A utility function to help our states generate urls.
-  const urlFor = makeUrlFor(req.protocol, req.get('Host'), furl);
+  const urlFor = createUrlForFromReq(req);
 
   // If this state is non-renderable, follow the branches until we get
   // to a renderable state.

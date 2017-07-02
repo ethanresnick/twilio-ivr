@@ -2,6 +2,7 @@ import request = require("supertest");
 import lib from "../../lib/";
 import { ErrorRequestHandler } from "express";
 import { BranchingState, RoutableState } from "../../lib/state";
+import { DEFAULT_CONFIG } from "../util/index";
 
 describe("error handling (at component integration points)", () => {
   describe("an invalid state transition (to undefined, an error, or an invalid state)", () => {
@@ -26,7 +27,7 @@ describe("error handling (at component integration points)", () => {
         }
       ];
 
-      const app = lib(statesWithInvalidTransition, {twilio: { authToken: "", validate: false}});
+      const app = lib(statesWithInvalidTransition, DEFAULT_CONFIG);
       app.use(<ErrorRequestHandler>function(err, req, res, next) {
         res.status(500).send('error handler reached');
       });
