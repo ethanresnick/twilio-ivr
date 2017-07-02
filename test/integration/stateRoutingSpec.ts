@@ -6,6 +6,7 @@ import twilio = require("twilio");
 import "../../lib/twilioAugments";
 import lib from "../../lib/";
 import { values as objectValues } from "../../lib/util/objectValuesEntries";
+import { DEFAULT_CONFIG } from "../util/index";
 
 import {
   RoutableState, BranchingState, NormalState, AsynchronousState,
@@ -14,9 +15,18 @@ import {
 
 chaiUse(sinonChai);
 
+type statesToTest = {
+  routableBranching: RoutableState & BranchingState,
+  routableNormal: RoutableState & NormalState,
+  routableEnd: RoutableState & EndState,
+  routableAsync: RoutableState & AsynchronousState,
+  nonRoutableBranching: BranchingState,
+  nonRoutableBranching2: BranchingState,
+  nonRoutableNormal: NormalState
+};
 
-const states: any = {
-  routableBranching: <RoutableState & BranchingState>{
+const states: statesToTest = {
+  routableBranching: {
     name: "CALL_RECEIVED_BRANCH",
     uri: "/routable-branching",
     transitionOut: (<sinon.SinonSpy>((input?: twilio.CallDataTwiml) => {
@@ -26,7 +36,7 @@ const states: any = {
     }))
   },
 
-  routableNormal: <RoutableState & NormalState>{
+  routableNormal: {
     name: "CALL_RECEIVED_RENDER",
     uri: "/routable-normal",
     processTransitionUri: "/process-renderable-entry",
@@ -38,7 +48,7 @@ const states: any = {
     }
   },
 
-  routableEnd: <RoutableState & EndState>{
+  routableEnd: {
     name: "CALL_RECEIVED_END",
     uri: "/routable-end",
     isEndState: true,
@@ -47,7 +57,7 @@ const states: any = {
     }
   },
 
-  routableAsync: <RoutableState & AsynchronousState>{
+  routableAsync: {
     name: "CALL_RECEIVED_ASYNC",
     uri: "/routable-async",
     twimlFor(urlFor: urlFor, input?: twilio.CallDataTwiml) {
@@ -56,21 +66,21 @@ const states: any = {
     backgroundTrigger() { return "do some effect..."; }
   },
 
-  nonRoutableBranching: <BranchingState>{
+  nonRoutableBranching: {
     name: "INNER_BRANCH",
     transitionOut: (<sinon.SinonSpy>((input?: twilio.CallDataTwiml) => {
       return states.nonRoutableNormal;
     }))
   },
 
-  nonRoutableBranching2: <BranchingState>{
+  nonRoutableBranching2: {
     name: "INNER_BRANCH_2",
     transitionOut: (<sinon.SinonSpy>((input?: twilio.CallDataTwiml) => {
       return Promise.resolve(states.routableAsync);
     }))
   },
 
-  nonRoutableNormal: <NormalState>{
+  nonRoutableNormal: {
     name: "INNER_RENDER",
     processTransitionUri: "/process-inner-renderable",
     twimlFor(urlFor: urlFor, input?: twilio.CallDataTwiml) {
@@ -82,8 +92,7 @@ const states: any = {
   }
 }
 
-const appConfig = { twilio: { authToken: "", validate: false } };
-const app = lib(objectValues<UsableState>(states), appConfig);
+const app = lib(objectValues<UsableState>(states), DEFAULT_CONFIG);
 const requestApp = request(app);
 
 describe("state routing & rendering", () => {
@@ -118,9 +127,11 @@ describe("state routing & rendering", () => {
           .type("form")
           .send({CallerZip: "00000"})
           .then(() => {
+            //tslint:disable-next-line:no-unbound-method
             expect(states.routableBranching.transitionOut)
               .calledWithExactly({CallerZip: "00000"});
 
+            //tslint:disable-next-line:no-unbound-method
             expect(states.nonRoutableBranching.transitionOut)
               .calledWithExactly(undefined);
           });
@@ -132,6 +143,7 @@ describe("state routing & rendering", () => {
           .type("form")
           .send({CallerZip: "00000"})
           .then(() => {
+            //tslint:disable-next-line:no-unbound-method
             expect(states.nonRoutableNormal.twimlFor)
               .calledWithExactly(sinon.match.func, undefined);
           });
@@ -144,9 +156,11 @@ describe("state routing & rendering", () => {
           .send({CallerZip: ""})
           .expect("Sorry, no one home. Bye.")
           .then(() => {
+            //tslint:disable-next-line:no-unbound-method
             expect(states.routableBranching.transitionOut)
               .calledWithExactly({CallerZip: ""});
 
+            //tslint:disable-next-line:no-unbound-method
             expect(states.routableEnd.twimlFor)
               .calledWithExactly(sinon.match.func, undefined);
           });
@@ -188,19 +202,22 @@ describe("state routing & rendering", () => {
         it("should call backgroundTrigger just before rendering", () => {
           return asyncRoutableRequest
             .then(() => {
+              //tslint:disable-next-line:no-unbound-method
               expect(states.routableAsync.backgroundTrigger)
-                .calledBefore(states.routableAsync.twimlFor);
+                .calledBefore(<sinon.SinonSpy>states.routableAsync.twimlFor); // tslint:disable-line:no-unbound-method
             });
         });
 
         it("should call backgroundTrigger with the POST data", () => {
           return asyncRoutableRequest
             .then(() => {
+              //tslint:disable-next-line:no-unbound-method
               expect(states.routableAsync.backgroundTrigger)
-                .calledBefore(states.routableAsync.twimlFor);
+                .calledBefore(<sinon.SinonSpy>states.routableAsync.twimlFor); // tslint:disable-line:no-unbound-method
 
               // Below, we quote "true" in recognition of the fact that
               // all data is converted to strings as part of POSTing it.
+              //tslint:disable-next-line:no-unbound-method
               expect(states.routableAsync.backgroundTrigger)
                 .calledWithExactly(sinon.match.func, {"Test": "true"});
             });
@@ -234,6 +251,7 @@ describe("state routing & rendering", () => {
         .type("form")
         .send(dummyData)
         .then(() => {
+          //tslint:disable-next-line:no-unbound-method
           expect(states.routableNormal.transitionOut)
             .calledWithExactly(dummyData);
         });
@@ -245,6 +263,7 @@ describe("state routing & rendering", () => {
         .type("form")
         .send(dummyData)
         .then(() => {
+          //tslint:disable-next-line:no-unbound-method
           expect(states.nonRoutableBranching2.transitionOut)
             .calledWithExactly(undefined);
         });
@@ -256,7 +275,8 @@ describe("state routing & rendering", () => {
         .type("form")
         .send(dummyData)
         .then(() => {
-          expect(states.nonRoutableNormal.transitionOut).to.not.have.been.called;
+          //tslint:disable-next-line:no-unbound-method
+          expect(states.nonRoutableNormal.transitionOut).callCount(0);
         });
     });
 
@@ -274,6 +294,7 @@ describe("state routing & rendering", () => {
           .send(dummyData)
           .expect("We're doing something...")
           .then(() => {
+            //tslint:disable-next-line:no-unbound-method
             expect(states.routableAsync.twimlFor)
               .calledWithExactly(sinon.match.func, undefined);
           })

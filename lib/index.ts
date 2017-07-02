@@ -1,6 +1,6 @@
 import * as State from "./state";
 import { renderState } from "./util/routeCreationHelpers";
-import { fingerprintUrl } from "./modules/urlFor";
+import { fingerprintUrl, createUrlForFromConfig, UrlForConfig } from "./modules/urlFor";
 import { default as makeMiddlewareAndFurl, StaticFilesConfig } from "./modules/staticFiles";
 
 import { Express, Handler } from "express";
@@ -26,6 +26,10 @@ export default function(states: State.UsableState[], config: config): Express {
   const { validate = true } = config.twilio;
   app.use(twilioWebhook(config.twilio.authToken, { validate: validate }));
 
+  // Create a function we'll pass to makeMiddlewareAndFurl,
+  // as it needs to be able to make a urlFor function too.
+  const createUrlFor = createUrlForFromConfig(config.urlFor);
+
   // Set up our url fingerprinter. This will stay undefined if the user doesn't
   // opt in to any of our static file handling; if they do, we'll fill it with
   // the fingerprinting function returned by the static files module.
@@ -35,13 +39,18 @@ export default function(states: State.UsableState[], config: config): Express {
     // Create the middleware and url fingerprinter function that we're going
     // to use to serve static files. Save the calculated fingerprinting function.
     let serveStaticMiddlewares: Handler[];
-    [serveStaticMiddlewares, urlFingerprinter] = makeMiddlewareAndFurl(config.staticFiles);
+    [serveStaticMiddlewares, urlFingerprinter] =
+      makeMiddlewareAndFurl(config.staticFiles, createUrlFor);
 
     // Register the middlewares to actually serve the static files/hold music.
     // Note: registering middlewares with an empty string mountPath is supported.
     // (see https://github.com/expressjs/express/blob/master/test/app.use.js#L515)
     app.use(config.staticFiles.mountPath || "", serveStaticMiddlewares);
   }
+
+  // Now that we've figured out the fingerprinter we're using,
+  // partially apply createUrlFor.
+  const createUrlForFromReq = createUrlFor(urlFingerprinter);
 
   // Below, we iterate over all the states and set up routes to handle them.
   // This route setup happens before our app starts, as sort of a "compile" phase.
@@ -62,7 +71,7 @@ export default function(states: State.UsableState[], config: config): Express {
 
     if (State.isRoutableState(thisState)) {
       app.post(thisState.uri, function (req, res, next) {
-        renderState(thisState, req, urlFingerprinter, req.body)
+        renderState(thisState, req, createUrlForFromReq, req.body)
           .then(twiml => { res.send(twiml);  })
           .catch(next);
       });
@@ -77,7 +86,7 @@ export default function(states: State.UsableState[], config: config): Express {
         // req.body anywhere, as we've already used that input to transition out.
         nextStatePromise
           .then(nextState => {
-            return renderState(nextState, req, urlFingerprinter, undefined);
+            return renderState(nextState, req, createUrlForFromReq, undefined);
           })
           .then(twiml => { res.send(twiml); })
           .catch(next);
@@ -94,4 +103,5 @@ export type config = {
     readonly validate?: boolean;
   };
   readonly staticFiles?: StaticFilesConfig;
+  readonly urlFor: UrlForConfig;
 }

@@ -3,8 +3,9 @@ import R = require("ramda");
 import request = require("supertest");
 import lib from "../../lib/";
 import { UsableState } from "../../lib/state";
+import { DEFAULT_URLFOR_CONFIG } from "../util/index";
 
-const states: UsableState[] = [<UsableState>{
+const states: UsableState[] = [<UsableState>{ //tslint:disable-line:no-object-literal-type-assertion
   uri: "/",
   name: "DUMMY",
   isEndState: true,
@@ -16,7 +17,7 @@ describe("request signing", () => {
   const fakeBody = { dummy: "val" };
 
   describe("default behavior", () => {
-    const app = lib(states, { twilio: { authToken: fakeToken } });
+    const app = lib(states, { ...DEFAULT_URLFOR_CONFIG, twilio: { authToken: fakeToken } });
     const agent = request.agent(app);
 
     it("should reject unsigned requests", () => {
@@ -27,7 +28,7 @@ describe("request signing", () => {
   });
 
   describe("validate: true", () => {
-    const app = lib(states, { twilio: { authToken: fakeToken, validate: true } });
+    const app = lib(states, { ...DEFAULT_URLFOR_CONFIG, twilio: { authToken: fakeToken, validate: true } });
     const agent = request.agent(app);
 
     it("should allow signed requests", () => {
@@ -58,7 +59,7 @@ describe("request signing", () => {
   });
 
   describe("validate: false", () => {
-    const app = lib(states, { twilio: { authToken: fakeToken, validate: false } });
+    const app = lib(states, { ...DEFAULT_URLFOR_CONFIG, twilio: { authToken: fakeToken, validate: false } });
     const agent = request.agent(app);
 
     it("should allow all requests", () => {

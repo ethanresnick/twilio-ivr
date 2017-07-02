@@ -16,6 +16,7 @@ describe("route creation utilities", () => {
     describe("handling renderable input states", () => {
       it("should return a promise for the input state", () => {
         const results: any[] = states.renderableStates.map(state =>
+           //tslint:disable-next-line:no-object-literal-type-assertion
           [state, sut.resolveBranches(state, <CallDataTwiml>{})]
         );
 
@@ -56,6 +57,7 @@ describe("route creation utilities", () => {
       })
 
       it("should pass any input data to the first non-renderable state, but not subsequent ones", () => {
+        //tslint:disable-next-line:no-object-literal-type-assertion
         return sut.resolveBranches(i, <CallDataTwiml>{}).then(state => {
           expect(i.transitionOut).calledWithExactly({});
           expect(h.transitionOut).calledWithExactly(undefined);
@@ -63,14 +65,16 @@ describe("route creation utilities", () => {
       });
 
       it("should finally return a promise for the first renderable state", () => {
+        //tslint:disable-next-line:no-object-literal-type-assertion
         return sut.resolveBranches(i, <CallDataTwiml>{}).then(state => {
           expect(state.name).to.equal("g");
         });
       });
 
       it("should not call transition out on the renderable state, once found", () => {
+        //tslint:disable-next-line:no-object-literal-type-assertion
         return sut.resolveBranches(i, <CallDataTwiml>{}).then(state => {
-          expect(g.transitionOut).to.not.have.been.called;
+          expect(g.transitionOut).callCount(0);
         });
       });
     });

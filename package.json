@@ -1,8 +1,8 @@
 {
   "name": "twilio-interactive-flow",
-  "version": "0.8.1",
+  "version": "0.8.2",
   "description": "Easily build phone/sms trees with twilio and express.",
-  "license": "MIT",
+  "license": "LGPL-3.0",
   "repository": {
     "type": "git",
     "url": "https://github.com/ethanresnick/twilio-ivr.git"
@@ -25,7 +25,7 @@
   "typings": "lib/index.d.ts",
   "scripts": {
     "clean": "rimraf build",
-    "lint": "tslint --type-check --project tsconfig.json --format verbose",
+    "lint": "tslint --project tsconfig.json --format verbose",
     "build": "npm run build:lintfree && npm run lint",
     "build:lintfree": "npm run clean && echo Using TypeScript && tsc --version && tsc --pretty",
     "test": "export NODE_ENV=testing; mocha --compilers ts:ts-node/register --recursive test/**/*Spec.ts test/**/**/*Spec.ts",
@@ -90,8 +90,8 @@
     "sinon-chai": "^2.8.0",
     "stream-equal": "^1.0.0",
     "supertest": "^2.0.1",
-    "ts-node": "^3.0.4",
-    "tslint": "4.5.1",
+    "ts-node": "^3.0.6",
+    "tslint": "5.4.3",
     "typescript": "2.4.1"
   },
   "engines": {

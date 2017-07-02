@@ -7,6 +7,7 @@ const request = require("supertest");
 require("../../lib/twilioAugments");
 const _1 = require("../../lib/");
 const objectValuesEntries_1 = require("../../lib/util/objectValuesEntries");
+const index_1 = require("../util/index");
 chai_1.use(sinonChai);
 const states = {
     routableBranching: {
@@ -68,8 +69,7 @@ const states = {
         }
     }
 };
-const appConfig = { twilio: { authToken: "", validate: false } };
-const app = _1.default(objectValuesEntries_1.values(states), appConfig);
+const app = _1.default(objectValuesEntries_1.values(states), index_1.DEFAULT_CONFIG);
 const requestApp = request(app);
 describe("state routing & rendering", () => {
     describe("routable states", () => {
@@ -214,7 +214,7 @@ describe("state routing & rendering", () => {
                 .type("form")
                 .send(dummyData)
                 .then(() => {
-                chai_1.expect(states.nonRoutableNormal.transitionOut).to.not.have.been.called;
+                chai_1.expect(states.nonRoutableNormal.transitionOut).callCount(0);
             });
         });
         it("should render the next state, with no input provided, calling bgTrigger if relevant", () => {

@@ -4,6 +4,7 @@ const crypto = require("crypto");
 const R = require("ramda");
 const request = require("supertest");
 const _1 = require("../../lib/");
+const index_1 = require("../util/index");
 const states = [{
         uri: "/",
         name: "DUMMY",
@@ -14,7 +15,7 @@ describe("request signing", () => {
     const fakeToken = 'abcdefghijklmnopqrstuvwxyz1234567890';
     const fakeBody = { dummy: "val" };
     describe("default behavior", () => {
-        const app = _1.default(states, { twilio: { authToken: fakeToken } });
+        const app = _1.default(states, Object.assign({}, index_1.DEFAULT_URLFOR_CONFIG, { twilio: { authToken: fakeToken } }));
         const agent = request.agent(app);
         it("should reject unsigned requests", () => {
             return agent
@@ -23,7 +24,7 @@ describe("request signing", () => {
         });
     });
     describe("validate: true", () => {
-        const app = _1.default(states, { twilio: { authToken: fakeToken, validate: true } });
+        const app = _1.default(states, Object.assign({}, index_1.DEFAULT_URLFOR_CONFIG, { twilio: { authToken: fakeToken, validate: true } }));
         const agent = request.agent(app);
         it("should allow signed requests", () => {
             const test = agent.post("/");
@@ -48,7 +49,7 @@ describe("request signing", () => {
         });
     });
     describe("validate: false", () => {
-        const app = _1.default(states, { twilio: { authToken: fakeToken, validate: false } });
+        const app = _1.default(states, Object.assign({}, index_1.DEFAULT_URLFOR_CONFIG, { twilio: { authToken: fakeToken, validate: false } }));
         const agent = request.agent(app);
         it("should allow all requests", () => {
             const test = agent.post("/");

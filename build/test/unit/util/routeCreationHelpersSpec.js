@@ -54,7 +54,7 @@ describe("route creation utilities", () => {
             });
             it("should not call transition out on the renderable state, once found", () => {
                 return sut.resolveBranches(i, {}).then(state => {
-                    chai_1.expect(g.transitionOut).to.not.have.been.called;
+                    chai_1.expect(g.transitionOut).callCount(0);
                 });
             });
         });

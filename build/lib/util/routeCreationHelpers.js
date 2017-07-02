@@ -2,7 +2,6 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const logger_1 = require("../logger");
 const state_1 = require("../state");
-const urlFor_1 = require("../modules/urlFor");
 require("../twilioAugments");
 const state_2 = require("../state");
 function resolveBranches(state, inputData) {
@@ -14,8 +13,8 @@ function resolveBranches(state, inputData) {
     return Promise.resolve(state);
 }
 exports.resolveBranches = resolveBranches;
-function renderState(state, req, furl, inputData) {
-    const urlFor = urlFor_1.makeUrlFor(req.protocol, req.get('Host'), furl);
+function renderState(state, req, createUrlForFromReq, inputData) {
+    const urlFor = createUrlForFromReq(req);
     const renderableStatePromise = resolveBranches(state, inputData);
     const inputToRenderWith = state_2.isRenderableState(state) ? inputData : undefined;
     const couldNotFindRenderableStateError = Symbol();

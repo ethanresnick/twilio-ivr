@@ -1,6 +1,8 @@
 import * as State from "../../lib/state";
 import { TwimlResponse } from "twilio";
 
+/* tslint:disable:no-object-literal-type-assertion */
+
 const emptyTwimlFn = () => new TwimlResponse();
 
 export const d = <any>{

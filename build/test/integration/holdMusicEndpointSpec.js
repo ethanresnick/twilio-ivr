@@ -64,33 +64,79 @@ describe("the hold music endpoint", () => {
             ]);
         });
     });
-    describe("with custom fingerprintUrl and middleware", () => {
-        const appConfig = util_1.filesConfig({
-            fingerprintUrl: (path) => {
-                const pathParts = path.split('.');
-                if (pathParts.length > 1) {
-                    pathParts.splice(pathParts.length - 1, 0, 'abc');
-                    return pathParts.join('.');
-                }
-                else {
-                    return path + '--abc';
-                }
-            },
-            mountPath: '/static',
-            middleware: ((req, res, next) => {
-                if (req.url === '/hold-music--abc') {
-                    req.url = '/hold-music';
-                    next();
-                    return;
-                }
-                res.send("Hi from " + req.url);
-            }),
-            holdMusic: { endpoint: "/hold-music", fileRelativeUri: "./theCalling.mp3" }
+    describe("with custom fingerprintUrl", () => {
+        const pathChangingFingerprinter = (path) => {
+            const pathParts = path.split('.');
+            if (pathParts.length > 1) {
+                pathParts.splice(pathParts.length - 1, 0, 'abc');
+                return pathParts.join('.');
+            }
+            else {
+                return path + '--abc';
+            }
+        };
+        const queryParamFingerprinter = (path) => path + '?v=123';
+        describe("and with custom middleware", () => {
+            const appWithPathFingerprintingConfig = util_1.filesConfig({
+                fingerprintUrl: pathChangingFingerprinter,
+                mountPath: '/static',
+                middleware: ((req, res, next) => {
+                    if (req.url === '/hold-music--abc') {
+                        req.url = '/hold-music';
+                        next();
+                        return;
+                    }
+                    res.send("Hi from " + req.url);
+                }),
+                holdMusic: { endpoint: "/hold-music", fileRelativeUri: "./theCalling.mp3" }
+            });
+            const appWithQueryFingerprintingConfig = util_1.filesConfig({
+                fingerprintUrl: queryParamFingerprinter,
+                mountPath: '/static',
+                middleware: ((req, res, next) => {
+                    if (req.url === '/hold-music?v=123') {
+                        req.url = '/hold-music';
+                        next();
+                        return;
+                    }
+                    res.send("Hi from " + req.url);
+                }),
+                holdMusic: { endpoint: "/hold-music", fileRelativeUri: "./theCalling.mp3" }
+            });
+            const customFingerprintAgent1 = request(_1.default([holdMusicUrlStates.mounted], appWithQueryFingerprintingConfig));
+            const customFingerprintAgent2 = request(_1.default([holdMusicUrlStates.mounted], appWithPathFingerprintingConfig));
+            it('should use the custom fingerprinting & middleware', () => {
+                return customFingerprintAgent1
+                    .get('/static/hold-music?v=123')
+                    .expect(new RegExp(`http\\://[\\d\\.\\:]+/static/theCalling\\.mp3\\?v=123`));
+            });
+            it("should work with path-changing fingerprint functions", () => {
+                return customFingerprintAgent2
+                    .get('/static/hold-music--abc')
+                    .expect(new RegExp(`http\\://[\\d\\.\\:]+/static/theCalling\\.abc.mp3`));
+            });
         });
-        const customFingerprintAgent = request(_1.default([holdMusicUrlStates.mounted], appConfig));
-        it("should work with path-changing fingerprint functions", () => {
-            return customFingerprintAgent.get('/static/hold-music--abc')
-                .expect(new RegExp(`http\\://[\\d\\.\\:]+/static/theCalling\\.abc.mp3`));
+        describe("but without custom middleware", () => {
+            const appWithQueryFingerprintingConfig = util_1.filesConfig({
+                fingerprintUrl: queryParamFingerprinter,
+                mountPath: '/static',
+                holdMusic: { endpoint: "/hold-music", fileRelativeUri: "./theCalling.mp3" }
+            });
+            const appWithPathFingerprintingConfig = util_1.filesConfig({
+                fingerprintUrl: pathChangingFingerprinter,
+                mountPath: '/static',
+                holdMusic: { endpoint: "/hold-music", fileRelativeUri: "./theCalling.mp3" }
+            });
+            it('should fallback to the built-in hold music middleware', () => {
+                return Promise.all([
+                    request(_1.default([holdMusicUrlStates.mounted], appWithQueryFingerprintingConfig))
+                        .get('/static/hold-music?v=123')
+                        .expect(new RegExp(`http\\://[\\d\\.\\:]+/static/theCalling\\.mp3\\?v=123`)),
+                    request(_1.default([holdMusicUrlStates.mounted], appWithPathFingerprintingConfig))
+                        .get('/static/hold-music--abc')
+                        .expect(404)
+                ]);
+            });
         });
     });
 });
