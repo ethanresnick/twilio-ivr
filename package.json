@@ -2,7 +2,7 @@
   "name": "twilio-interactive-flow",
   "version": "0.8.1",
   "description": "Easily build phone/sms trees with twilio and express.",
-  "license": "MIT",
+  "license": "LGPL-3.0",
   "repository": {
     "type": "git",
     "url": "https://github.com/ethanresnick/twilio-ivr.git"
