@@ -14,18 +14,18 @@ describe("urlFor", () => {
   });
 
   it("should default fingerprint setting to (!!furl && !query)", () => {
-    expect(urlFor('/static/test', {}).includes('v=1')).to.be.true;
-    expect(urlFor('/static/test', {query: {a: 'b'}}).includes('v=1')).to.be.false;
+    expect(urlFor('/static/test', {}).includes('v=1')).to.equal(true);
+    expect(urlFor('/static/test', {query: {a: 'b'}}).includes('v=1')).to.equal(false);
 
     const urlForCantFingerprint = makeUrlFor("ftp", "localhost");
-    expect(urlForCantFingerprint('/static/test', {}).includes('v=1')).to.be.false;
-    expect(urlForCantFingerprint('/static/test', {query: {a: 'b'}}).includes('v=1')).to.be.false;
+    expect(urlForCantFingerprint('/static/test', {}).includes('v=1')).to.equal(false);
+    expect(urlForCantFingerprint('/static/test', {query: {a: 'b'}}).includes('v=1')).to.equal(false);
   });
 
   it("should default absolute to false", () => {
-    expect(urlFor('/static/test', {}).startsWith('/static/test')).to.be.true;
-    expect(urlFor('/static/test', {query: {a: 'b'}}).startsWith('/static/test')).to.be.true;
-    expect(urlFor('/static/test', {fingerprint: true}).startsWith('/static/test')).to.be.true;
+    expect(urlFor('/static/test', {}).startsWith('/static/test')).to.equal(true);
+    expect(urlFor('/static/test', {query: {a: 'b'}}).startsWith('/static/test')).to.equal(true);
+    expect(urlFor('/static/test', {fingerprint: true}).startsWith('/static/test')).to.equal(true);
   });
 
   it("should handle all the valid permutations of the options", () => {

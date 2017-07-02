@@ -4,7 +4,7 @@ import request = require("supertest");
 import lib from "../../lib/";
 import { UsableState } from "../../lib/state";
 
-const states: UsableState[] = [<UsableState>{
+const states: UsableState[] = [<UsableState>{ //tslint:disable-line:no-object-literal-type-assertion
   uri: "/",
   name: "DUMMY",
   isEndState: true,

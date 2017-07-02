@@ -9,7 +9,7 @@ describe("error handling (at component integration points)", () => {
       const statesWithInvalidTransition = <(BranchingState & RoutableState)[]>[
         { uri: "/1",
           transitionOut() {
-          return undefined;
+            return undefined; // tslint:disable-line:return-undefined
           }
         },
         {

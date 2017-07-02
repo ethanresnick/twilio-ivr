@@ -8,7 +8,7 @@ const { expect } = chai;
 describe("main express app creation function", () => {
   it("should return an express app", () => {
     const result = sut([], { twilio: {authToken: ""} });
-    expect(isExpressApp(result)).to.be.true;
+    expect(isExpressApp(result)).to.equal(true);
   });
 
   it("should error at creation time when given a state with an invalid shape", () => {

@@ -12,8 +12,10 @@ describe("the hold music endpoint", () => {
     holdMusic: { endpoint: "/hold-music", fileRelativeUri: "./theCalling.mp3" },
     path: musicPath
   };
-  const mountedStaticConfig =
-    Object.assign({}, baseStaticConfig, { mountPath: "/static/" });
+  const mountedStaticConfig = {
+    ...baseStaticConfig,
+    mountPath: "/static/"
+  };
 
   const holdMusicUrlStates = {
     normal: stateRenderingUrlFor("/hold-music", "/get-hold-music-endpoint"),
