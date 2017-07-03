@@ -25,7 +25,7 @@
   "typings": "lib/index.d.ts",
   "scripts": {
     "clean": "rimraf build",
-    "lint": "tslint --project tsconfig.json --format verbose",
+    "lint": "tslint --project tsconfig.json --format verbose --config node_modules/@ethanresnick/tslint-config/tslint.json",
     "build": "npm run build:lintfree && npm run lint",
     "build:lintfree": "npm run clean && echo Using TypeScript && tsc --version && tsc --pretty",
     "test": "export NODE_ENV=testing; mocha --compilers ts:ts-node/register --recursive test/**/*Spec.ts test/**/**/*Spec.ts",
@@ -73,6 +73,7 @@
     "twilio": "ethanresnick/twilio-node#patch-1"
   },
   "devDependencies": {
+    "@ethanresnick/tslint-config": "^4.0.0",
     "@types/chai": "3.5.2",
     "@types/chai-as-promised": "0.0.30",
     "@types/mocha": "2.2.41",
