@@ -73,7 +73,7 @@
     "twilio": "ethanresnick/twilio-node#patch-1"
   },
   "devDependencies": {
-    "@ethanresnick/tslint-config": "^4.0.0",
+    "@ethanresnick/tslint-config": "^5.5.0",
     "@types/chai": "3.5.2",
     "@types/chai-as-promised": "0.0.31",
     "@types/mocha": "2.2.41",
