@@ -74,7 +74,7 @@
   },
   "devDependencies": {
     "@ethanresnick/tslint-config": "^5.5.0",
-    "@types/chai": "3.5.2",
+    "@types/chai": "4.0.2",
     "@types/chai-as-promised": "0.0.31",
     "@types/mocha": "2.2.41",
     "@types/node": "6.0.59",
