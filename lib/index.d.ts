@@ -1,8 +1,5 @@
 /// <reference types="express" />
-/// <reference types="twilio" />
 import { Express, Handler, RequestHandler, Request as ExpressRequest } from "express";
-import { TwimlResponse } from "twilio";
-
 export default function (states: UsableState[], config: config): Express;
 
 export interface Request extends ExpressRequest {
@@ -22,7 +19,7 @@ export type config = {
     holdMusic?: {
       fileRelativeUri: string;
       endpoint?: string;
-      twimlFor?: (urlFor: urlFor) => TwimlResponse | string;
+      twimlFor?: (urlFor: urlFor) => string;
     };
   };
   session?: RequestHandler;
@@ -53,7 +50,7 @@ export interface BranchingState extends AbstractState {
 }
 
 export interface RenderableState extends AbstractState {
-  twimlFor(urlFor: urlFor, req: Request, inputData?: CallDataTwiml): TwimlResponse | string;
+  twimlFor(urlFor: urlFor, req: Request, inputData?: CallDataTwiml): string;
 }
 
 export interface EndState extends RenderableState {

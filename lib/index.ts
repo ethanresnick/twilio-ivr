@@ -7,7 +7,9 @@ import express = require("express");
 import bodyParser = require("body-parser");
 import path = require("path");
 
-import { webhook as twilioWebhook, TwimlResponse } from "twilio";
+// TODO: look
+import { webhook as twilioWebhook } from "twilio";
+const VoiceResponse = require('twilio').twiml.VoiceResponse;
 import "./twilioAugments";
 
 
@@ -78,10 +80,11 @@ export default function(states: State.UsableState[], config: config): Express {
       const holdMusicEndpointMounted = path.normalize(staticFilesMountPath + '/' + holdMusicEndpoint);
 
       const holdMusicTwimlFor = config.staticFiles.holdMusic.twimlFor ||
-        ((urlFor: State.urlFor) =>
-          (new TwimlResponse()).play({ loop: 1000 }, urlFor(
-            path.normalize(staticFilesMountPath + '/' + holdMusicFileUri), { absolute: true }
-          )));
+        ((urlFor: State.urlFor) => {
+          const response = new VoiceResponse()
+          response.play({ loop: 1000 }, urlFor(path.normalize(staticFilesMountPath + '/' + holdMusicFileUri), { absolute: true }))
+          return response.toString()
+        })
 
       if(!holdMusicFileUri) {
         throw new Error("You must provide a relative uri to your hold music file.");
@@ -206,7 +209,8 @@ type StaticFilesConfig =
     readonly holdMusic?: {
       readonly fileRelativeUri: string;
       readonly endpoint?: string;
-      readonly twimlFor?: (urlFor: State.urlFor) => TwimlResponse | string;
+      // TODO: look
+      readonly twimlFor?: (urlFor: State.urlFor) => string;
     }
   };
 

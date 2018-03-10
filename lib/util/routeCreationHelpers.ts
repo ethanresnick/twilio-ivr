@@ -59,7 +59,7 @@ export function resolveBranches(state: UsableState, req: express.Request, inputD
  *   the state passed in as `state` wasn't requested directly (see above comment),
  *   then the user input will have already been used to transition out, and
  *   inputData should be undefined.
- * @return {TwimlResponse|string} The rendered next state.
+ * @return {string} The rendered next state.
  */
 export function renderState(state: UsableState, req: express.Request,
   furl: fingerprintUrl | undefined, inputData: CallDataTwiml | undefined) {

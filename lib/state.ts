@@ -1,5 +1,5 @@
 import { Request } from "express";
-import { TwimlResponse, CallDataTwiml } from "twilio";
+import { CallDataTwiml } from "twilio";
 import "./twilioAugments";
 import { urlFor } from "./util/routeCreationHelpers";
 
@@ -29,7 +29,7 @@ export interface BranchingState extends AbstractState {
 }
 
 export interface RenderableState extends AbstractState {
-  twimlFor(urlFor: urlFor, req: Request, inputData?: CallDataTwiml): TwimlResponse | string;
+  twimlFor(urlFor: urlFor, req: Request, inputData?: CallDataTwiml): string;
 }
 
 export interface EndState extends RenderableState {
