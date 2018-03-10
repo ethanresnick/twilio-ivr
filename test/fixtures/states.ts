@@ -1,7 +1,8 @@
 import * as State from "../../lib/state";
-import { TwimlResponse } from "twilio";
+import twilio = require('twilio')
+const VoiceResponse = twilio.twiml.VoiceResponse;
 
-const emptyTwimlFn = () => new TwimlResponse();
+const emptyTwimlFn = () => (new VoiceResponse()).toString();
 
 export const d = <any>{
   name: "d",

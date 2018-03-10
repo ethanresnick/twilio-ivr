@@ -1,9 +1,7 @@
 import logger from "../logger";
 import * as express from "express";
-import { CallDataTwiml } from "twilio";
 import { stateToString } from "../state";
 import { UrlToFingerprintNotUnderMountPathError } from "./staticExpiryHelpers";
-import "../twilioAugments";
 import url = require("url");
 
 import {
@@ -23,11 +21,11 @@ import {
  * @param  {UsableState} state The initial state, which may or may
  *   not be renderable.
  * @param  {express.Request} req The express request
- * @param  {CallDataTwiml} inputData Any user input taht should be passed to
+ * @param  {any} inputData Any user input taht should be passed to
  *   the initial state, and the initial state only, if it's not renderable.
  * @return {Promise<RenderableState>} The final renderable state.
  */
-export function resolveBranches(state: UsableState, req: express.Request, inputData?: CallDataTwiml): Promise<RenderableState> {
+export function resolveBranches(state: UsableState, req: express.Request, inputData?: any): Promise<RenderableState> {
   if (isBranchingState(state) && !isRenderableState(state)) {
     return Promise.resolve(state.transitionOut(req, inputData)).then(nextState => {
       return resolveBranches(nextState, req);
@@ -54,7 +52,7 @@ export function resolveBranches(state: UsableState, req: express.Request, inputD
  * @param {express.Request} req The express request
  * @param {fingerprintUrl|undefined} furl A function to generate fingerprinted
  *   uris for static files.
- * @param {CallDataTwiml|undefined} inputData Data we should pass to the first
+ * @param {any|undefined} inputData Data we should pass to the first
  *   state that we encounter on our way to rendering the final state. Note: if
  *   the state passed in as `state` wasn't requested directly (see above comment),
  *   then the user input will have already been used to transition out, and
@@ -62,7 +60,7 @@ export function resolveBranches(state: UsableState, req: express.Request, inputD
  * @return {string} The rendered next state.
  */
 export function renderState(state: UsableState, req: express.Request,
-  furl: fingerprintUrl | undefined, inputData: CallDataTwiml | undefined) {
+  furl: fingerprintUrl | undefined, inputData: any | undefined) {
 
   // A utility function to help our states generate urls.
   const urlForBound = makeUrlFor(req.protocol, req.get('Host'), furl);

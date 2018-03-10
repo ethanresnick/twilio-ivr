@@ -3,7 +3,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const logger_1 = require("../logger");
 const state_1 = require("../state");
 const staticExpiryHelpers_1 = require("./staticExpiryHelpers");
-require("../twilioAugments");
 const url = require("url");
 const state_2 = require("../state");
 function resolveBranches(state, req, inputData) {

@@ -46,11 +46,11 @@ export interface RoutableState extends AbstractState {
 }
 
 export interface BranchingState extends AbstractState {
-  transitionOut(req: Request, inputData?: CallDataTwiml): Promise<UsableState> | UsableState;
+  transitionOut(req: Request, inputData?: any): Promise<UsableState> | UsableState;
 }
 
 export interface RenderableState extends AbstractState {
-  twimlFor(urlFor: urlFor, req: Request, inputData?: CallDataTwiml): string;
+  twimlFor(urlFor: urlFor, req: Request, inputData?: any): string;
 }
 
 export interface EndState extends RenderableState {
@@ -58,73 +58,9 @@ export interface EndState extends RenderableState {
 }
 
 export interface AsynchronousState extends RenderableState {
-  backgroundTrigger(urlFor: urlFor, req: Request, inputData?: CallDataTwiml): void;
+  backgroundTrigger(urlFor: urlFor, req: Request, inputData?: any): void;
 }
 
 export interface NormalState extends BranchingState, RenderableState {
   processTransitionUri: string;
-}
-
-type CallDirection = "inbound" | "outbound-api" | "outbound-dial" | "trunking-terminating" | "trunking-originating";
-type CallStatus = "queued" | "ringing" | "in-progress" | "busy" | "failed" | "canceled" | "no-answer" | "completed";
-
-export interface CallDataTwiml {
-  CallSid: string;
-  Direction: CallDirection;
-  CallStatus: CallStatus;
-  AccountSid: string;
-  ForwardedFrom?: string;
-  CallerName?: string;
-  To: string;
-  ToCountry?: string;
-  ToState?: string;
-  ToCity?: string;
-  ToZip?: string;
-  From: string;
-  FromCountry?: string;
-  FromState?: string;
-  FromCity?: string;
-  FromZip?: string;
-  Called: string;
-  CalledCountry: string;
-  CalledState: string;
-  CalledCity: string;
-  CalledZip: string;
-  Caller: string;
-  CallerCountry: string;
-  CallerState: string;
-  CallerCity: string;
-  CallerZip: string;
-  ApiVersion: '2010-04-01';
-}
-
-export interface GatherDataTwiml extends CallDataTwiml {
-  msg: "Gather End";
-  Digits: string;
-}
-
-export interface CallDataAPI {
-  dateCreated: string | null;
-  dateUpdated: string | null;
-  startTime: string | null;
-  endTime: string | null;
-  duration: string | null;
-  parentCallSid: string | null;
-  toFormatted: string;
-  fromFormatted: string;
-  price: string | null;
-  priceUnit: string;
-  phoneNumberSid: string;
-  answeredBy: string | null;
-  forwardedFrom: string | null;
-  groupSid: string | null;
-  callerName: string | null;
-  uri: string;
-  sid: string;
-  direction: CallDirection;
-  status: CallStatus;
-  accountSid: string;
-  to: string;
-  from: string;
-  apiVersion: string;
 }

@@ -1,13 +1,14 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const twilio = require("twilio");
 const request = require("supertest");
+const twilio = require("twilio");
+const VoiceResponse = twilio.twiml.VoiceResponse;
 const _1 = require("../../lib/");
 const states = [{
         uri: "/returns-twiml-response",
         name: "DUMMY",
         isEndState: true,
-        twimlFor() { return new twilio.TwimlResponse(); }
+        twimlFor() { return (new VoiceResponse()).toString(); }
     }, {
         uri: "/returns-twiml-string",
         name: "DUMMY",

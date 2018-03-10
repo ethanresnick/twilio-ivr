@@ -6,8 +6,9 @@ const routeCreationHelpers_1 = require("./util/routeCreationHelpers");
 const express = require("express");
 const bodyParser = require("body-parser");
 const path = require("path");
-const twilio_1 = require("twilio");
-require("./twilioAugments");
+const twilio = require("twilio");
+const VoiceResponse = twilio.twiml.VoiceResponse;
+const twilioWebhook = twilio.webhook;
 function default_1(states, config) {
     const app = express();
     if (config.trustProxy) {
@@ -18,7 +19,7 @@ function default_1(states, config) {
     }
     app.use(bodyParser.urlencoded({ extended: false }));
     const { validate = true } = config.twilio;
-    app.use(twilio_1.webhook(config.twilio.authToken, { validate: validate }));
+    app.use(twilioWebhook(config.twilio.authToken, { validate: validate }));
     let urlFingerprinter;
     if (config.staticFiles) {
         const staticFilesMountPath = config.staticFiles.mountPath || "";
@@ -44,7 +45,11 @@ function default_1(states, config) {
             const holdMusicEndpoint = config.staticFiles.holdMusic.endpoint || "/hold-music";
             const holdMusicEndpointMounted = path.normalize(staticFilesMountPath + '/' + holdMusicEndpoint);
             const holdMusicTwimlFor = config.staticFiles.holdMusic.twimlFor ||
-                ((urlFor) => (new twilio_1.TwimlResponse()).play({ loop: 1000 }, urlFor(path.normalize(staticFilesMountPath + '/' + holdMusicFileUri), { absolute: true })));
+                ((urlFor) => {
+                    const response = new VoiceResponse();
+                    response.play({ loop: 1000 }, urlFor(path.normalize(staticFilesMountPath + '/' + holdMusicFileUri), { absolute: true }));
+                    return response.toString();
+                });
             if (!holdMusicFileUri) {
                 throw new Error("You must provide a relative uri to your hold music file.");
             }

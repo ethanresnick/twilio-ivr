@@ -1,6 +1,4 @@
 import { Request } from "express";
-import { CallDataTwiml } from "twilio";
-import "./twilioAugments";
 import { urlFor } from "./util/routeCreationHelpers";
 
 // A RoutableState that's not also either a BranchingState, or a RenderableState
@@ -25,11 +23,11 @@ export interface BranchingState extends AbstractState {
   // Take an immutable session data and some input; return a promise for the
   // modified session data (if being at this state told us something about the
   // call we want to store) and the next state to go to.
-  transitionOut(req: Request, inputData?: CallDataTwiml): Promise<UsableState>|UsableState;
+  transitionOut(req: Request, inputData?: any): Promise<UsableState>|UsableState;
 }
 
 export interface RenderableState extends AbstractState {
-  twimlFor(urlFor: urlFor, req: Request, inputData?: CallDataTwiml): string;
+  twimlFor(urlFor: urlFor, req: Request, inputData?: any): string;
 }
 
 export interface EndState extends RenderableState {
@@ -37,7 +35,7 @@ export interface EndState extends RenderableState {
 }
 
 export interface AsynchronousState extends RenderableState {
-  backgroundTrigger(urlFor: urlFor, req: Request, inputData?: CallDataTwiml): void;
+  backgroundTrigger(urlFor: urlFor, req: Request, inputData?: any): void;
 }
 
 export interface NormalState extends BranchingState, RenderableState {

@@ -4,7 +4,6 @@ const sinon = require("sinon");
 const sinonChai = require("sinon-chai");
 const chai_1 = require("chai");
 const request = require("supertest");
-require("../../lib/twilioAugments");
 const _1 = require("../../lib/");
 const objectValuesEntries_1 = require("../../lib/util/objectValuesEntries");
 chai_1.use(sinonChai);

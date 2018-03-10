@@ -7,10 +7,9 @@ import express = require("express");
 import bodyParser = require("body-parser");
 import path = require("path");
 
-// TODO: look
-import { webhook as twilioWebhook } from "twilio";
-const VoiceResponse = require('twilio').twiml.VoiceResponse;
-import "./twilioAugments";
+import twilio = require('twilio')
+const VoiceResponse = twilio.twiml.VoiceResponse;
+const twilioWebhook = twilio.webhook
 
 
 export default function(states: State.UsableState[], config: config): Express {

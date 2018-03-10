@@ -2,8 +2,6 @@ import sinon = require("sinon");
 import sinonChai = require("sinon-chai");
 import { expect, use as chaiUse } from "chai";
 import request = require("supertest");
-import twilio = require("twilio");
-import "../../lib/twilioAugments";
 import lib from "../../lib/";
 import { values as objectValues } from "../../lib/util/objectValuesEntries";
 import * as express from "express"
@@ -20,7 +18,7 @@ const states: any = {
   routableBranching: <RoutableState & BranchingState>{
     name: "CALL_RECEIVED_BRANCH",
     uri: "/routable-branching",
-    transitionOut: (<sinon.SinonSpy>((req: express.Request, input?: twilio.CallDataTwiml) => {
+    transitionOut: (<sinon.SinonSpy>((req: express.Request, input?: any) => {
       return input && input.CallerZip === "00000" ?
         states.nonRoutableBranching :
         states.routableEnd;
@@ -31,10 +29,10 @@ const states: any = {
     name: "CALL_RECEIVED_RENDER",
     uri: "/routable-normal",
     processTransitionUri: "/process-renderable-entry",
-    twimlFor(urlFor: urlFor, req: express.Request, input?: twilio.CallDataTwiml) {
+    twimlFor(urlFor: urlFor, req: express.Request, input?: any) {
       return "input to routableNormal was: " + JSON.stringify(input);
     },
-    transitionOut(req: express.Request, input?: twilio.CallDataTwiml) {
+    transitionOut(req: express.Request, input?: any) {
       return Promise.resolve(states.nonRoutableNormal);
     }
   },
@@ -43,7 +41,7 @@ const states: any = {
     name: "CALL_RECEIVED_END",
     uri: "/routable-end",
     isEndState: true,
-    twimlFor(urlFor: urlFor, req: express.Request, input?: twilio.CallDataTwiml) {
+    twimlFor(urlFor: urlFor, req: express.Request, input?: any) {
       return "Sorry, no one home. Bye.";
     }
   },
@@ -51,7 +49,7 @@ const states: any = {
   routableAsync: <RoutableState & AsynchronousState>{
     name: "CALL_RECEIVED_ASYNC",
     uri: "/routable-async",
-    twimlFor(urlFor: urlFor, req: express.Request, input?: twilio.CallDataTwiml) {
+    twimlFor(urlFor: urlFor, req: express.Request, input?: any) {
       return "We're doing something...";
     },
     backgroundTrigger() { return "do some effect..."; }
@@ -59,14 +57,14 @@ const states: any = {
 
   nonRoutableBranching: <BranchingState>{
     name: "INNER_BRANCH",
-    transitionOut: (<sinon.SinonSpy>((req: express.Request, input?: twilio.CallDataTwiml) => {
+    transitionOut: (<sinon.SinonSpy>((req: express.Request, input?: any) => {
       return states.nonRoutableNormal;
     }))
   },
 
   nonRoutableBranching2: <BranchingState>{
     name: "INNER_BRANCH_2",
-    transitionOut: (<sinon.SinonSpy>((req: express.Request, input?: twilio.CallDataTwiml) => {
+    transitionOut: (<sinon.SinonSpy>((req: express.Request, input?: any) => {
       return Promise.resolve(states.routableAsync);
     }))
   },
@@ -74,10 +72,10 @@ const states: any = {
   nonRoutableNormal: <NormalState>{
     name: "INNER_RENDER",
     processTransitionUri: "/process-inner-renderable",
-    twimlFor(urlFor: urlFor, req: express.Request, input?: twilio.CallDataTwiml) {
+    twimlFor(urlFor: urlFor, req: express.Request, input?: any) {
       return "input to nonRoutableNormal was: " + JSON.stringify(input);
     },
-    transitionOut(req: express.Request, input?: twilio.CallDataTwiml) {
+    transitionOut(req: express.Request, input?: any) {
       return Promise.resolve(states.nonRoutableBranching2);
     }
   }
