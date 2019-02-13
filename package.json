@@ -76,7 +76,7 @@
     "@ethanresnick/tslint-config": "^5.5.0",
     "@types/chai": "3.5.2",
     "@types/chai-as-promised": "0.0.31",
-    "@types/mocha": "2.2.41",
+    "@types/mocha": "5.2.6",
     "@types/node": "6.0.59",
     "@types/sinon": "^1.16.32",
     "@types/sinon-chai": "^2.7.27",
