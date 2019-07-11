@@ -1,6 +1,6 @@
 {
   "name": "twilio-interactive-flow",
-  "version": "0.8.1",
+  "version": "0.8.2",
   "description": "Easily build phone/sms trees with twilio and express.",
   "license": "MIT",
   "repository": {
@@ -64,12 +64,12 @@
     "@types/debug": "0.0.29",
     "@types/express": "^4.0.34",
     "@types/ramda": "0.0.5",
-    "body-parser": "^1.15.2",
+    "body-parser": "^1.19.0",
     "debug": "^2.2.0",
-    "express": "^4.14.0",
+    "express": "^4.17.1",
     "ramda": "^0.23.0",
-    "static-expiry": "paulwalker/connect-static-expiry#f18d288a6a5ccaff07c9805c498a9a79e6473f99",
-    "twilio": "^3.13.0"
+    "static-expiry": "paulwalker/connect-static-expiry#2bac82d592779251e1a3dd5c71b0efdf20e3c582",
+    "twilio": "^3.33.1"
   },
   "devDependencies": {
     "@types/chai": "3.4.35",
