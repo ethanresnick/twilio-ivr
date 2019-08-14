@@ -86,7 +86,7 @@
     "coveralls": "^2.11.15",
     "mocha": "^3.0.1",
     "nyc": "^11.0.0",
-    "rimraf": "^2.5.4",
+    "rimraf": "^3.0.0",
     "sinon": "^1.17.6",
     "sinon-chai": "^2.8.0",
     "stream-equal": "^1.0.0",
